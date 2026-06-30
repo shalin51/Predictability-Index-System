@@ -9,11 +9,11 @@ Deliver deterministic V1 scoring against benchmark profiles with metric-level di
 ## Files Changed
 
 ```text
-apps/main-server/src/modules/scoring/scoring-engine.ts
-apps/main-server/src/modules/scoring/scoring.service.ts
-apps/main-server/src/modules/scoring/__tests__/scoring-engine.test.ts
-apps/main-server/src/modules/scoring/__tests__/scoring.api.test.ts
-apps/dashboard/src/features/analysis/AnalysisPage.tsx
+main-server/src/modules/scoring/scoring-engine.ts
+main-server/src/modules/scoring/scoring.service.ts
+main-server/src/modules/scoring/__tests__/scoring-engine.test.ts
+main-server/src/modules/scoring/__tests__/scoring.api.test.ts
+dashboard/src/features/analysis/AnalysisPage.tsx
 ```
 
 ## Verification Checklist

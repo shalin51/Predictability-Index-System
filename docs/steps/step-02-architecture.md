@@ -27,16 +27,16 @@ Establish clean cross-app architecture boundaries before expanding feature work.
 |---|---|
 | `docs/architecture/step-02-architecture-rules.md` | Architecture and boundary rules |
 | `docs/steps/step-02-architecture.md` | Step validator artifact |
-| `apps/dashboard/src/services/api.ts` | Shared-contract API typing only |
+| `dashboard/src/services/api.ts` | Shared-contract API typing only |
 | `package.json` | Root validation/build scripts aligned to step flow |
 
 ## Files Changed
 
 ```text
 package.json
-apps/dashboard/src/services/api.ts
-apps/main-server/src/modules/reports/report.service.ts
-apps/main-server/src/modules/scoring/scoring-engine.ts
+dashboard/src/services/api.ts
+main-server/src/modules/reports/report.service.ts
+main-server/src/modules/scoring/scoring-engine.ts
 docs/architecture/step-02-architecture-rules.md
 docs/steps/step-02-architecture.md
 ```

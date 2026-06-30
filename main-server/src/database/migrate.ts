@@ -1,8 +1,8 @@
 /**
  * migrate.ts — Runs SQL migration files against the AMFPI database.
  *
- * Run: node scripts/load-env.js env.dev tsx apps/main-server/src/database/migrate.ts
- * With seed: node scripts/load-env.js env.dev tsx apps/main-server/src/database/migrate.ts --seed
+ * Run: npm run db:migrate:dev
+ * With seed: npm run db:seed:dev
  */
 
 import { config } from '../config/env';

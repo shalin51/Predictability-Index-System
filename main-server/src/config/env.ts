@@ -2,13 +2,13 @@
  * env.ts — Environment configuration loader
  *
  * This module must be imported FIRST in index.ts.
- * It reads the appropriate env file from the project root and populates process.env.
+ * It reads the appropriate env file from the main-server app root and populates process.env.
  * After import, the exported `config` object provides typed access to all settings.
  *
  * Env file resolution order:
  *   1. process.env.APP_ENV_FILE (explicit override, absolute or relative to CWD)
- *   2. Derived from process.env.APP_ENV: dev→env.dev, staging→env.staging, production→env.production
- *   3. Fallback: env.dev
+ *   2. Derived from process.env.APP_ENV: dev→.env.development, staging→.env.staging, production→.env.production
+ *   3. Fallback: .env.development
  */
 
 import dotenv from 'dotenv';
@@ -16,24 +16,24 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 // __dirname resolves to src/config/ (tsx) or dist/config/ (compiled).
-// Either way, 4 levels up reaches the project root.
-const PROJECT_ROOT = path.resolve(__dirname, '../../../../');
+// Either way, 2 levels up reaches the app root.
+const ENV_ROOT = path.resolve(__dirname, '../../');
 
 function resolveEnvFileName(): string {
   const appEnv = process.env.APP_ENV ?? '';
   const envMap: Record<string, string> = {
-    dev: 'env.dev',
-    development: 'env.dev',
-    staging: 'env.staging',
-    production: 'env.production',
+    dev: '.env.development',
+    development: '.env.development',
+    staging: '.env.staging',
+    production: '.env.production',
   };
-  return envMap[appEnv] ?? 'env.dev';
+  return envMap[appEnv] ?? '.env.development';
 }
 
 const targetFile = process.env.APP_ENV_FILE ?? resolveEnvFileName();
 const envFilePath = path.isAbsolute(targetFile)
   ? targetFile
-  : path.resolve(PROJECT_ROOT, targetFile);
+  : path.resolve(ENV_ROOT, targetFile);
 
 if (fs.existsSync(envFilePath)) {
   const result = dotenv.config({ path: envFilePath, override: false });

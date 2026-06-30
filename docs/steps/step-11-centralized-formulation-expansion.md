@@ -57,7 +57,7 @@ Missing or partial now:
 Add a new migration:
 
 ```text
-apps/main-server/src/database/migrations/003_centralized_formulation_expansion.sql
+main-server/src/database/migrations/003_centralized_formulation_expansion.sql
 ```
 
 ### Table Changes
@@ -175,9 +175,9 @@ interface ProcessingRun {
 Update:
 
 ```text
-apps/main-server/src/modules/formulations/formulation.service.ts
-apps/main-server/src/infrastructure/repositories/formulation.repository.ts
-apps/main-server/src/modules/formulations/formulation.controller.ts
+main-server/src/modules/formulations/formulation.service.ts
+main-server/src/infrastructure/repositories/formulation.repository.ts
+main-server/src/modules/formulations/formulation.controller.ts
 ```
 
 Change behavior:
@@ -193,9 +193,9 @@ Change behavior:
 Add module:
 
 ```text
-apps/main-server/src/modules/processing-runs/processing-run.module.ts
-apps/main-server/src/modules/processing-runs/processing-run.service.ts
-apps/main-server/src/infrastructure/repositories/processing-run.repository.ts
+main-server/src/modules/processing-runs/processing-run.module.ts
+main-server/src/modules/processing-runs/processing-run.service.ts
+main-server/src/infrastructure/repositories/processing-run.repository.ts
 ```
 
 Routes:
@@ -209,8 +209,8 @@ Routes:
 Update:
 
 ```text
-apps/main-server/src/modules/test-results/test-result.service.ts
-apps/main-server/src/infrastructure/repositories/test-result.repository.ts
+main-server/src/modules/test-results/test-result.service.ts
+main-server/src/infrastructure/repositories/test-result.repository.ts
 ```
 
 Add support for:
@@ -260,9 +260,9 @@ Needed for:
 Update:
 
 ```text
-apps/dashboard/src/features/formulations/FormulationForm.tsx
-apps/dashboard/src/features/formulations/FormulationEditorPage.tsx
-apps/dashboard/src/services/api.ts
+dashboard/src/features/formulations/FormulationForm.tsx
+dashboard/src/features/formulations/FormulationEditorPage.tsx
+dashboard/src/services/api.ts
 ```
 
 Add sections:
@@ -287,7 +287,7 @@ Add sections:
 Update:
 
 ```text
-apps/dashboard/src/features/formulations/FormulationDetailPage.tsx
+dashboard/src/features/formulations/FormulationDetailPage.tsx
 ```
 
 Add cards for:
@@ -300,7 +300,7 @@ Add cards for:
 Update:
 
 ```text
-apps/dashboard/src/features/test-results/TestResultsPage.tsx
+dashboard/src/features/test-results/TestResultsPage.tsx
 ```
 
 Add text inputs / textareas for:
@@ -330,9 +330,9 @@ Add server-side validation:
 Add or expand:
 
 ```text
-apps/main-server/src/modules/formulations/__tests__/formulation.api.test.ts
-apps/main-server/src/modules/test-results/__tests__/test-results.api.test.ts
-apps/main-server/src/infrastructure/repositories/__tests__/repository.integration.test.ts
+main-server/src/modules/formulations/__tests__/formulation.api.test.ts
+main-server/src/modules/test-results/__tests__/test-results.api.test.ts
+main-server/src/infrastructure/repositories/__tests__/repository.integration.test.ts
 ```
 
 Coverage:
@@ -350,27 +350,27 @@ Coverage:
 New:
 
 ```text
-apps/main-server/src/database/migrations/003_centralized_formulation_expansion.sql
-apps/main-server/src/infrastructure/repositories/processing-run.repository.ts
-apps/main-server/src/modules/processing-runs/processing-run.module.ts
-apps/main-server/src/modules/processing-runs/processing-run.service.ts
+main-server/src/database/migrations/003_centralized_formulation_expansion.sql
+main-server/src/infrastructure/repositories/processing-run.repository.ts
+main-server/src/modules/processing-runs/processing-run.module.ts
+main-server/src/modules/processing-runs/processing-run.service.ts
 docs/steps/step-11-centralized-formulation-expansion.md
 ```
 
 Changed:
 
 ```text
-apps/main-server/src/app.ts
-apps/main-server/src/infrastructure/repositories/formulation.repository.ts
-apps/main-server/src/infrastructure/repositories/test-result.repository.ts
-apps/main-server/src/modules/formulations/formulation.controller.ts
-apps/main-server/src/modules/formulations/formulation.service.ts
-apps/main-server/src/modules/test-results/test-result.service.ts
-apps/dashboard/src/features/formulations/FormulationDetailPage.tsx
-apps/dashboard/src/features/formulations/FormulationEditorPage.tsx
-apps/dashboard/src/features/formulations/FormulationForm.tsx
-apps/dashboard/src/features/test-results/TestResultsPage.tsx
-apps/dashboard/src/services/api.ts
+main-server/src/app.ts
+main-server/src/infrastructure/repositories/formulation.repository.ts
+main-server/src/infrastructure/repositories/test-result.repository.ts
+main-server/src/modules/formulations/formulation.controller.ts
+main-server/src/modules/formulations/formulation.service.ts
+main-server/src/modules/test-results/test-result.service.ts
+dashboard/src/features/formulations/FormulationDetailPage.tsx
+dashboard/src/features/formulations/FormulationEditorPage.tsx
+dashboard/src/features/formulations/FormulationForm.tsx
+dashboard/src/features/test-results/TestResultsPage.tsx
+dashboard/src/services/api.ts
 packages/shared/src/contracts/domain.contract.ts
 packages/shared/src/types/domain.ts
 ```

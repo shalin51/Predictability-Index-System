@@ -25,25 +25,25 @@ Deliver end-to-end formulation create, list, detail, and edit workflows with aud
 
 | File / Artefact | Description |
 |---|---|
-| `apps/main-server/src/app.ts` | Testable Express app factory |
-| `apps/main-server/src/modules/formulations/__tests__/formulation.api.test.ts` | Formulation API contract tests |
-| `apps/dashboard/src/features/formulations/*` | CRUD dashboard views and reusable form |
+| `main-server/src/app.ts` | Testable Express app factory |
+| `main-server/src/modules/formulations/__tests__/formulation.api.test.ts` | Formulation API contract tests |
+| `dashboard/src/features/formulations/*` | CRUD dashboard views and reusable form |
 | `docs/steps/step-04-formulation-crud.md` | Step validator artifact |
 
 ## Files Changed
 
 ```text
-apps/main-server/package.json
-apps/main-server/src/app.ts
-apps/main-server/src/index.ts
-apps/main-server/src/modules/formulations/formulation.service.ts
-apps/main-server/src/modules/formulations/__tests__/formulation.api.test.ts
-apps/dashboard/src/App.tsx
-apps/dashboard/src/services/api.ts
-apps/dashboard/src/features/formulations/FormulationListPage.tsx
-apps/dashboard/src/features/formulations/FormulationForm.tsx
-apps/dashboard/src/features/formulations/FormulationDetailPage.tsx
-apps/dashboard/src/features/formulations/FormulationEditorPage.tsx
+main-server/package.json
+main-server/src/app.ts
+main-server/src/index.ts
+main-server/src/modules/formulations/formulation.service.ts
+main-server/src/modules/formulations/__tests__/formulation.api.test.ts
+dashboard/src/App.tsx
+dashboard/src/services/api.ts
+dashboard/src/features/formulations/FormulationListPage.tsx
+dashboard/src/features/formulations/FormulationForm.tsx
+dashboard/src/features/formulations/FormulationDetailPage.tsx
+dashboard/src/features/formulations/FormulationEditorPage.tsx
 docs/steps/step-04-formulation-crud.md
 ```
 

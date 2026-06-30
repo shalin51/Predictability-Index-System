@@ -2,15 +2,15 @@
 
 ## Core boundaries
 
-- `apps/main-server/src/modules`: route orchestration and use-case services only.
-- `apps/main-server/src/infrastructure`: database and repository implementations only.
-- `apps/main-server/src/core`: reusable server-side base abstractions only.
-- `apps/main-server/src/interfaces`: reserved for explicit transport adapters as the app grows.
-- `apps/main-server/src/config`, `middlewares`, `errors`: cross-cutting concerns only.
-- `apps/dashboard/src/features`: screen-level feature modules.
-- `apps/dashboard/src/components`: reusable UI primitives.
-- `apps/dashboard/src/services`: HTTP client adapters only.
-- `apps/dashboard/src/types`: re-exports from `@amfpi/shared`; no local API DTO ownership.
+- `main-server/src/modules`: route orchestration and use-case services only.
+- `main-server/src/infrastructure`: database and repository implementations only.
+- `main-server/src/core`: reusable server-side base abstractions only.
+- `main-server/src/interfaces`: reserved for explicit transport adapters as the app grows.
+- `main-server/src/config`, `middlewares`, `errors`: cross-cutting concerns only.
+- `dashboard/src/features`: screen-level feature modules.
+- `dashboard/src/components`: reusable UI primitives.
+- `dashboard/src/services`: HTTP client adapters only.
+- `dashboard/src/types`: re-exports from `@amfpi/shared`; no local API DTO ownership.
 - `packages/shared/src/contracts`: request and response DTOs shared across apps.
 - `packages/shared/src/types`: domain model types shared across apps.
 - `packages/shared/src/constants`: cross-app constants only.

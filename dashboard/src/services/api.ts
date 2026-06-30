@@ -25,8 +25,7 @@ import type {
   TrafficLight,
   UpdateFormulationDto,
 } from '@amfpi/shared';
-
-const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL;
+import { env } from '../config/env';
 
 export type {
   BenchmarkListItem as BenchmarkItem,
@@ -52,7 +51,7 @@ export type {
 export type PaginatedFormulations = PaginatedResponse<FormulationListItem>;
 
 async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+  const response = await fetch(`${env.apiBaseUrl}${endpoint}`, options);
   if (!response.ok) {
     const body = (await response
       .json()

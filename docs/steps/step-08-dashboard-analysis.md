@@ -9,9 +9,9 @@ Provide a business-facing analytics workspace with summary, benchmark comparison
 ## Files Changed
 
 ```text
-apps/dashboard/src/features/analysis/AnalysisPage.tsx
-apps/dashboard/src/features/formulations/FormulationDetailPage.tsx
-apps/dashboard/src/App.tsx
+dashboard/src/features/analysis/AnalysisPage.tsx
+dashboard/src/features/formulations/FormulationDetailPage.tsx
+dashboard/src/App.tsx
 ```
 
 ## Verification Checklist

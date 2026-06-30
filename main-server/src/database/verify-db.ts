@@ -6,7 +6,6 @@
  *
  * Run via:
  *   npm run db:verify:dev
- *   (which executes: node scripts/load-env.js env.dev tsx apps/main-server/src/database/verify-db.ts)
  */
 
 // env.ts must be the first import — it loads process.env from the env file

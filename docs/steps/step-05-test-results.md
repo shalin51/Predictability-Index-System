@@ -10,13 +10,13 @@ Support 72-hour physical, performance, durability, environmental, and subjective
 
 ```text
 packages/shared/src/contracts/domain.contract.ts
-apps/main-server/src/infrastructure/repositories/test-result.repository.ts
-apps/main-server/src/modules/test-results/test-result.service.ts
-apps/main-server/src/modules/test-results/__tests__/test-results.api.test.ts
-apps/dashboard/src/services/api.ts
-apps/dashboard/src/features/test-results/TestResultsPage.tsx
-apps/dashboard/src/features/formulations/FormulationDetailPage.tsx
-apps/dashboard/src/App.tsx
+main-server/src/infrastructure/repositories/test-result.repository.ts
+main-server/src/modules/test-results/test-result.service.ts
+main-server/src/modules/test-results/__tests__/test-results.api.test.ts
+dashboard/src/services/api.ts
+dashboard/src/features/test-results/TestResultsPage.tsx
+dashboard/src/features/formulations/FormulationDetailPage.tsx
+dashboard/src/App.tsx
 ```
 
 ## Verification Checklist

@@ -25,21 +25,21 @@ Create and validate the centralized formulation database schema, seed data, and 
 
 | File / Artefact | Description |
 |---|---|
-| `apps/main-server/src/database/migration-runner.ts` | Reusable reset/migrate/seed orchestration |
-| `apps/main-server/src/database/validate-schema.ts` | Schema validator gate |
-| `apps/main-server/src/infrastructure/repositories/__tests__/repository.integration.test.ts` | Repository integration coverage |
+| `main-server/src/database/migration-runner.ts` | Reusable reset/migrate/seed orchestration |
+| `main-server/src/database/validate-schema.ts` | Schema validator gate |
+| `main-server/src/infrastructure/repositories/__tests__/repository.integration.test.ts` | Repository integration coverage |
 | `docs/steps/step-03-database-foundation.md` | Step validator artifact |
 
 ## Files Changed
 
 ```text
 package.json
-apps/main-server/src/database/migration-runner.ts
-apps/main-server/src/database/migrate.ts
-apps/main-server/src/database/validate-schema.ts
-apps/main-server/src/database/seeds/001_benchmark_profiles.sql
-apps/main-server/src/database/seeds/002_sample_formulations.sql
-apps/main-server/src/infrastructure/repositories/__tests__/repository.integration.test.ts
+main-server/src/database/migration-runner.ts
+main-server/src/database/migrate.ts
+main-server/src/database/validate-schema.ts
+main-server/src/database/seeds/001_benchmark_profiles.sql
+main-server/src/database/seeds/002_sample_formulations.sql
+main-server/src/infrastructure/repositories/__tests__/repository.integration.test.ts
 docs/steps/step-03-database-foundation.md
 ```
 

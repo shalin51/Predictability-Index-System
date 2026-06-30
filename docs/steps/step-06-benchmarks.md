@@ -10,11 +10,11 @@ Expose Lifetime and Franklin X-40 benchmark profiles, metric targets, weight val
 
 ```text
 packages/shared/src/contracts/domain.contract.ts
-apps/main-server/src/modules/benchmarks/benchmark.service.ts
-apps/main-server/src/modules/benchmarks/__tests__/benchmark.api.test.ts
-apps/dashboard/src/services/api.ts
-apps/dashboard/src/features/benchmarks/BenchmarkPage.tsx
-apps/dashboard/src/App.tsx
+main-server/src/modules/benchmarks/benchmark.service.ts
+main-server/src/modules/benchmarks/__tests__/benchmark.api.test.ts
+dashboard/src/services/api.ts
+dashboard/src/features/benchmarks/BenchmarkPage.tsx
+dashboard/src/App.tsx
 ```
 
 ## Verification Checklist

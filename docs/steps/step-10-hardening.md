@@ -9,10 +9,10 @@ Finalize production-oriented hardening with auth placeholder, API versioning, st
 ## Files Changed
 
 ```text
-apps/main-server/src/app.ts
-apps/main-server/src/middlewares/request-logger.ts
-apps/main-server/src/modules/reports/__tests__/report-and-hardening.api.test.ts
-apps/main-server/vitest.config.ts
+main-server/src/app.ts
+main-server/src/middlewares/request-logger.ts
+main-server/src/modules/reports/__tests__/report-and-hardening.api.test.ts
+main-server/vitest.config.ts
 .github/workflows/ci.yml
 docs/operations/step-10-hardening-checklist.md
 ```

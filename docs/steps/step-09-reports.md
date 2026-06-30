@@ -10,11 +10,11 @@ Generate a downloadable formulation analysis report and expose a dashboard previ
 
 ```text
 packages/shared/src/contracts/domain.contract.ts
-apps/main-server/src/modules/reports/report.service.ts
-apps/main-server/src/modules/reports/__tests__/report-and-hardening.api.test.ts
-apps/dashboard/src/services/api.ts
-apps/dashboard/src/features/reports/ReportPage.tsx
-apps/dashboard/src/App.tsx
+main-server/src/modules/reports/report.service.ts
+main-server/src/modules/reports/__tests__/report-and-hardening.api.test.ts
+dashboard/src/services/api.ts
+dashboard/src/features/reports/ReportPage.tsx
+dashboard/src/App.tsx
 ```
 
 ## Verification Checklist
