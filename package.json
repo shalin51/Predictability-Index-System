@@ -1,0 +1,37 @@
+{
+  "name": "predictability-index-system",
+  "version": "1.0.0",
+  "description": "Predictability Index System — Enterprise Formulation Analysis Platform",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=packages/shared && npm run build --workspace=apps/main-server && npm run build --workspace=apps/dashboard",
+    "verify:env:dev": "node scripts/verify-env.js env.dev",
+    "verify:env:staging": "node scripts/verify-env.js env.staging",
+    "verify:env:production": "node scripts/verify-env.js env.production",
+    "db:verify:dev": "node scripts/load-env.js env.dev tsx apps/main-server/src/database/verify-db.ts",
+    "db:validate:schema:dev": "node scripts/load-env.js env.dev tsx apps/main-server/src/database/validate-schema.ts",
+    "db:migrate:dev": "node scripts/load-env.js env.dev tsx apps/main-server/src/database/migrate.ts",
+    "db:migrate:reset:dev": "node scripts/load-env.js env.dev tsx apps/main-server/src/database/migrate.ts --reset",
+    "db:seed:dev": "node scripts/load-env.js env.dev tsx apps/main-server/src/database/migrate.ts --seed",
+    "db:fresh:dev": "node scripts/load-env.js env.dev tsx apps/main-server/src/database/migrate.ts --reset --seed",
+    "dev:server": "node scripts/load-env.js env.dev npm run dev --workspace=apps/main-server",
+    "dev:dashboard": "node scripts/load-env.js env.dev npm run dev --workspace=apps/dashboard",
+    "test": "npm run test --workspace=apps/main-server",
+    "lint": "eslint apps packages --ext .ts,.tsx",
+    "type-check": "npm run type-check --workspace=apps/main-server && npm run type-check --workspace=apps/dashboard"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
