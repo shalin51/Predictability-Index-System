@@ -20,7 +20,7 @@
     "db:seed:dev": "yarn workspace @amfpi/main-server db:seed:dev",
     "db:fresh:dev": "yarn workspace @amfpi/main-server db:fresh:dev",
     "dev:server": "yarn workspace @amfpi/main-server dev",
-    "dev:dashboard": "yarn workspace @amfpi/dashboard dev",
+    "dev:dash": "yarn workspace @amfpi/dashboard dev",
     "test": "yarn workspace @amfpi/main-server test",
     "lint": "eslint main-server dashboard packages --ext .ts,.tsx",
     "type-check": "yarn workspace @amfpi/main-server type-check && yarn workspace @amfpi/dashboard type-check"

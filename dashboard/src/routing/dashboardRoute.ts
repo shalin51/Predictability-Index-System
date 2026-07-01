@@ -1,6 +1,7 @@
 export type DashboardView =
   | 'dashboard'
   | 'formulations'
+  | 'imports'
   | 'formulation-create'
   | 'formulation-detail'
   | 'formulation-edit'
@@ -37,11 +38,12 @@ export function parseDashboardHash(
     return { formulationId: '', view: 'benchmarks' };
   }
 
+  if (segments[0] === 'imports') {
+    return { formulationId: '', view: 'dashboard' };
+  }
+
   if (segments[0] === 'analysis') {
-    return {
-      formulationId: segments[1] ?? '',
-      view: 'analysis',
-    };
+    return { formulationId: '', view: 'dashboard' };
   }
 
   if (segments[0] === 'settings') {
@@ -87,8 +89,12 @@ export function buildDashboardHash({
     return '#/benchmarks';
   }
 
+  if (view === 'imports') {
+    return '#/dashboard';
+  }
+
   if (view === 'analysis') {
-    return formulationId ? `#/analysis/${encodeURIComponent(formulationId)}` : '#/analysis';
+    return '#/dashboard';
   }
 
   if (view === 'settings') {

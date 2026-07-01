@@ -62,7 +62,7 @@ function buildReportDocument({
     .map((row) => `
       <tr>
         <td>${escapeHtml(row.formulation.formulationCode)}</td>
-        <td>${escapeHtml(formatDateLabel(row.formulation.producedDate ?? row.formulation.createdAt))}</td>
+        <td>${escapeHtml(formatDateLabel(row.formulation.producedDate))}</td>
         <td>${escapeHtml(row.bestScore?.benchmarkSimilarity.benchmarkName ?? 'Unavailable')}</td>
         <td>${row.bestScore ? row.bestScore.overallScore.toFixed(1) : '—'}</td>
       </tr>

@@ -3,11 +3,9 @@ import { DashboardViewContent } from './app/DashboardViewContent';
 import { getActiveNavView, NAV, VIEW_META } from './app/dashboardConfig';
 import {
   createDefaultNotifications,
-  createDefaultViewNotification,
-  createThemeNotification,
-  prependUniqueNotification,
 } from './app/dashboardNotifications';
 import { AppShell, type ShellNotification } from './components/shell/AppShell';
+import { GlobalActivityOverlay } from './components/ui/GlobalActivityOverlay';
 import { useDashboardPreferences } from './hooks/useDashboardPreferences';
 import { useDashboardRoute } from './hooks/useDashboardRoute';
 import { useDashboardTheme } from './hooks/useDashboardTheme';
@@ -26,17 +24,17 @@ export default function App() {
 
   const handleThemeChange = (nextTheme: typeof theme) => {
     setTheme(nextTheme);
-    setNotifications((current) => prependUniqueNotification(current, createThemeNotification(nextTheme)));
   };
 
-  const handlePreferenceChange = (next: typeof preferences) => {
+  const handleSettingsSave = async ({
+    preferences: next,
+    theme: nextTheme,
+  }: {
+    preferences: typeof preferences;
+    theme: typeof theme;
+  }) => {
+    setTheme(nextTheme);
     setPreferences(next);
-
-    if (next.defaultView !== preferences.defaultView) {
-      setNotifications((current) => (
-        prependUniqueNotification(current, createDefaultViewNotification(next.defaultView))
-      ));
-    }
   };
 
   const activeView = getActiveNavView(view);
@@ -84,9 +82,7 @@ export default function App() {
           setNotifications((current) => current.map((notification) => ({ ...notification, read: true })));
         }}
         onNavigate={(nextView) => {
-          const route = nextView === 'analysis'
-            ? { formulationId: selectedFormulationId, view: nextView }
-            : { formulationId: '', view: nextView };
+          const route = { formulationId: '', view: nextView };
           void navigate(route);
         }}
         onOpenSettings={() => {
@@ -103,11 +99,10 @@ export default function App() {
         theme={theme}
         themeOptions={themeOptions}
         title={VIEW_META[view].title}
-      >
+        >
         <DashboardViewContent
           navigate={navigate}
-          onPreferenceChange={handlePreferenceChange}
-          onThemeChange={handleThemeChange}
+          onSettingsSave={handleSettingsSave}
           preferences={preferences}
           selectedFormulationId={selectedFormulationId}
           setHasUnsavedChanges={setHasUnsavedChanges}
@@ -115,6 +110,7 @@ export default function App() {
           view={view}
         />
       </AppShell>
+      <GlobalActivityOverlay />
     </div>
   );
 }

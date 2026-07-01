@@ -28,7 +28,6 @@ function toTestResult(r: Record<string, unknown>): TestResult {
     compressionKg: r['compression_kg'] != null ? Number(r['compression_kg']) : undefined,
     deflectionMm: r['deflection_mm'] != null ? Number(r['deflection_mm']) : undefined,
     coefficientOfRestitution: r['coefficient_of_restitution'] != null ? Number(r['coefficient_of_restitution']) : undefined,
-    notes: r['notes'] as string | undefined,
     createdAt: r['created_at'] as string,
     updatedAt: r['updated_at'] as string,
   };
@@ -42,9 +41,8 @@ function toDurability(r: Record<string, unknown>): DurabilityResult {
     testedBy: r['tested_by'] as string | undefined,
     airCannonCycles: r['air_cannon_cycles'] != null ? Number(r['air_cannon_cycles']) : undefined,
     crackInitiationCycles: r['crack_initiation_cycles'] != null ? Number(r['crack_initiation_cycles']) : undefined,
-    crackPropagationMm: r['crack_propagation_mm'] != null ? Number(r['crack_propagation_mm']) : undefined,
+    crackPropagationObservations: r['crack_propagation_mm'] != null ? Number(r['crack_propagation_mm']) : undefined,
     deformationMm: r['deformation_mm'] != null ? Number(r['deformation_mm']) : undefined,
-    notes: r['notes'] as string | undefined,
     createdAt: r['created_at'] as string,
     updatedAt: r['updated_at'] as string,
   };
@@ -56,13 +54,9 @@ function toEnv(r: Record<string, unknown>): EnvironmentalResult {
     formulationId: r['formulation_id'] as string,
     testedAt: r['tested_at'] as string,
     testedBy: r['tested_by'] as string | undefined,
-    hotPerformanceScore: r['hot_performance_score'] != null ? Number(r['hot_performance_score']) : undefined,
-    coldPerformanceScore: r['cold_performance_score'] != null ? Number(r['cold_performance_score']) : undefined,
-    humidityPerformanceScore: r['humidity_performance_score'] != null ? Number(r['humidity_performance_score']) : undefined,
-    testTempHotC: r['test_temp_hot_c'] != null ? Number(r['test_temp_hot_c']) : undefined,
-    testTempColdC: r['test_temp_cold_c'] != null ? Number(r['test_temp_cold_c']) : undefined,
-    testHumidityPct: r['test_humidity_pct'] != null ? Number(r['test_humidity_pct']) : undefined,
-    notes: r['notes'] as string | undefined,
+    hotTemperaturePerformance: r['hot_performance_score'] != null ? Number(r['hot_performance_score']) : undefined,
+    coldTemperaturePerformance: r['cold_performance_score'] != null ? Number(r['cold_performance_score']) : undefined,
+    humidityExposureResults: r['humidity_performance_score'] != null ? Number(r['humidity_performance_score']) : undefined,
     createdAt: r['created_at'] as string,
     updatedAt: r['updated_at'] as string,
   };
@@ -74,14 +68,22 @@ function toSubjective(r: Record<string, unknown>): SubjectiveRating {
     formulationId: r['formulation_id'] as string,
     ratedAt: r['rated_at'] as string,
     ratedBy: r['rated_by'] as string | undefined,
+    playerFeedback: r['notes'] as string | undefined,
     feelScore: r['feel_score'] != null ? Number(r['feel_score']) : undefined,
     soundScore: r['sound_score'] != null ? Number(r['sound_score']) : undefined,
     perceivedSpeedScore: r['perceived_speed_score'] != null ? Number(r['perceived_speed_score']) : undefined,
     perceivedDurabilityScore: r['perceived_durability_score'] != null ? Number(r['perceived_durability_score']) : undefined,
-    notes: r['notes'] as string | undefined,
     createdAt: r['created_at'] as string,
     updatedAt: r['updated_at'] as string,
   };
+}
+
+function keepNumber(next: number | undefined, current: number | undefined): number | null {
+  return next ?? current ?? null;
+}
+
+function keepString(next: string | undefined, current: string | undefined): string | null {
+  return next ?? current ?? null;
 }
 
 // ─── Repository ──────────────────────────────────────────────
@@ -114,21 +116,22 @@ export class TestResultRepository {
   async upsertTestResult(formulationId: string, dto: UpsertTestResultDto): Promise<TestResult> {
     const pool = getPool();
     const latestId = await this.findLatestId('test_results', formulationId, 'tested_at');
+    const testedAt = dto.testedAt ?? new Date().toISOString();
+    const existing = latestId ? await this.findTestResultByFormulation(formulationId) : null;
     const insertParams = [
       formulationId,
-      dto.testedAt ?? null,
-      dto.testedBy ?? null,
-      dto.weightG ?? null,
-      dto.diameterMm ?? null,
-      dto.wallThicknessMm ?? null,
-      dto.roundnessMm ?? null,
-      dto.balanceG ?? null,
-      dto.bounceCm ?? null,
-      dto.hardnessShorD ?? null,
-      dto.compressionKg ?? null,
-      dto.deflectionMm ?? null,
-      dto.coefficientOfRestitution ?? null,
-      dto.notes ?? null,
+      testedAt,
+      keepString(dto.testedBy, existing?.testedBy),
+      keepNumber(dto.weightG, existing?.weightG),
+      keepNumber(dto.diameterMm, existing?.diameterMm),
+      keepNumber(dto.wallThicknessMm, existing?.wallThicknessMm),
+      keepNumber(dto.roundnessMm, existing?.roundnessMm),
+      keepNumber(dto.balanceG, existing?.balanceG),
+      keepNumber(dto.bounceCm, existing?.bounceCm),
+      keepNumber(dto.hardnessShorD, existing?.hardnessShorD),
+      keepNumber(dto.compressionKg, existing?.compressionKg),
+      keepNumber(dto.deflectionMm, existing?.deflectionMm),
+      keepNumber(dto.coefficientOfRestitution, existing?.coefficientOfRestitution),
     ];
     const updateParams = insertParams.slice(1);
 
@@ -146,17 +149,15 @@ export class TestResultRepository {
                hardness_shore_d = $9,
                compression_kg = $10,
                deflection_mm = $11,
-               coefficient_of_restitution = $12,
-               notes = $13
-           WHERE id = $14
+               coefficient_of_restitution = $12
+           WHERE id = $13
            RETURNING *`,
           [...updateParams, latestId]
         )
       : await pool.query(
           `INSERT INTO test_results (formulation_id, tested_at, tested_by, weight_g, diameter_mm, wall_thickness_mm,
-            roundness_mm, balance_g, bounce_cm, hardness_shore_d, compression_kg, deflection_mm,
-            coefficient_of_restitution, notes)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+            roundness_mm, balance_g, bounce_cm, hardness_shore_d, compression_kg, deflection_mm, coefficient_of_restitution)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
            RETURNING *`,
           insertParams
         );
@@ -177,15 +178,16 @@ export class TestResultRepository {
   async upsertDurability(formulationId: string, dto: UpsertDurabilityDto): Promise<DurabilityResult> {
     const pool = getPool();
     const latestId = await this.findLatestId('durability_results', formulationId, 'tested_at');
+    const testedAt = dto.testedAt ?? new Date().toISOString();
+    const existing = latestId ? await this.findDurabilityByFormulation(formulationId) : null;
     const insertParams = [
       formulationId,
-      dto.testedAt ?? null,
-      dto.testedBy ?? null,
-      dto.airCannonCycles ?? null,
-      dto.crackInitiationCycles ?? null,
-      dto.crackPropagationMm ?? null,
-      dto.deformationMm ?? null,
-      dto.notes ?? null,
+      testedAt,
+      keepString(dto.testedBy, existing?.testedBy),
+      keepNumber(dto.airCannonCycles, existing?.airCannonCycles),
+      keepNumber(dto.crackInitiationCycles, existing?.crackInitiationCycles),
+      keepNumber(dto.crackPropagationObservations, existing?.crackPropagationObservations),
+      keepNumber(dto.deformationMm, existing?.deformationMm),
     ];
     const updateParams = insertParams.slice(1);
     const r = latestId
@@ -196,16 +198,15 @@ export class TestResultRepository {
                air_cannon_cycles = $3,
                crack_initiation_cycles = $4,
                crack_propagation_mm = $5,
-               deformation_mm = $6,
-               notes = $7
-           WHERE id = $8
+               deformation_mm = $6
+           WHERE id = $7
            RETURNING *`,
           [...updateParams, latestId]
         )
       : await pool.query(
           `INSERT INTO durability_results (formulation_id, tested_at, tested_by, air_cannon_cycles,
-            crack_initiation_cycles, crack_propagation_mm, deformation_mm, notes)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+            crack_initiation_cycles, crack_propagation_mm, deformation_mm)
+           VALUES ($1,$2,$3,$4,$5,$6,$7)
            RETURNING *`,
           insertParams
         );
@@ -226,17 +227,15 @@ export class TestResultRepository {
   async upsertEnvironmental(formulationId: string, dto: UpsertEnvironmentalDto): Promise<EnvironmentalResult> {
     const pool = getPool();
     const latestId = await this.findLatestId('environmental_results', formulationId, 'tested_at');
+    const testedAt = dto.testedAt ?? new Date().toISOString();
+    const existing = latestId ? await this.findEnvByFormulation(formulationId) : null;
     const insertParams = [
       formulationId,
-      dto.testedAt ?? null,
-      dto.testedBy ?? null,
-      dto.hotPerformanceScore ?? null,
-      dto.coldPerformanceScore ?? null,
-      dto.humidityPerformanceScore ?? null,
-      dto.testTempHotC ?? null,
-      dto.testTempColdC ?? null,
-      dto.testHumidityPct ?? null,
-      dto.notes ?? null,
+      testedAt,
+      keepString(dto.testedBy, existing?.testedBy),
+      keepNumber(dto.hotTemperaturePerformance, existing?.hotTemperaturePerformance),
+      keepNumber(dto.coldTemperaturePerformance, existing?.coldTemperaturePerformance),
+      keepNumber(dto.humidityExposureResults, existing?.humidityExposureResults),
     ];
     const updateParams = insertParams.slice(1);
     const r = latestId
@@ -246,20 +245,15 @@ export class TestResultRepository {
                tested_by = $2,
                hot_performance_score = $3,
                cold_performance_score = $4,
-               humidity_performance_score = $5,
-               test_temp_hot_c = $6,
-               test_temp_cold_c = $7,
-               test_humidity_pct = $8,
-               notes = $9
-           WHERE id = $10
+               humidity_performance_score = $5
+           WHERE id = $6
            RETURNING *`,
           [...updateParams, latestId]
         )
       : await pool.query(
           `INSERT INTO environmental_results (formulation_id, tested_at, tested_by, hot_performance_score,
-            cold_performance_score, humidity_performance_score, test_temp_hot_c, test_temp_cold_c,
-            test_humidity_pct, notes)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+            cold_performance_score, humidity_performance_score)
+           VALUES ($1,$2,$3,$4,$5,$6)
            RETURNING *`,
           insertParams
         );
@@ -280,15 +274,17 @@ export class TestResultRepository {
   async upsertSubjective(formulationId: string, dto: UpsertSubjectiveRatingDto): Promise<SubjectiveRating> {
     const pool = getPool();
     const latestId = await this.findLatestId('subjective_ratings', formulationId, 'rated_at');
+    const ratedAt = dto.ratedAt ?? new Date().toISOString();
+    const existing = latestId ? await this.findSubjectiveByFormulation(formulationId) : null;
     const insertParams = [
       formulationId,
-      dto.ratedAt ?? null,
-      dto.ratedBy ?? null,
-      dto.feelScore ?? null,
-      dto.soundScore ?? null,
-      dto.perceivedSpeedScore ?? null,
-      dto.perceivedDurabilityScore ?? null,
-      dto.notes ?? null,
+      ratedAt,
+      keepString(dto.ratedBy, existing?.ratedBy),
+      keepNumber(dto.feelScore, existing?.feelScore),
+      keepNumber(dto.soundScore, existing?.soundScore),
+      keepNumber(dto.perceivedSpeedScore, existing?.perceivedSpeedScore),
+      keepNumber(dto.perceivedDurabilityScore, existing?.perceivedDurabilityScore),
+      keepString(dto.playerFeedback, existing?.playerFeedback),
     ];
     const updateParams = insertParams.slice(1);
     const r = latestId

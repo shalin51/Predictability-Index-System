@@ -1,58 +1,40 @@
-import { useEffect, useMemo, useState } from 'react';
-import { DashboardPage } from '../../components/ui/Page';
-import {
-  listBenchmarks,
-  listFormulations,
-  scoreAllBenchmarks,
-  type BenchmarkItem,
-  type FormulationListItem,
-} from '../../services/api';
-import { useHeartbeat } from '../heartbeat/useHeartbeat';
-import {
-  AnalysisSpotlight,
-  DashboardContentGrid,
-  DashboardError,
-  DashboardHero,
-  DashboardMetricGrid,
-  type DashboardLandingMetrics,
-} from './DashboardLandingSections';
-import { dashboardLandingStyles } from './dashboardLandingStyles';
+import type { CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
+import { Card } from '../../components/ui/Card';
+import { DashboardPage, MessageBanner } from '../../components/ui/Page';
+import { listBenchmarks, listFormulations } from '../../services/api';
+import { colors, font, spacing } from '../../theme/tokens';
 
 interface DashboardLandingPageProps {
-  onOpenAnalysis: () => void;
   onOpenBenchmarks: () => void;
   onOpenFormulations: () => void;
 }
 
-interface DashboardSnapshot {
-  benchmarks: BenchmarkItem[];
-  formulations: FormulationListItem[];
+interface DashboardCounts {
+  benchmarkCount: number;
+  formulationCount: number;
   loading: boolean;
   error: string;
-  spotlight: AnalysisSpotlight[];
 }
 
-const EMPTY_SNAPSHOT: DashboardSnapshot = {
-  benchmarks: [],
+const EMPTY_COUNTS: DashboardCounts = {
+  benchmarkCount: 0,
   error: '',
-  formulations: [],
+  formulationCount: 0,
   loading: true,
-  spotlight: [],
 };
 
 export function DashboardLandingPage({
-  onOpenAnalysis,
   onOpenBenchmarks,
   onOpenFormulations,
 }: DashboardLandingPageProps) {
-  const [snapshot, setSnapshot] = useState<DashboardSnapshot>(EMPTY_SNAPSHOT);
-  const { apiError, apiStatus, appEnv, dbError, dbStatus, lastChecked, serverTimestamp } = useHeartbeat();
+  const [counts, setCounts] = useState<DashboardCounts>(EMPTY_COUNTS);
 
   useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
-      setSnapshot((current) => ({ ...current, error: '', loading: true }));
+      setCounts((current) => ({ ...current, error: '', loading: true }));
 
       try {
         const [formulationResponse, benchmarks] = await Promise.all([
@@ -60,37 +42,23 @@ export function DashboardLandingPage({
           listBenchmarks(),
         ]);
 
-        const formulations = formulationResponse.data;
-        const candidates = formulations
-          .filter((formulation) => formulation.status !== 'draft')
-          .slice(0, 6);
-
-        const settled = await Promise.allSettled(
-          candidates.map(async (formulation) => {
-            const scores = await scoreAllBenchmarks(formulation.id);
-            const bestScore = scores.slice().sort((left, right) => right.overallScore - left.overallScore)[0] ?? null;
-            return { bestScore, formulation };
-          }),
-        );
-
         if (cancelled) {
           return;
         }
 
-        setSnapshot({
-          benchmarks,
+        setCounts({
+          benchmarkCount: benchmarks.length,
           error: '',
-          formulations,
+          formulationCount: formulationResponse.total,
           loading: false,
-          spotlight: settled.flatMap((result) => result.status === 'fulfilled' ? [result.value] : []),
         });
       } catch (error) {
         if (cancelled) {
           return;
         }
 
-        setSnapshot({
-          ...EMPTY_SNAPSHOT,
+        setCounts({
+          ...EMPTY_COUNTS,
           error: error instanceof Error ? error.message : 'Unable to load dashboard data.',
           loading: false,
         });
@@ -104,77 +72,86 @@ export function DashboardLandingPage({
     };
   }, []);
 
-  const metrics = useMemo<DashboardLandingMetrics>(() => {
-    const statusCounts = snapshot.formulations.reduce<Record<string, number>>((counts, formulation) => {
-      counts[formulation.status] = (counts[formulation.status] ?? 0) + 1;
-      return counts;
-    }, {});
-
-    const assessed = snapshot.spotlight.filter((item) => item.bestScore);
-    const productionReady = assessed.filter((item) => item.bestScore?.productionReady).length;
-    const averageScore = assessed.length > 0
-      ? assessed.reduce((total, item) => total + (item.bestScore?.overallScore ?? 0), 0) / assessed.length
-      : 0;
-
-    return {
-      approved: statusCounts.approved ?? 0,
-      averageScore,
-      pending: (statusCounts.draft ?? 0) + (statusCounts.testing ?? 0),
-      productionReadyRatio: assessed.length > 0 ? Math.round((productionReady / assessed.length) * 100) : null,
-      rejected: (statusCounts.rejected ?? 0) + (statusCounts.archived ?? 0),
-      statusCounts,
-    };
-  }, [snapshot.formulations, snapshot.spotlight]);
-
-  const recentFormulations = snapshot.formulations.slice(0, 5);
-  const benchmarkCoverage = snapshot.benchmarks.reduce((total, benchmark) => total + benchmark.metricCount, 0);
-  const liveTimestamp = serverTimestamp !== '—' ? new Date(serverTimestamp).toLocaleString() : 'Awaiting sync';
-  const lastCheckedLabel = lastChecked ? lastChecked.toLocaleTimeString() : 'Pending';
-  const heartbeatIssues = [apiError, dbError].filter(Boolean) as string[];
-
   return (
-    <DashboardPage>
-      <div style={dashboardLandingStyles.page}>
-        <DashboardHero
-          appEnv={appEnv}
-          apiStatus={apiStatus}
-          dbStatus={dbStatus}
-          lastCheckedLabel={lastCheckedLabel}
-          liveTimestamp={liveTimestamp}
-          onOpenAnalysis={onOpenAnalysis}
-          onOpenBenchmarks={onOpenBenchmarks}
-          onOpenFormulations={onOpenFormulations}
+    <DashboardPage maxWidth={960}>
+      {counts.error && <MessageBanner tone="danger">{counts.error}</MessageBanner>}
+      <div style={styles.grid}>
+        <MetricTile
+          actionLabel="Open formulations"
+          count={counts.formulationCount}
+          loading={counts.loading}
+          onClick={onOpenFormulations}
+          title="Number of formulations"
         />
-
-        <DashboardMetricGrid
-          benchmarkCount={snapshot.benchmarks.length}
-          formulationCount={snapshot.formulations.length}
-          loading={snapshot.loading}
-          pending={metrics.pending}
-          productionReadyRatio={metrics.productionReadyRatio}
-        />
-
-        {snapshot.error && <DashboardError message={snapshot.error} />}
-
-        <DashboardContentGrid
-          benchmarkCoverage={benchmarkCoverage}
-          benchmarks={snapshot.benchmarks}
-          heartbeatIssues={heartbeatIssues}
-          metrics={metrics}
-          onOpenAnalysis={onOpenAnalysis}
-          onOpenBenchmarks={onOpenBenchmarks}
-          onOpenFormulations={onOpenFormulations}
-          recentFormulations={recentFormulations}
-          snapshotLoading={snapshot.loading}
-          spotlight={snapshot.spotlight}
-          systemStatus={{
-            apiStatus,
-            appEnv,
-            dbStatus,
-            lastCheckedLabel,
-          }}
+        <MetricTile
+          actionLabel="Open benchmarks"
+          count={counts.benchmarkCount}
+          loading={counts.loading}
+          onClick={onOpenBenchmarks}
+          title="Number of benchmarks"
         />
       </div>
     </DashboardPage>
   );
 }
+
+function MetricTile({
+  actionLabel,
+  count,
+  loading,
+  onClick,
+  title,
+}: {
+  actionLabel: string;
+  count: number;
+  loading: boolean;
+  onClick: () => void;
+  title: string;
+}) {
+  return (
+    <Card style={styles.tile}>
+      <div style={styles.tileLabel}>{title}</div>
+      <div style={styles.tileValue}>{loading ? '...' : String(count)}</div>
+      <button onClick={onClick} style={styles.tileButton} type="button">
+        {actionLabel}
+      </button>
+    </Card>
+  );
+}
+
+const styles: Record<string, CSSProperties> = {
+  grid: {
+    display: 'grid',
+    gap: spacing.lg,
+    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+  },
+  tile: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: spacing.md,
+    minHeight: 220,
+    justifyContent: 'space-between',
+  },
+  tileButton: {
+    backgroundColor: colors.text.primary,
+    border: 'none',
+    color: colors.bg,
+    cursor: 'pointer',
+    fontFamily: font.family,
+    fontSize: font.size.sm,
+    fontWeight: font.weight.semibold,
+    padding: '12px 16px',
+  },
+  tileLabel: {
+    color: colors.text.muted,
+    fontSize: font.size.sm,
+    letterSpacing: '0.08em',
+    textTransform: 'uppercase',
+  },
+  tileValue: {
+    color: colors.text.primary,
+    fontSize: '4rem',
+    fontWeight: font.weight.bold,
+    lineHeight: 1,
+  },
+};

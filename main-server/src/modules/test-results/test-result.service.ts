@@ -127,12 +127,6 @@ export class TestResultService {
   // ── Validation ─────────────────────────────────────────
 
   private validateTestResultDto(dto: UpsertTestResultDto): void {
-    const requiredKeys: Array<keyof UpsertTestResultDto> = [
-      'weightG', 'diameterMm', 'wallThicknessMm', 'roundnessMm', 'balanceG',
-      'bounceCm', 'hardnessShorD', 'compressionKg', 'deflectionMm', 'coefficientOfRestitution',
-    ];
-    this.assertRequiredMetrics(dto, requiredKeys, 'physical/performance');
-
     if (dto.coefficientOfRestitution !== undefined) {
       if (dto.coefficientOfRestitution < 0 || dto.coefficientOfRestitution > 1) {
         throw new ValidationError('coefficientOfRestitution must be between 0 and 1');
@@ -144,28 +138,16 @@ export class TestResultService {
   }
 
   private validateDurabilityDto(dto: UpsertDurabilityDto): void {
-    this.assertRequiredMetrics(
-      dto,
-      ['airCannonCycles', 'crackInitiationCycles', 'crackPropagationMm', 'deformationMm'],
-      'durability'
-    );
-
     if (dto.airCannonCycles !== undefined && dto.airCannonCycles < 0) {
       throw new ValidationError('airCannonCycles must be non-negative');
     }
   }
 
   private validateEnvironmentalDto(dto: UpsertEnvironmentalDto): void {
-    this.assertRequiredMetrics(
-      dto,
-      ['hotPerformanceScore', 'coldPerformanceScore', 'humidityPerformanceScore'],
-      'environmental'
-    );
-
     const scoreFields = [
-      dto.hotPerformanceScore,
-      dto.coldPerformanceScore,
-      dto.humidityPerformanceScore,
+      dto.hotTemperaturePerformance,
+      dto.coldTemperaturePerformance,
+      dto.humidityExposureResults,
     ];
 
     for (const score of scoreFields) {
@@ -176,28 +158,11 @@ export class TestResultService {
   }
 
   private validateSubjectiveDto(dto: UpsertSubjectiveRatingDto): void {
-    this.assertRequiredMetrics(
-      dto,
-      ['feelScore', 'soundScore', 'perceivedSpeedScore', 'perceivedDurabilityScore'],
-      'subjective'
-    );
-
     const scores = [dto.feelScore, dto.soundScore, dto.perceivedSpeedScore, dto.perceivedDurabilityScore];
     for (const score of scores) {
       if (score !== undefined && (score < 1 || score > 10)) {
         throw new ValidationError('Subjective scores must be between 1 and 10');
       }
-    }
-  }
-
-  private assertRequiredMetrics<T extends object>(
-    dto: T,
-    keys: Array<keyof T>,
-    label: string
-  ): void {
-    const missing = keys.filter((key) => dto[key] === undefined || dto[key] === null);
-    if (missing.length > 0) {
-      throw new ValidationError(`Missing required ${label} metrics: ${missing.join(', ')}`);
     }
   }
 }

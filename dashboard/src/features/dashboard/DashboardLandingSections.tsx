@@ -11,12 +11,8 @@ export interface AnalysisSpotlight {
 }
 
 export interface DashboardLandingMetrics {
-  approved: number;
   averageScore: number;
-  pending: number;
   productionReadyRatio: number | null;
-  rejected: number;
-  statusCounts: Record<string, number>;
 }
 
 export function DashboardHero({
@@ -85,13 +81,11 @@ export function DashboardMetricGrid({
   benchmarkCount,
   formulationCount,
   loading,
-  pending,
   productionReadyRatio,
 }: {
   benchmarkCount: number;
   formulationCount: number;
   loading: boolean;
-  pending: number;
   productionReadyRatio: number | null;
 }) {
   return (
@@ -104,7 +98,7 @@ export function DashboardMetricGrid({
         loading={loading}
         value={productionReadyRatio == null ? '—' : `${productionReadyRatio}%`}
       />
-      <MetricCard caption="Draft and testing formulations waiting on action" label="Pending activity" loading={loading} value={String(pending)} />
+      <MetricCard caption="Formulation records currently tracked" label="Tracked records" loading={loading} value={String(formulationCount)} />
     </section>
   );
 }
@@ -146,22 +140,15 @@ export function DashboardContentGrid({
           action={<button onClick={onOpenFormulations} style={controlStyles.secondaryButton} type="button">Formulations</button>}
           title="Formulation workflow"
         />
-        <div style={dashboardLandingStyles.statusRail}>
-          <StatusMetric label="Approved" tone="ok" value={metrics.approved} />
-          <StatusMetric label="Testing" tone="checking" value={metrics.statusCounts.testing ?? 0} />
-          <StatusMetric label="Draft" tone="checking" value={metrics.statusCounts.draft ?? 0} />
-          <StatusMetric label="Rejected" tone="error" value={metrics.rejected} />
-        </div>
         <div style={dashboardLandingStyles.activityList}>
           {recentFormulations.length === 0 && !snapshotLoading && <EmptyState>No formulation activity yet.</EmptyState>}
           {recentFormulations.map((formulation) => (
             <div key={formulation.id} style={dashboardLandingStyles.activityRow}>
               <div>
                 <div style={dashboardLandingStyles.activityTitle}>{formulation.formulationCode}</div>
-                <div style={dashboardLandingStyles.activityText}>{formulation.name}</div>
+                <div style={dashboardLandingStyles.activityText}>Formulation record</div>
               </div>
               <div style={dashboardLandingStyles.activityMeta}>
-                <span style={dashboardLandingStyles.statusBadge}>{formulation.status}</span>
                 <span style={dashboardLandingStyles.activityDate}>{formatDate(formulation.producedDate)}</span>
               </div>
             </div>
@@ -282,26 +269,6 @@ function MetricCard({
       <div style={dashboardLandingStyles.metricLabel}>{label}</div>
       <div style={dashboardLandingStyles.metricValue}>{loading ? '…' : value}</div>
       <div style={dashboardLandingStyles.metricCaption}>{caption}</div>
-    </div>
-  );
-}
-
-function StatusMetric({
-  label,
-  tone,
-  value,
-}: {
-  label: string;
-  tone: DotStatus;
-  value: number;
-}) {
-  return (
-    <div style={dashboardLandingStyles.statusMetric}>
-      <div style={dashboardLandingStyles.statusMetricLabel}>
-        <StatusDot size={10} status={tone} />
-        {label}
-      </div>
-      <div style={dashboardLandingStyles.statusMetricValue}>{value}</div>
     </div>
   );
 }

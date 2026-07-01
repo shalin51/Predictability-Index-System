@@ -59,7 +59,7 @@ export class ReportService {
     return {
       formulationId,
       formulationCode: formulation.formulationCode,
-      formulationName: formulation.name,
+      formulationName: formulation.formulationCode,
       generatedAt: new Date().toISOString(),
 
       executiveSummary: {

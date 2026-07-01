@@ -13,17 +13,9 @@ export function createDefaultNotifications(): ShellNotification[] {
       read: false,
     },
     {
-      id: 'alert-results',
-      title: 'Test result capture pending',
-      detail: 'At least one formulation is waiting on 72-hour test inputs before analysis can complete.',
-      timeLabel: '18m',
-      tone: 'warning',
-      read: false,
-    },
-    {
       id: 'alert-shell',
       title: 'Dashboard shell upgraded',
-      detail: 'Sidebar navigation, profile controls, settings, and theme presets are now available locally.',
+      detail: 'The workspace has been trimmed to focus on formulation and benchmark records.',
       timeLabel: 'Now',
       tone: 'info',
       read: false,

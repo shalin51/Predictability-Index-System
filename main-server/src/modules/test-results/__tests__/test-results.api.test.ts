@@ -63,15 +63,20 @@ describe('test results API contracts', () => {
     expect(audit.rows[0]?.['action']).toBe('UPDATE');
   });
 
-  it('rejects incomplete physical payloads', async () => {
+  it('preserves existing performance values when only physical properties are updated', async () => {
     const response = await request(createApp())
       .post(`/formulations/${FORMULATION_ID}/results/physical`)
       .send({
         weightG: 26.1,
         diameterMm: 74.1,
+        wallThicknessMm: 2.55,
+        roundnessMm: 0.23,
+        balanceG: 0.39,
       });
 
-    expect(response.status).toBe(400);
-    expect(String(response.body.error)).toContain('Missing required physical/performance metrics');
+    expect(response.status).toBe(201);
+    expect(response.body.weightG).toBe(26.1);
+    expect(response.body.bounceCm).toBeTypeOf('number');
+    expect(response.body.hardnessShorD).toBeTypeOf('number');
   });
 });

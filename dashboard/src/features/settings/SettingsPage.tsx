@@ -1,6 +1,8 @@
 import type { CSSProperties } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card } from '../../components/ui/Card';
 import { DashboardPage } from '../../components/ui/Page';
+import { controlStyles } from '../../components/ui/controls';
 import { colors, font, radius, spacing, type ThemeName } from '../../theme/tokens';
 import type {
   DashboardPreferences,
@@ -8,20 +10,55 @@ import type {
 } from '../../app/dashboardPreferences';
 
 interface SettingsPageProps {
-  onThemeChange: (theme: ThemeName) => void;
+  onSave: (next: { preferences: DashboardPreferences; theme: ThemeName }) => Promise<void> | void;
   preferences: DashboardPreferences;
   theme: ThemeName;
   themeOptions: Array<{ id: ThemeName; label: string; description: string }>;
-  onPreferencesChange: (next: DashboardPreferences) => void;
 }
 
 export function SettingsPage({
-  onThemeChange,
+  onSave,
   preferences,
   theme,
   themeOptions,
-  onPreferencesChange,
 }: SettingsPageProps) {
+  const [draftPreferences, setDraftPreferences] = useState(preferences);
+  const [draftTheme, setDraftTheme] = useState(theme);
+  const [submitState, setSubmitState] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const hasChanges = useMemo(
+    () => draftTheme !== theme || JSON.stringify(draftPreferences) !== JSON.stringify(preferences),
+    [draftPreferences, draftTheme, preferences, theme],
+  );
+
+  useEffect(() => {
+    setDraftPreferences(preferences);
+  }, [preferences]);
+
+  useEffect(() => {
+    setDraftTheme(theme);
+  }, [theme]);
+
+  useEffect(() => {
+    if (hasChanges && submitState === 'saved') {
+      setSubmitState('idle');
+    }
+  }, [hasChanges, submitState]);
+
+  const handleSave = async () => {
+    if (!hasChanges || submitState === 'saving') {
+      return;
+    }
+
+    setSubmitState('saving');
+
+    try {
+      await onSave({ preferences: draftPreferences, theme: draftTheme });
+      setSubmitState('saved');
+    } catch (_error) {
+      setSubmitState('idle');
+    }
+  };
+
   return (
     <DashboardPage maxWidth={1200}>
       <Card style={styles.card}>
@@ -35,10 +72,10 @@ export function SettingsPage({
             {themeOptions.map((option) => (
               <button
                 key={option.id}
-                onClick={() => onThemeChange(option.id)}
+                onClick={() => setDraftTheme(option.id)}
                 style={{
                   ...styles.themeCard,
-                  ...(theme === option.id ? styles.themeCardActive : {}),
+                  ...(draftTheme === option.id ? styles.themeCardActive : {}),
                 }}
                 type="button"
               >
@@ -55,17 +92,16 @@ export function SettingsPage({
             <label style={styles.field}>
               <span style={styles.fieldLabel}>Default landing view</span>
               <select
-                onChange={(event) => onPreferencesChange({
-                  ...preferences,
+                onChange={(event) => setDraftPreferences({
+                  ...draftPreferences,
                   defaultView: event.target.value as SettingsLandingView,
                 })}
                 style={styles.select}
-                value={preferences.defaultView}
+                value={draftPreferences.defaultView}
               >
                 <option value="dashboard">Dashboard</option>
                 <option value="formulations">Formulations</option>
                 <option value="benchmarks">Benchmarks</option>
-                <option value="analysis">Analysis</option>
               </select>
             </label>
           </div>
@@ -75,25 +111,40 @@ export function SettingsPage({
           <h2 style={styles.sectionTitle}>Behavior</h2>
           <div style={styles.toggleStack}>
             <ToggleRow
-              checked={preferences.autoRefresh}
+              checked={draftPreferences.autoRefresh}
               description="Recheck operational surfaces more aggressively."
               label="Auto-refresh widgets"
-              onChange={(checked) => onPreferencesChange({ ...preferences, autoRefresh: checked })}
+              onChange={(checked) => setDraftPreferences({ ...draftPreferences, autoRefresh: checked })}
             />
             <ToggleRow
-              checked={preferences.desktopAlerts}
+              checked={draftPreferences.desktopAlerts}
               description="Keep notification badges visible for workflow issues."
               label="Desktop-style alerts"
-              onChange={(checked) => onPreferencesChange({ ...preferences, desktopAlerts: checked })}
+              onChange={(checked) => setDraftPreferences({ ...draftPreferences, desktopAlerts: checked })}
             />
             <ToggleRow
-              checked={preferences.denseTables}
+              checked={draftPreferences.denseTables}
               description="Use tighter spacing for benchmark and results tables."
               label="Dense table spacing"
-              onChange={(checked) => onPreferencesChange({ ...preferences, denseTables: checked })}
+              onChange={(checked) => setDraftPreferences({ ...draftPreferences, denseTables: checked })}
             />
           </div>
         </section>
+
+        <div style={styles.actions}>
+          <button
+            disabled={!hasChanges || submitState === 'saving'}
+            onClick={() => void handleSave()}
+            style={{
+              ...controlStyles.primaryButton,
+              ...styles.saveButton,
+              ...(!hasChanges && submitState !== 'saving' ? styles.saveButtonDisabled : {}),
+            }}
+            type="button"
+          >
+            {submitState === 'saving' ? 'Saving...' : submitState === 'saved' && !hasChanges ? 'Saved' : 'Save'}
+          </button>
+        </div>
       </Card>
     </DashboardPage>
   );
@@ -131,6 +182,10 @@ function ToggleRow({
 }
 
 const styles: Record<string, CSSProperties> = {
+  actions: {
+    display: 'flex',
+    justifyContent: 'flex-end',
+  },
   card: {
     display: 'flex',
     flexDirection: 'column',
@@ -202,6 +257,14 @@ const styles: Record<string, CSSProperties> = {
     color: colors.text.secondary,
     fontSize: font.size.sm,
     fontWeight: font.weight.semibold,
+  },
+  saveButton: {
+    fontWeight: font.weight.medium,
+    minWidth: 112,
+  },
+  saveButtonDisabled: {
+    cursor: 'default',
+    opacity: 0.7,
   },
   select: {
     appearance: 'none',

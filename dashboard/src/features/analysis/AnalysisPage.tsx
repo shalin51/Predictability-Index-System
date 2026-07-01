@@ -121,7 +121,7 @@ export function AnalysisPage({ initialFormulationId = '', onViewReport }: Analys
               <option value="">- choose -</option>
               {formulations.map((formulation) => (
                 <option key={formulation.id} value={formulation.id}>
-                  {formulation.formulationCode} - {formulation.name} ({formulation.status})
+                  {formulation.formulationCode}{formulation.producedDate ? ` - ${formulation.producedDate}` : ''}
                 </option>
               ))}
             </select>

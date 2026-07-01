@@ -64,7 +64,7 @@ export function ReportPage({ formulationId, onBack }: ReportPageProps) {
         <h1 style={styles.title}>Formulation Report</h1>
         {formulation && (
           <p style={styles.subtitle}>
-            {formulation.formulationCode} · {formulation.name}
+            {formulation.formulationCode}{formulation.producedDate ? ` · ${formulation.producedDate}` : ''}
           </p>
         )}
 

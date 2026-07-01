@@ -69,6 +69,17 @@ textarea {
   outline: none;
 }
 
+select {
+  background-color: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+}
+
+select option,
+select optgroup {
+  background-color: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+}
+
 button {
   transition:
     transform 140ms ease,
@@ -183,6 +194,16 @@ button:disabled {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@keyframes dashboard-activity-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
   }
 }
 

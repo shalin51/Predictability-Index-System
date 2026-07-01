@@ -2,29 +2,29 @@
 
 export type FormulationStatus = 'draft' | 'testing' | 'approved' | 'rejected' | 'archived';
 
+export interface ResinComponent {
+  materialId: string;
+  resinComponent: string;
+  percentComposition: number;
+  materialSupplier: string;
+  lotNumber?: string;
+}
+
+export interface ManufacturingData {
+  moldUsed?: string;
+  injectionPressure?: number;
+  meltTemperature?: number;
+  coolingTime?: number;
+  cycleTime?: number;
+  machineUsed?: string;
+}
+
 export interface Formulation {
   id: string;
   formulationCode: string;
-  name: string;
-  description?: string;
-  version: number;
-  status: FormulationStatus;
   producedDate?: string; // ISO date
-  lotNumber?: string;
-  batchSizeKg?: number;
-  notes?: string;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface FormulationMaterial {
-  id: string;
-  formulationId: string;
-  materialId: string;
-  percentage: number;
-  lotNumber?: string;
-  notes?: string;
+  resinComponents: ResinComponent[];
+  manufacturingData: ManufacturingData | null;
 }
 
 export interface Material {
@@ -55,19 +55,16 @@ export interface TestResult {
   formulationId: string;
   testedAt: string;
   testedBy?: string;
-  // Physical
   weightG?: number;
   diameterMm?: number;
   wallThicknessMm?: number;
   roundnessMm?: number;
   balanceG?: number;
-  // Performance
   bounceCm?: number;
   hardnessShorD?: number;
   compressionKg?: number;
   deflectionMm?: number;
   coefficientOfRestitution?: number;
-  notes?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -79,9 +76,8 @@ export interface DurabilityResult {
   testedBy?: string;
   airCannonCycles?: number;
   crackInitiationCycles?: number;
-  crackPropagationMm?: number;
+  crackPropagationObservations?: number;
   deformationMm?: number;
-  notes?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -91,13 +87,9 @@ export interface EnvironmentalResult {
   formulationId: string;
   testedAt: string;
   testedBy?: string;
-  hotPerformanceScore?: number;
-  coldPerformanceScore?: number;
-  humidityPerformanceScore?: number;
-  testTempHotC?: number;
-  testTempColdC?: number;
-  testHumidityPct?: number;
-  notes?: string;
+  hotTemperaturePerformance?: number;
+  coldTemperaturePerformance?: number;
+  humidityExposureResults?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -107,11 +99,11 @@ export interface SubjectiveRating {
   formulationId: string;
   ratedAt: string;
   ratedBy?: string;
+  playerFeedback?: string;
   feelScore?: number;
   soundScore?: number;
   perceivedSpeedScore?: number;
   perceivedDurabilityScore?: number;
-  notes?: string;
   createdAt: string;
   updatedAt: string;
 }

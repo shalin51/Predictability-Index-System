@@ -64,6 +64,36 @@ export class BenchmarkRepository {
     return rowToProfile(result.rows[0] as Record<string, unknown>);
   }
 
+  async findByName(name: string): Promise<BenchmarkProfile | null> {
+    const pool = getPool();
+    const result = await pool.query('SELECT * FROM benchmark_profiles WHERE LOWER(name) = LOWER($1)', [name]);
+    if (result.rowCount === 0) return null;
+    return rowToProfile(result.rows[0] as Record<string, unknown>);
+  }
+
+  async createProfile(input: {
+    name: string;
+    description?: string;
+    ballBrand: string;
+    ballModel: string;
+    isActive?: boolean;
+  }): Promise<BenchmarkProfile> {
+    const pool = getPool();
+    const result = await pool.query(
+      `INSERT INTO benchmark_profiles (name, description, ball_brand, ball_model, is_active)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [
+        input.name,
+        input.description ?? null,
+        input.ballBrand,
+        input.ballModel,
+        input.isActive ?? true,
+      ]
+    );
+    return rowToProfile(result.rows[0] as Record<string, unknown>);
+  }
+
   async findMetricsByBenchmarkId(benchmarkId: string): Promise<BenchmarkMetricTarget[]> {
     const pool = getPool();
     const result = await pool.query(

@@ -1,4 +1,4 @@
-import type { Formulation, FormulationStatus } from '../types/domain';
+import type { Formulation, ManufacturingData } from '../types/domain';
 import type {
   BenchmarkMetricTarget,
   BenchmarkProfile,
@@ -13,45 +13,30 @@ import type { PredictabilitySummary, ScoreResult } from './scoring.contract';
 
 export interface CreateFormulationDto {
   formulationCode: string;
-  name: string;
-  description?: string;
-  status?: FormulationStatus;
   producedDate?: string;
-  lotNumber?: string;
-  batchSizeKg?: number;
-  notes?: string;
+  resinComponents: Array<{
+    resinComponent: string;
+    percentComposition: number;
+    materialSupplier: string;
+    lotNumber?: string;
+  }>;
+  manufacturingData?: ManufacturingData;
   createdBy?: string;
 }
 
 export interface UpdateFormulationDto {
-  name?: string;
-  description?: string;
-  status?: FormulationStatus;
   producedDate?: string;
-  lotNumber?: string;
-  batchSizeKg?: number;
-  notes?: string;
+  resinComponents?: CreateFormulationDto['resinComponents'];
+  manufacturingData?: ManufacturingData;
 }
 
 export interface FormulationListItem {
   id: string;
   formulationCode: string;
-  name: string;
-  status: FormulationStatus;
   producedDate?: string;
-  lotNumber?: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
-export interface FormulationDetailDto extends Formulation {
-  materials?: Array<{
-    materialId: string;
-    materialName: string;
-    percentage: number;
-    lotNumber?: string;
-  }>;
-}
+export type FormulationDetailDto = Formulation;
 
 // ── Benchmark contracts ───────────────────────────────────────
 
@@ -89,6 +74,8 @@ export interface UpsertTestResultDto {
   bounceCm?: number;
   hardnessShorD?: number;
   compressionKg?: number;
+  stretchQuarterInchLbf?: number;
+  fullStretchMaxLbf?: number;
   deflectionMm?: number;
   coefficientOfRestitution?: number;
   notes?: string;
@@ -99,31 +86,26 @@ export interface UpsertDurabilityDto {
   testedBy?: string;
   airCannonCycles?: number;
   crackInitiationCycles?: number;
-  crackPropagationMm?: number;
+  crackPropagationObservations?: number;
   deformationMm?: number;
-  notes?: string;
 }
 
 export interface UpsertEnvironmentalDto {
   testedAt?: string;
   testedBy?: string;
-  hotPerformanceScore?: number;
-  coldPerformanceScore?: number;
-  humidityPerformanceScore?: number;
-  testTempHotC?: number;
-  testTempColdC?: number;
-  testHumidityPct?: number;
-  notes?: string;
+  hotTemperaturePerformance?: number;
+  coldTemperaturePerformance?: number;
+  humidityExposureResults?: number;
 }
 
 export interface UpsertSubjectiveRatingDto {
   ratedAt?: string;
   ratedBy?: string;
+  playerFeedback?: string;
   feelScore?: number;
   soundScore?: number;
   perceivedSpeedScore?: number;
   perceivedDurabilityScore?: number;
-  notes?: string;
 }
 
 export interface FormulationResultsBundle {

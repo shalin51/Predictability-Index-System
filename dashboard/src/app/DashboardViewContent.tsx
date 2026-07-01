@@ -1,4 +1,3 @@
-import { AnalysisPage } from '../features/analysis/AnalysisPage';
 import { BenchmarkPage } from '../features/benchmarks/BenchmarkPage';
 import { DashboardLandingPage } from '../features/dashboard/DashboardLandingPage';
 import { FormulationDetailPage } from '../features/formulations/FormulationDetailPage';
@@ -12,8 +11,7 @@ import type { DashboardRouteState, DashboardView } from '../routing/dashboardRou
 import { themeOptions, type ThemeName } from '../theme/tokens';
 
 interface DashboardViewContentProps {
-  onPreferenceChange: (next: DashboardPreferences) => void;
-  onThemeChange: (theme: ThemeName) => void;
+  onSettingsSave: (next: { preferences: DashboardPreferences; theme: ThemeName }) => Promise<void> | void;
   preferences: DashboardPreferences;
   selectedFormulationId: string;
   setHasUnsavedChanges: (dirty: boolean) => void;
@@ -23,8 +21,7 @@ interface DashboardViewContentProps {
 }
 
 export function DashboardViewContent({
-  onPreferenceChange,
-  onThemeChange,
+  onSettingsSave,
   preferences,
   selectedFormulationId,
   setHasUnsavedChanges,
@@ -39,9 +36,6 @@ export function DashboardViewContent({
   if (view === 'dashboard') {
     return (
       <DashboardLandingPage
-        onOpenAnalysis={() => {
-          void navigate({ formulationId: selectedFormulationId, view: 'analysis' });
-        }}
         onOpenBenchmarks={() => {
           void navigate({ formulationId: '', view: 'benchmarks' });
         }}
@@ -73,7 +67,7 @@ export function DashboardViewContent({
         onDirtyChange={setHasUnsavedChanges}
         onSaved={(id) => {
           setHasUnsavedChanges(false);
-          void navigate({ formulationId: id, view: 'formulation-detail' }, { replace: true, skipConfirm: true });
+          void navigate({ formulationId: id, view: 'formulation-edit' }, { replace: true, skipConfirm: true });
         }}
       />
     );
@@ -83,20 +77,11 @@ export function DashboardViewContent({
     return (
       <FormulationDetailPage
         formulationId={selectedFormulationId}
-        onAnalyse={(id) => {
-          void navigate({ formulationId: id, view: 'analysis' });
-        }}
         onBack={() => {
           void navigate({ formulationId: '', view: 'formulations' });
         }}
         onEdit={(id) => {
           void navigate({ formulationId: id, view: 'formulation-edit' });
-        }}
-        onReport={(id) => {
-          void navigate({ formulationId: id, view: 'report' });
-        }}
-        onTestResults={(id) => {
-          void navigate({ formulationId: id, view: 'formulation-results' });
         }}
       />
     );
@@ -111,9 +96,8 @@ export function DashboardViewContent({
           void navigate({ formulationId: selectedFormulationId, view: 'formulation-detail' });
         }}
         onDirtyChange={setHasUnsavedChanges}
-        onSaved={(id) => {
+        onSaved={() => {
           setHasUnsavedChanges(false);
-          void navigate({ formulationId: id, view: 'formulation-detail' }, { replace: true, skipConfirm: true });
         }}
       />
     );
@@ -123,9 +107,6 @@ export function DashboardViewContent({
     return (
       <TestResultsPage
         formulationId={selectedFormulationId}
-        onAnalyse={(id) => {
-          void navigate({ formulationId: id, view: 'analysis' });
-        }}
         onBack={() => {
           void navigate({ formulationId: selectedFormulationId, view: 'formulation-detail' });
         }}
@@ -137,15 +118,12 @@ export function DashboardViewContent({
     return <BenchmarkPage />;
   }
 
+  if (view === 'imports') {
+    return <DashboardLandingPage onOpenBenchmarks={() => void navigate({ formulationId: '', view: 'benchmarks' })} onOpenFormulations={() => void navigate({ formulationId: '', view: 'formulations' })} />;
+  }
+
   if (view === 'analysis') {
-    return (
-      <AnalysisPage
-        initialFormulationId={selectedFormulationId}
-        onViewReport={(id) => {
-          void navigate({ formulationId: id, view: 'report' });
-        }}
-      />
-    );
+    return <DashboardLandingPage onOpenBenchmarks={() => void navigate({ formulationId: '', view: 'benchmarks' })} onOpenFormulations={() => void navigate({ formulationId: '', view: 'formulations' })} />;
   }
 
   if (view === 'report' && selectedFormulationId) {
@@ -161,8 +139,7 @@ export function DashboardViewContent({
 
   return (
     <SettingsPage
-      onPreferencesChange={onPreferenceChange}
-      onThemeChange={onThemeChange}
+      onSave={onSettingsSave}
       preferences={preferences}
       theme={theme}
       themeOptions={themeOptions}

@@ -8,7 +8,7 @@ interface DashboardPageProps {
 
 interface MessageBannerProps {
   children: ReactNode;
-  tone: 'danger' | 'warning';
+  tone: 'danger' | 'warning' | 'success';
 }
 
 export function DashboardPage({ children, maxWidth = '100%' }: DashboardPageProps) {
@@ -40,7 +40,16 @@ export function EmptyState({ children }: { children: ReactNode }) {
 
 export function MessageBanner({ children, tone }: MessageBannerProps) {
   return (
-    <div style={{ ...styles.banner, ...(tone === 'danger' ? styles.bannerDanger : styles.bannerWarning) }}>
+    <div
+      style={{
+        ...styles.banner,
+        ...(tone === 'danger'
+          ? styles.bannerDanger
+          : tone === 'success'
+            ? styles.bannerSuccess
+            : styles.bannerWarning),
+      }}
+    >
       {children}
     </div>
   );
@@ -89,5 +98,10 @@ const styles: Record<string, CSSProperties> = {
     backgroundColor: '#422006',
     border: '1px solid #854d0e',
     color: '#fde68a',
+  },
+  bannerSuccess: {
+    backgroundColor: 'rgba(20, 83, 45, 0.78)',
+    border: '1px solid rgba(134, 239, 172, 0.28)',
+    color: '#bbf7d0',
   },
 };

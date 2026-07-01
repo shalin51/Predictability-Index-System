@@ -10,6 +10,7 @@ import { createScoringRouter } from './modules/scoring/scoring.module';
 import { createReportRouter } from './modules/reports/report.module';
 import { createMlRouter } from './modules/ml/ml.module';
 import { createVersionRouter } from './modules/version/version.module';
+import { createBallTestingImportRouter } from './modules/imports/ball-testing-import.module';
 import { requestLogger } from './middlewares/request-logger';
 import { errorHandler } from './middlewares/error-handler';
 import { authPlaceholder } from './middlewares/auth-placeholder';
@@ -48,6 +49,7 @@ function registerRoutes(app: Express): void {
   app.use('/formulations/:id/report', createReportRouter());
   app.use('/ml', createMlRouter());
   app.use('/version', createVersionRouter());
+  app.use('/imports', createBallTestingImportRouter());
 }
 
 function registerFallbackHandlers(app: Express): void {

@@ -10,6 +10,8 @@ import {
   type FormulationDetail,
   type UpdateFormulationDto,
 } from '../../services/api';
+import { useAppDispatch } from '../../store/hooks';
+import { trackActivity } from '../../store/activityTracker';
 import { colors, font, spacing } from '../../theme/tokens';
 import { FormulationForm } from './FormulationForm';
 
@@ -18,7 +20,7 @@ interface FormulationEditorPageProps {
   mode: 'create' | 'edit';
   onBack: () => void;
   onDirtyChange?: (dirty: boolean) => void;
-  onSaved: (id: string) => void;
+  onSaved?: (id: string) => void;
 }
 
 export function FormulationEditorPage({
@@ -28,10 +30,13 @@ export function FormulationEditorPage({
   onDirtyChange,
   onSaved,
 }: FormulationEditorPageProps) {
+  const dispatch = useAppDispatch();
   const [initialValue, setInitialValue] = useState<FormulationDetail | null>(null);
   const [loading, setLoading] = useState(mode === 'edit');
-  const [saving, setSaving] = useState(false);
+  const [submitState, setSubmitState] = useState<'idle' | 'saving' | 'saved'>('idle');
   const [error, setError] = useState('');
+  const effectiveMode = mode === 'create' && initialValue?.id ? 'edit' : mode;
+  const activeFormulationId = formulationId ?? initialValue?.id;
 
   useEffect(() => {
     if (mode !== 'edit' || !formulationId) {
@@ -50,44 +55,59 @@ export function FormulationEditorPage({
   }, [formulationId, mode]);
 
   const handleSubmit = async (payload: CreateFormulationDto | UpdateFormulationDto) => {
-    setSaving(true);
+    setSubmitState('saving');
     setError('');
 
     try {
-      const saved = mode === 'create'
-        ? await createFormulation(payload as CreateFormulationDto)
-        : await updateFormulation(formulationId!, payload as UpdateFormulationDto);
+      const saved = await trackActivity(
+        dispatch,
+        effectiveMode === 'create' ? 'Creating formulation...' : 'Saving formulation...',
+        async () => (
+          effectiveMode === 'create'
+            ? createFormulation(payload as CreateFormulationDto)
+            : updateFormulation(activeFormulationId!, payload as UpdateFormulationDto)
+        ),
+      );
 
-      onSaved(saved.id);
+      setInitialValue(saved);
+      setSubmitState('saved');
+      onDirtyChange?.(false);
+      onSaved?.(saved.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to save formulation');
+      setSubmitState('idle');
     } finally {
-      setSaving(false);
     }
   };
 
   return (
     <DashboardPage>
       <Card>
-        <h1 style={styles.title}>{mode === 'create' ? 'Create Formulation' : 'Edit Formulation'}</h1>
+        <h1 style={styles.title}>{effectiveMode === 'create' ? 'Create Formulation' : 'Edit Formulation'}</h1>
         <p style={styles.subtitle}>
-          {mode === 'create' ? 'Add a new formulation record.' : 'Update the current formulation.'}
+          {effectiveMode === 'create' ? 'Add a new formulation record.' : 'Update the current formulation.'}
         </p>
 
         <Divider />
 
         {error && !loading && <MessageBanner tone="danger">{error}</MessageBanner>}
+        {!error && submitState === 'saved' && <MessageBanner tone="success">Saved.</MessageBanner>}
         {loading ? (
           <div style={styles.muted}>Loading formulation...</div>
         ) : (
           <FormulationForm
             error={error}
             initialValue={initialValue ?? undefined}
-            loading={saving}
+            onChange={() => {
+              if (submitState === 'saved') {
+                setSubmitState('idle');
+              }
+            }}
             onCancel={onBack}
             onDirtyChange={onDirtyChange}
             onSubmit={handleSubmit}
-            submitLabel={mode === 'create' ? 'Create' : 'Save Changes'}
+            submitLabel={effectiveMode === 'create' ? 'Create' : 'Save Changes'}
+            submitState={submitState}
           />
         )}
       </Card>

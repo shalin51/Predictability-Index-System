@@ -5,14 +5,14 @@ export const NAV: ReadonlyArray<ShellNavItem<DashboardView>> = [
   {
     id: 'dashboard',
     label: 'Dashboard',
-    description: 'Landing overview for workflow, benchmarks, and activity.',
+    description: 'High-level record counts.',
     group: 'Operations',
     icon: 'grid',
   },
   {
     id: 'formulations',
     label: 'Formulations',
-    description: 'Records, materials, and production details.',
+    description: 'Formulation records and production details.',
     group: 'Workspace',
     icon: 'flask',
   },
@@ -22,13 +22,6 @@ export const NAV: ReadonlyArray<ShellNavItem<DashboardView>> = [
     description: 'Target envelopes and scoring weights.',
     group: 'Workspace',
     icon: 'layers',
-  },
-  {
-    id: 'analysis',
-    label: 'Analysis',
-    description: 'Comparisons, risks, and historical scores.',
-    group: 'Workspace',
-    icon: 'scan',
   },
   {
     id: 'settings',
@@ -41,36 +34,40 @@ export const NAV: ReadonlyArray<ShellNavItem<DashboardView>> = [
 
 export const VIEW_META: Record<DashboardView, { title: string; subtitle: string }> = {
   dashboard: {
-    title: 'Landing dashboard',
-    subtitle: 'See formulation volume, benchmark coverage, success ratio, and live operational activity in one place.',
+    title: 'Dashboard',
+    subtitle: 'See current formulation and benchmark counts.',
   },
   formulations: {
-    title: 'Formulation workspace',
-    subtitle: 'Browse active recipes, open records, and stage new formulations without leaving the dashboard.',
+    title: 'Formulations',
+    subtitle: 'Browse and maintain formulation records.',
   },
   'formulation-create': {
     title: 'Create formulation',
-    subtitle: 'Capture a new formulation record and move directly into test and reporting flows.',
+    subtitle: 'Add a new formulation record.',
   },
   'formulation-detail': {
     title: 'Formulation detail',
-    subtitle: 'Review metadata, materials, and downstream actions for the selected formulation.',
+    subtitle: 'Review the selected formulation record.',
   },
   'formulation-edit': {
     title: 'Edit formulation',
-    subtitle: 'Update record details while keeping the surrounding workflow context visible.',
+    subtitle: 'Update the current formulation record.',
   },
   'formulation-results': {
     title: 'Test results',
-    subtitle: 'Manage the 72-hour validation inputs before running comparative analysis.',
+    subtitle: 'Review stored test result data.',
   },
   benchmarks: {
     title: 'Benchmark control',
     subtitle: 'Maintain benchmark envelopes, metric weights, and validation balance.',
   },
+  imports: {
+    title: 'Workbook imports',
+    subtitle: 'Import is currently unavailable.',
+  },
   analysis: {
-    title: 'Analysis command',
-    subtitle: 'Compare formulations against benchmark profiles and surface the highest-risk deltas.',
+    title: 'Analysis',
+    subtitle: 'Analysis is currently unavailable.',
   },
   report: {
     title: 'Report output',

@@ -12,6 +12,9 @@ const REQUIRED_TABLES = [
   'subjective_ratings',
   'benchmark_profiles',
   'benchmark_metric_targets',
+  'ball_testing_import_batches',
+  'ball_testing_import_sheets',
+  'ball_testing_import_samples',
   'audit_log',
 ] as const;
 
@@ -23,6 +26,8 @@ const REQUIRED_INDEXES = [
   'idx_environmental_results_formulation',
   'idx_subjective_ratings_formulation',
   'idx_benchmark_targets_benchmark',
+  'idx_ball_testing_sheets_batch',
+  'idx_ball_testing_samples_sheet',
 ] as const;
 
 const REQUIRED_FOREIGN_KEYS = [
@@ -34,6 +39,8 @@ const REQUIRED_FOREIGN_KEYS = [
   { table: 'environmental_results', column: 'formulation_id', references: 'formulations' },
   { table: 'subjective_ratings', column: 'formulation_id', references: 'formulations' },
   { table: 'benchmark_metric_targets', column: 'benchmark_id', references: 'benchmark_profiles' },
+  { table: 'ball_testing_import_sheets', column: 'batch_id', references: 'ball_testing_import_batches' },
+  { table: 'ball_testing_import_samples', column: 'import_sheet_id', references: 'ball_testing_import_sheets' },
 ] as const;
 
 function assertCheck(condition: boolean, label: string): void {

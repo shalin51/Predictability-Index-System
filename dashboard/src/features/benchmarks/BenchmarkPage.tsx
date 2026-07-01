@@ -13,9 +13,13 @@ import {
   type BenchmarkMetricTarget,
   type BenchmarkWeightValidation,
 } from '../../services/api';
+import { useAppDispatch } from '../../store/hooks';
+import { trackActivity } from '../../store/activityTracker';
 import { colors, font, radius, spacing } from '../../theme/tokens';
+import { formatMetricLabel } from './formatMetricLabel';
 
 export function BenchmarkPage() {
+  const dispatch = useAppDispatch();
   const [benchmarks, setBenchmarks] = useState<BenchmarkItem[]>([]);
   const [selectedBenchmarkId, setSelectedBenchmarkId] = useState('');
   const [detail, setDetail] = useState<BenchmarkDetailDto | null>(null);
@@ -63,17 +67,19 @@ export function BenchmarkPage() {
     setError('');
 
     try {
-      await updateBenchmarkMetric(detail.id, selectedMetric.metricName, payload);
-      const [updatedDetail, updatedValidation] = await Promise.all([
-        getBenchmark(detail.id),
-        validateBenchmarkWeights(detail.id),
-      ]);
+      await trackActivity(dispatch, 'Updating benchmark metric...', async () => {
+        await updateBenchmarkMetric(detail.id, selectedMetric.metricName, payload);
+        const [updatedDetail, updatedValidation] = await Promise.all([
+          getBenchmark(detail.id),
+          validateBenchmarkWeights(detail.id),
+        ]);
 
-      setDetail(updatedDetail);
-      setValidation(updatedValidation);
-      setSelectedMetric(
-        updatedDetail.metrics.find((metric) => metric.metricName === selectedMetric.metricName) ?? null,
-      );
+        setDetail(updatedDetail);
+        setValidation(updatedValidation);
+        setSelectedMetric(
+          updatedDetail.metrics.find((metric) => metric.metricName === selectedMetric.metricName) ?? null,
+        );
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unable to save benchmark metric');
     } finally {
@@ -139,7 +145,7 @@ export function BenchmarkPage() {
                         }}
                         type="button"
                       >
-                        <span>{metric.metricName}</span>
+                        <span>{formatMetricLabel(metric.metricName)}</span>
                         <span>{metric.targetValue}</span>
                       </button>
                     ))}
@@ -199,7 +205,7 @@ function MetricEditor({
       }}
       style={styles.editor}
     >
-      <h2 style={styles.sectionTitle}>Edit Metric: {metric.metricName}</h2>
+      <h2 style={styles.sectionTitle}>Edit Metric: {formatMetricLabel(metric.metricName)}</h2>
       <div style={styles.grid}>
         {[
           ['targetValue', 'Target Value'],

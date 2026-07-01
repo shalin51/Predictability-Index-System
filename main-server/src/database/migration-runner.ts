@@ -30,6 +30,9 @@ export async function resetDatabase(client: Client): Promise<void> {
   await client.query(`
     DROP TABLE IF EXISTS
       request_logs,
+      ball_testing_import_samples,
+      ball_testing_import_sheets,
+      ball_testing_import_batches,
       users,
       api_versions,
       audit_log,

@@ -42,8 +42,9 @@ describe('repository integration', () => {
     const formulation = await repo.findById(FORMULATION_ID);
 
     expect(formulation?.id).toBe(FORMULATION_ID);
-    expect(formulation?.materials?.length).toBeGreaterThan(0);
-    expect(formulation?.materials?.[0]).toHaveProperty('materialName');
+    expect(formulation?.resinComponents.length).toBeGreaterThan(0);
+    expect(formulation?.resinComponents[0]).toHaveProperty('materialSupplier');
+    expect(formulation?.manufacturingData?.machineUsed).toBe('MACHINE-01');
   });
 
   it('lists seeded benchmark profiles', async () => {

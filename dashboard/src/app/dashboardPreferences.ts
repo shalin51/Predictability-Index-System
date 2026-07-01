@@ -5,7 +5,7 @@ export interface DashboardPreferences {
   desktopAlerts: boolean;
 }
 
-export type SettingsLandingView = 'dashboard' | 'formulations' | 'benchmarks' | 'analysis';
+export type SettingsLandingView = 'dashboard' | 'formulations' | 'benchmarks';
 
 export const DEFAULT_PREFERENCES: DashboardPreferences = {
   autoRefresh: true,
@@ -19,8 +19,7 @@ export const DASHBOARD_PREFERENCES_KEY = 'dashboard-preferences';
 export function isSettingsLandingView(value: string | undefined): value is SettingsLandingView {
   return value === 'dashboard'
     || value === 'formulations'
-    || value === 'benchmarks'
-    || value === 'analysis';
+    || value === 'benchmarks';
 }
 
 export function getStoredPreferences(): DashboardPreferences {

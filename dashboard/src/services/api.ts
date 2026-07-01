@@ -7,8 +7,12 @@ import type {
   BenchmarkListItem,
   BenchmarkMetricTarget,
   BenchmarkWeightValidation,
+  BallTestingImportRequestDto,
+  BallTestingImportResultDto,
   CreateFormulationDto,
   DbHealthResponse,
+  DurabilityResult,
+  EnvironmentalResult,
   FormulationDetailDto,
   FormulationListItem,
   FormulationResultsBundle,
@@ -18,6 +22,8 @@ import type {
   PaginatedResponse,
   PredictabilitySummary,
   ScoreResult,
+  SubjectiveRating,
+  TestResult,
   UpsertDurabilityDto,
   UpsertEnvironmentalDto,
   UpsertSubjectiveRatingDto,
@@ -32,7 +38,11 @@ export type {
   BenchmarkDetailDto,
   BenchmarkMetricTarget,
   BenchmarkWeightValidation,
+  BallTestingImportRequestDto,
+  BallTestingImportResultDto,
   CreateFormulationDto,
+  DurabilityResult,
+  EnvironmentalResult,
   FormulationDetailDto as FormulationDetail,
   FormulationListItem,
   FormulationResultsBundle,
@@ -40,6 +50,8 @@ export type {
   GeneratedReportDto,
   PredictabilitySummary,
   ScoreResult,
+  SubjectiveRating,
+  TestResult,
   TrafficLight,
   UpsertDurabilityDto,
   UpsertEnvironmentalDto,
@@ -193,4 +205,14 @@ export async function getPredictabilitySummary(formulationId: string): Promise<P
 
 export async function getReport(formulationId: string): Promise<GeneratedReportDto> {
   return fetchJSON<GeneratedReportDto>(`/formulations/${formulationId}/report`);
+}
+
+export async function importBallTestingWorkbook(
+  payload: BallTestingImportRequestDto
+): Promise<BallTestingImportResultDto> {
+  return fetchJSON<BallTestingImportResultDto>('/imports/ball-testing', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 }

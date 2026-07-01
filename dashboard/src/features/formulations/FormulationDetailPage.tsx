@@ -5,36 +5,22 @@ import { controlStyles } from '../../components/ui/controls';
 import { DashboardPage, MessageBanner } from '../../components/ui/Page';
 import {
   getFormulation,
-  getFormulationResults,
-  scoreAllBenchmarks,
   type FormulationDetail,
-  type FormulationResultsBundle,
-  type ScoreResult,
 } from '../../services/api';
 import { colors, font, radius, spacing } from '../../theme/tokens';
-import { FormulationSummaryPanel, SimilarityScoresPanel, TrafficLightIndicatorCard } from '../analysis/AnalysisPanels';
-import { buildSimilaritySummaries, getBestScore, getLatestTestedAt } from '../analysis/analysisInsights';
 
 interface FormulationDetailPageProps {
   formulationId: string;
-  onAnalyse: (id: string) => void;
   onBack: () => void;
   onEdit: (id: string) => void;
-  onReport: (id: string) => void;
-  onTestResults: (id: string) => void;
 }
 
 export function FormulationDetailPage({
   formulationId,
-  onAnalyse,
   onBack,
   onEdit,
-  onReport,
-  onTestResults,
 }: FormulationDetailPageProps) {
   const [data, setData] = useState<FormulationDetail | null>(null);
-  const [results, setResults] = useState<FormulationResultsBundle | null>(null);
-  const [scores, setScores] = useState<ScoreResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -42,26 +28,14 @@ export function FormulationDetailPage({
     setLoading(true);
     setError('');
 
-    void Promise.all([
-      getFormulation(formulationId),
-      getFormulationResults(formulationId),
-      scoreAllBenchmarks(formulationId).catch(() => []),
-    ])
-      .then(([formulation, formulationResults, formulationScores]) => {
-        setData(formulation);
-        setResults(formulationResults);
-        setScores(formulationScores.slice().sort((left, right) => right.overallScore - left.overallScore));
-      })
+    void getFormulation(formulationId)
+      .then(setData)
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
   }, [formulationId]);
 
-  const bestScore = getBestScore(scores);
-  const similarityScores = buildSimilaritySummaries(scores).slice(0, 2);
-  const testedAt = getLatestTestedAt(results);
-
   return (
-    <DashboardPage>
+    <DashboardPage maxWidth={1200}>
       <Card>
         <div style={styles.header}>
           <button onClick={onBack} style={controlStyles.secondaryButton} type="button">
@@ -69,15 +43,6 @@ export function FormulationDetailPage({
           </button>
           {data && (
             <div style={controlStyles.actionRow}>
-              <button onClick={() => onTestResults(data.id)} style={controlStyles.secondaryButton} type="button">
-                Test Results
-              </button>
-              <button onClick={() => onAnalyse(data.id)} style={controlStyles.secondaryButton} type="button">
-                Analyse
-              </button>
-              <button onClick={() => onReport(data.id)} style={controlStyles.secondaryButton} type="button">
-                Report
-              </button>
               <button onClick={() => onEdit(data.id)} style={controlStyles.primaryButton} type="button">
                 Edit
               </button>
@@ -91,66 +56,84 @@ export function FormulationDetailPage({
         {!loading && !error && data && (
           <>
             <h1 style={styles.title}>{data.formulationCode}</h1>
-            <p style={styles.subtitle}>{data.name}</p>
-
-            <Divider />
-
-            <div style={styles.analysisGrid}>
-              <FormulationSummaryPanel
-                formulationId={data.formulationCode}
-                predictabilityIndex={bestScore?.overallScore ?? null}
-                testedAt={testedAt}
-              />
-              <TrafficLightIndicatorCard
-                benchmarkName={bestScore?.benchmarkSimilarity.benchmarkName}
-                trafficLight={bestScore?.trafficLight ?? null}
-              />
-            </div>
-
-            {similarityScores.length > 0 && (
-              <>
-                <section style={styles.section}>
-                  <h2 style={styles.sectionTitle}>Similarity Scores</h2>
-                  <SimilarityScoresPanel scores={similarityScores} />
-                </section>
-                <Divider />
-              </>
-            )}
-
-            <div style={styles.grid}>
-              <Info label="Status" value={data.status} />
-              <Info label="Version" value={String(data.version)} />
-              <Info label="Produced Date" value={data.producedDate ?? '—'} />
-              <Info label="Lot Number" value={data.lotNumber ?? '—'} />
-              <Info label="Batch Size" value={data.batchSizeKg != null ? `${data.batchSizeKg} kg` : '—'} />
-              <Info label="Created By" value={data.createdBy} />
-            </div>
+            <p style={styles.subtitle}>{data.producedDate ?? 'No production date'}</p>
 
             <Divider />
 
             <section style={styles.section}>
-              <h2 style={styles.sectionTitle}>Description</h2>
-              <p style={styles.body}>{data.description ?? 'No description provided.'}</p>
+              <h2 style={styles.sectionTitle}>Record</h2>
+              <div style={styles.tableWrap}>
+                <table style={styles.table}>
+                  <tbody>
+                    <TableRow label="Record ID" value={data.id} />
+                    <TableRow label="Code" value={data.formulationCode} />
+                    <TableRow label="Produced Date" value={data.producedDate ?? '—'} />
+                  </tbody>
+                </table>
+              </div>
             </section>
 
-            <section style={styles.section}>
-              <h2 style={styles.sectionTitle}>Notes</h2>
-              <p style={styles.body}>{data.notes ?? 'No notes provided.'}</p>
-            </section>
+            <Divider />
 
             <section style={styles.section}>
-              <h2 style={styles.sectionTitle}>Materials</h2>
-              {data.materials && data.materials.length > 0 ? (
-                <div style={styles.materials}>
-                  {data.materials.map((material) => (
-                    <div key={`${material.materialId}-${material.materialName}`} style={styles.materialCard}>
-                      <div style={styles.materialName}>{material.materialName}</div>
-                      <div style={styles.materialMeta}>{material.percentage}%</div>
-                    </div>
-                  ))}
+              <h2 style={styles.sectionTitle}>Resin Components</h2>
+              {data.resinComponents.length > 0 ? (
+                <div style={styles.tableWrap}>
+                  <table style={styles.table}>
+                    <thead>
+                      <tr>
+                        <th style={styles.th}>Component</th>
+                        <th style={styles.th}>Percent</th>
+                        <th style={styles.th}>Supplier</th>
+                        <th style={styles.th}>Lot Number</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {data.resinComponents.map((component) => (
+                        <tr key={`${component.materialId}-${component.resinComponent}`} style={styles.tableRow}>
+                          <td style={styles.tdStrong}>{component.resinComponent}</td>
+                          <td style={styles.td}>{component.percentComposition}%</td>
+                          <td style={styles.td}>{component.materialSupplier}</td>
+                          <td style={styles.td}>{component.lotNumber ?? '—'}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               ) : (
-                <p style={styles.body}>No materials attached yet.</p>
+                <p style={styles.body}>No resin components attached yet.</p>
+              )}
+            </section>
+
+            <section style={styles.section}>
+              <h2 style={styles.sectionTitle}>Manufacturing Data</h2>
+              {data.manufacturingData ? (
+                <div style={styles.tableWrap}>
+                  <table style={styles.table}>
+                    <tbody>
+                      <TableRow label="Mold Used" value={data.manufacturingData.moldUsed ?? '—'} />
+                      <TableRow
+                        label="Injection Pressure"
+                        value={data.manufacturingData.injectionPressure != null ? String(data.manufacturingData.injectionPressure) : '—'}
+                      />
+                      <TableRow
+                        label="Melt Temperature"
+                        value={data.manufacturingData.meltTemperature != null ? String(data.manufacturingData.meltTemperature) : '—'}
+                      />
+                      <TableRow
+                        label="Cooling Time"
+                        value={data.manufacturingData.coolingTime != null ? String(data.manufacturingData.coolingTime) : '—'}
+                      />
+                      <TableRow
+                        label="Cycle Time"
+                        value={data.manufacturingData.cycleTime != null ? String(data.manufacturingData.cycleTime) : '—'}
+                      />
+                      <TableRow label="Machine Used" value={data.manufacturingData.machineUsed ?? '—'} />
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p style={styles.body}>No manufacturing data attached yet.</p>
               )}
             </section>
           </>
@@ -160,12 +143,12 @@ export function FormulationDetailPage({
   );
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function TableRow({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <div style={styles.label}>{label}</div>
-      <div style={styles.value}>{value}</div>
-    </div>
+    <tr style={styles.tableRow}>
+      <th style={styles.th}>{label}</th>
+      <td style={styles.td}>{value}</td>
+    </tr>
   );
 }
 
@@ -176,48 +159,10 @@ const styles: Record<string, CSSProperties> = {
     lineHeight: 1.6,
     margin: 0,
   },
-  analysisGrid: {
-    display: 'grid',
-    gap: spacing.md,
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    marginBottom: spacing.md,
-  },
-  grid: {
-    display: 'grid',
-    gap: spacing.md,
-    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-  },
   header: {
     display: 'flex',
     gap: spacing.sm,
     justifyContent: 'space-between',
-  },
-  label: {
-    color: colors.text.muted,
-    fontSize: font.size.xs,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-  },
-  materials: {
-    display: 'grid',
-    gap: spacing.sm,
-    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-  },
-  materialCard: {
-    backgroundColor: colors.surfaceElevated,
-    border: `1px solid ${colors.border}`,
-    borderRadius: radius.sm,
-    padding: `${spacing.sm}px ${spacing.md}px`,
-  },
-  materialMeta: {
-    color: colors.text.secondary,
-    fontSize: font.size.xs,
-    marginTop: 4,
-  },
-  materialName: {
-    color: colors.text.primary,
-    fontSize: font.size.sm,
-    fontWeight: font.weight.medium,
   },
   muted: {
     color: colors.text.muted,
@@ -244,10 +189,39 @@ const styles: Record<string, CSSProperties> = {
     fontWeight: font.weight.bold,
     margin: `${spacing.md}px 0 4px`,
   },
-  value: {
+  table: {
+    borderCollapse: 'collapse',
+    width: '100%',
+  },
+  tableRow: {
+    borderBottom: `1px solid ${colors.border}`,
+  },
+  tableWrap: {
+    border: `1px solid ${colors.border}`,
+    borderRadius: radius.sm,
+    overflow: 'auto',
+  },
+  td: {
+    color: colors.text.secondary,
+    fontSize: font.size.sm,
+    padding: `${spacing.sm}px ${spacing.md}px`,
+    verticalAlign: 'top',
+  },
+  tdStrong: {
     color: colors.text.primary,
     fontSize: font.size.sm,
-    marginTop: 4,
-    textTransform: 'capitalize',
+    fontWeight: font.weight.semibold,
+    padding: `${spacing.sm}px ${spacing.md}px`,
+  },
+  th: {
+    backgroundColor: colors.surfaceElevated,
+    color: colors.text.muted,
+    fontSize: font.size.xs,
+    fontWeight: font.weight.semibold,
+    letterSpacing: '0.08em',
+    padding: `${spacing.sm}px ${spacing.md}px`,
+    textAlign: 'left',
+    textTransform: 'uppercase',
+    verticalAlign: 'top',
   },
 };

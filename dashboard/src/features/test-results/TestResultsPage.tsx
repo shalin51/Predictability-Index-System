@@ -10,31 +10,81 @@ import {
   saveEnvironmentalResults,
   savePhysicalResults,
   saveSubjectiveResults,
+  type DurabilityResult,
+  type EnvironmentalResult,
   type FormulationDetail,
   type FormulationResultsBundle,
+  type SubjectiveRating,
+  type TestResult,
   type UpsertDurabilityDto,
   type UpsertEnvironmentalDto,
   type UpsertSubjectiveRatingDto,
   type UpsertTestResultDto,
 } from '../../services/api';
+import { useAppDispatch } from '../../store/hooks';
+import { trackActivity } from '../../store/activityTracker';
 import { colors, font, radius, spacing } from '../../theme/tokens';
 
 interface TestResultsPageProps {
   formulationId: string;
-  onAnalyse: (id: string) => void;
   onBack: () => void;
 }
 
-type ResultSection = keyof FormulationResultsBundle;
+type ResultSection = 'physical' | 'performance' | 'durability' | 'environmental' | 'subjective';
+type FieldType = 'number' | 'textarea';
 
-const REQUIRED_FIELDS: Record<ResultSection, string[]> = {
-  physical: ['weightG', 'diameterMm', 'wallThicknessMm', 'roundnessMm', 'balanceG', 'bounceCm', 'hardnessShorD', 'compressionKg', 'deflectionMm', 'coefficientOfRestitution'],
-  durability: ['airCannonCycles', 'crackInitiationCycles', 'crackPropagationMm', 'deformationMm'],
-  environmental: ['hotPerformanceScore', 'coldPerformanceScore', 'humidityPerformanceScore'],
-  subjective: ['feelScore', 'soundScore', 'perceivedSpeedScore', 'perceivedDurabilityScore'],
+interface FieldDefinition {
+  key: string;
+  label: string;
+  step?: string;
+  type?: FieldType;
+}
+
+const SECTION_FIELDS: Record<ResultSection, FieldDefinition[]> = {
+  physical: [
+    { key: 'weightG', label: 'Weight', step: '0.01' },
+    { key: 'diameterMm', label: 'Diameter', step: '0.01' },
+    { key: 'wallThicknessMm', label: 'Wall thickness', step: '0.01' },
+    { key: 'roundnessMm', label: 'Roundness', step: '0.01' },
+    { key: 'balanceG', label: 'Balance / center of mass deviation', step: '0.01' },
+  ],
+  performance: [
+    { key: 'bounceCm', label: 'Bounce height', step: '0.01' },
+    { key: 'hardnessShorD', label: 'Hardness', step: '0.01' },
+    { key: 'compressionKg', label: 'Compression', step: '0.01' },
+    { key: 'deflectionMm', label: 'Deflection', step: '0.01' },
+    { key: 'coefficientOfRestitution', label: 'Coefficient of restitution', step: '0.01' },
+  ],
+  durability: [
+    { key: 'airCannonCycles', label: 'Air cannon cycles to failure', step: '1' },
+    { key: 'crackInitiationCycles', label: 'Crack initiation cycles', step: '1' },
+    { key: 'crackPropagationObservations', label: 'Crack propagation observations', step: '0.01' },
+    { key: 'deformationMm', label: 'Deformation measurements', step: '0.01' },
+  ],
+  environmental: [
+    { key: 'hotTemperaturePerformance', label: 'Hot temperature performance', step: '0.01' },
+    { key: 'coldTemperaturePerformance', label: 'Cold temperature performance', step: '0.01' },
+    { key: 'humidityExposureResults', label: 'Humidity exposure results', step: '0.01' },
+  ],
+  subjective: [
+    { key: 'playerFeedback', label: 'Player feedback', type: 'textarea' },
+    { key: 'feelScore', label: 'Feel rating', step: '1' },
+    { key: 'soundScore', label: 'Sound rating', step: '1' },
+    { key: 'perceivedSpeedScore', label: 'Perceived speed', step: '1' },
+    { key: 'perceivedDurabilityScore', label: 'Perceived durability', step: '1' },
+  ],
 };
 
-export function TestResultsPage({ formulationId, onAnalyse, onBack }: TestResultsPageProps) {
+const SECTION_TITLES: Record<ResultSection, string> = {
+  physical: 'Physical Properties',
+  performance: 'Performance Testing',
+  durability: 'Durability Testing',
+  environmental: 'Environmental Testing',
+  subjective: 'Subjective Ratings',
+};
+
+export function TestResultsPage({ formulationId, onBack }: TestResultsPageProps) {
+  const dispatch = useAppDispatch();
   const [formulation, setFormulation] = useState<FormulationDetail | null>(null);
   const [results, setResults] = useState<FormulationResultsBundle | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,28 +113,27 @@ export function TestResultsPage({ formulationId, onAnalyse, onBack }: TestResult
     void load();
   }, [formulationId]);
 
-  const saveSection = async (
-    section: ResultSection,
-    payload: Record<string, number | string>,
-  ) => {
+  const saveSection = async (section: ResultSection, payload: Record<string, number | string>) => {
     setSaving(section);
     setError('');
 
     try {
-      if (section === 'physical') {
-        await savePhysicalResults(formulationId, payload as UpsertTestResultDto);
-      }
-      if (section === 'durability') {
-        await saveDurabilityResults(formulationId, payload as UpsertDurabilityDto);
-      }
-      if (section === 'environmental') {
-        await saveEnvironmentalResults(formulationId, payload as UpsertEnvironmentalDto);
-      }
-      if (section === 'subjective') {
-        await saveSubjectiveResults(formulationId, payload as UpsertSubjectiveRatingDto);
-      }
+      await trackActivity(dispatch, `Saving ${SECTION_TITLES[section].toLowerCase()}...`, async () => {
+        if (section === 'physical' || section === 'performance') {
+          await savePhysicalResults(formulationId, payload as UpsertTestResultDto);
+        }
+        if (section === 'durability') {
+          await saveDurabilityResults(formulationId, payload as UpsertDurabilityDto);
+        }
+        if (section === 'environmental') {
+          await saveEnvironmentalResults(formulationId, payload as UpsertEnvironmentalDto);
+        }
+        if (section === 'subjective') {
+          await saveSubjectiveResults(formulationId, payload as UpsertSubjectiveRatingDto);
+        }
 
-      await load();
+        await load();
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save test results');
     } finally {
@@ -99,17 +148,12 @@ export function TestResultsPage({ formulationId, onAnalyse, onBack }: TestResult
           <button onClick={onBack} style={controlStyles.secondaryButton} type="button">
             Back
           </button>
-          {formulation && (
-            <button onClick={() => onAnalyse(formulation.id)} style={controlStyles.primaryButton} type="button">
-              Analyse
-            </button>
-          )}
         </div>
 
-        <h1 style={styles.title}>72-Hour Test Results</h1>
+        <h1 style={styles.title}>Test Results</h1>
         {formulation && (
           <p style={styles.subtitle}>
-            {formulation.formulationCode} · {formulation.name}
+            {formulation.formulationCode}{formulation.producedDate ? ` · ${formulation.producedDate}` : ''}
           </p>
         )}
 
@@ -121,65 +165,41 @@ export function TestResultsPage({ formulationId, onAnalyse, onBack }: TestResult
         {!loading && results && (
           <div style={styles.sections}>
             <ResultCard
-              fields={[
-                ['weightG', 'Weight (g)'],
-                ['diameterMm', 'Diameter (mm)'],
-                ['wallThicknessMm', 'Wall Thickness (mm)'],
-                ['roundnessMm', 'Roundness (mm)'],
-                ['balanceG', 'Balance (g)'],
-                ['bounceCm', 'Bounce (cm)'],
-                ['hardnessShorD', 'Hardness (Shore D)'],
-                ['compressionKg', 'Compression (kg)'],
-                ['deflectionMm', 'Deflection (mm)'],
-                ['coefficientOfRestitution', 'Coefficient of Restitution'],
-              ]}
-              missing={getMissingMetrics('physical', results)}
+              fields={SECTION_FIELDS.physical}
               saving={saving === 'physical'}
-              title="Physical + Performance"
+              title={SECTION_TITLES.physical}
               values={results.physical}
               onSubmit={(payload) => saveSection('physical', payload)}
             />
 
             <ResultCard
-              fields={[
-                ['airCannonCycles', 'Air Cannon Cycles'],
-                ['crackInitiationCycles', 'Crack Initiation Cycles'],
-                ['crackPropagationMm', 'Crack Propagation (mm)'],
-                ['deformationMm', 'Deformation (mm)'],
-              ]}
-              missing={getMissingMetrics('durability', results)}
+              fields={SECTION_FIELDS.performance}
+              saving={saving === 'performance'}
+              title={SECTION_TITLES.performance}
+              values={results.physical}
+              onSubmit={(payload) => saveSection('performance', payload)}
+            />
+
+            <ResultCard
+              fields={SECTION_FIELDS.durability}
               saving={saving === 'durability'}
-              title="Durability"
+              title={SECTION_TITLES.durability}
               values={results.durability}
               onSubmit={(payload) => saveSection('durability', payload)}
             />
 
             <ResultCard
-              fields={[
-                ['hotPerformanceScore', 'Hot Performance'],
-                ['coldPerformanceScore', 'Cold Performance'],
-                ['humidityPerformanceScore', 'Humidity Performance'],
-                ['testTempHotC', 'Hot Test Temp (C)'],
-                ['testTempColdC', 'Cold Test Temp (C)'],
-                ['testHumidityPct', 'Test Humidity (%)'],
-              ]}
-              missing={getMissingMetrics('environmental', results)}
+              fields={SECTION_FIELDS.environmental}
               saving={saving === 'environmental'}
-              title="Environmental"
+              title={SECTION_TITLES.environmental}
               values={results.environmental}
               onSubmit={(payload) => saveSection('environmental', payload)}
             />
 
             <ResultCard
-              fields={[
-                ['feelScore', 'Feel'],
-                ['soundScore', 'Sound'],
-                ['perceivedSpeedScore', 'Perceived Speed'],
-                ['perceivedDurabilityScore', 'Perceived Durability'],
-              ]}
-              missing={getMissingMetrics('subjective', results)}
+              fields={SECTION_FIELDS.subjective}
               saving={saving === 'subjective'}
-              title="Subjective"
+              title={SECTION_TITLES.subjective}
               values={results.subjective}
               onSubmit={(payload) => saveSection('subjective', payload)}
             />
@@ -190,30 +210,28 @@ export function TestResultsPage({ formulationId, onAnalyse, onBack }: TestResult
   );
 }
 
-function getMissingMetrics(section: ResultSection, results: FormulationResultsBundle): string[] {
-  const data = results[section] as Record<string, unknown> | null;
-  return REQUIRED_FIELDS[section].filter((field) => data?.[field] == null);
-}
-
-interface ResultCardProps {
-  fields: Array<[string, string]>;
-  missing: string[];
-  onSubmit: (payload: Record<string, number>) => Promise<void>;
+function ResultCard({
+  fields,
+  onSubmit,
+  saving,
+  title,
+  values,
+}: {
+  fields: FieldDefinition[];
+  onSubmit: (payload: Record<string, number | string>) => Promise<void>;
   saving: boolean;
   title: string;
-  values: object | null;
-}
-
-function ResultCard({ fields, missing, onSubmit, saving, title, values }: ResultCardProps) {
+  values: TestResult | DurabilityResult | EnvironmentalResult | SubjectiveRating | null;
+}) {
   const [form, setForm] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const next: Record<string, string> = {};
-    const typedValues = values as Record<string, unknown> | null;
+    const source = (values ?? {}) as Record<string, unknown>;
 
-    for (const [key] of fields) {
-      const value = typedValues?.[key];
-      next[key] = value == null ? '' : String(value);
+    for (const field of fields) {
+      const value = source[field.key];
+      next[field.key] = value == null ? '' : String(value);
     }
 
     setForm(next);
@@ -222,11 +240,14 @@ function ResultCard({ fields, missing, onSubmit, saving, title, values }: Result
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const payload = fields.reduce<Record<string, number>>((acc, [key]) => {
-      const rawValue = form[key]?.trim();
-      if (rawValue) {
-        acc[key] = Number(rawValue);
+    const payload = fields.reduce<Record<string, number | string>>((acc, field) => {
+      const rawValue = form[field.key]?.trim() ?? '';
+
+      if (!rawValue) {
+        return acc;
       }
+
+      acc[field.key] = field.type === 'textarea' ? rawValue : Number(rawValue);
       return acc;
     }, {});
 
@@ -242,23 +263,28 @@ function ResultCard({ fields, missing, onSubmit, saving, title, values }: Result
         </button>
       </div>
 
-      {missing.length > 0 && (
-        <MessageBanner tone="warning">
-          Missing metrics: {missing.join(', ')}
-        </MessageBanner>
-      )}
-
       <div style={styles.grid}>
-        {fields.map(([key, label]) => (
-          <label key={key} style={controlStyles.field}>
-            <span style={controlStyles.fieldLabel}>{label}</span>
-            <input
-              onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.value }))}
-              step="0.01"
-              style={controlStyles.input}
-              type="number"
-              value={form[key] ?? ''}
-            />
+        {fields.map((field) => (
+          <label
+            key={field.key}
+            style={field.type === 'textarea' ? styles.fullWidthField : controlStyles.field}
+          >
+            <span style={controlStyles.fieldLabel}>{field.label}</span>
+            {field.type === 'textarea' ? (
+              <textarea
+                onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))}
+                style={controlStyles.textarea}
+                value={form[field.key] ?? ''}
+              />
+            ) : (
+              <input
+                onChange={(event) => setForm((current) => ({ ...current, [field.key]: event.target.value }))}
+                step={field.step ?? '0.01'}
+                style={controlStyles.input}
+                type="number"
+                value={form[field.key] ?? ''}
+              />
+            )}
           </label>
         ))}
       </div>
@@ -281,6 +307,10 @@ const styles: Record<string, CSSProperties> = {
     display: 'flex',
     gap: spacing.sm,
     justifyContent: 'space-between',
+  },
+  fullWidthField: {
+    ...controlStyles.field,
+    gridColumn: '1 / -1',
   },
   grid: {
     display: 'grid',

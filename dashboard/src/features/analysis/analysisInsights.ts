@@ -217,8 +217,8 @@ export function buildTrendSnapshot(rows: HistoricalAnalysisRow[], currentFormula
     .filter((row) => row.formulation.id !== currentFormulationId && row.bestScore)
     .slice()
     .sort((left, right) => {
-      const leftDate = new Date(left.formulation.producedDate ?? left.formulation.createdAt).getTime();
-      const rightDate = new Date(right.formulation.producedDate ?? right.formulation.createdAt).getTime();
+      const leftDate = new Date(left.formulation.producedDate ?? 0).getTime();
+      const rightDate = new Date(right.formulation.producedDate ?? 0).getTime();
       return rightDate - leftDate;
     });
 

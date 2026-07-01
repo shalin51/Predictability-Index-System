@@ -70,12 +70,12 @@ const METRIC_FIELD_MAP: Record<string, (d: AllTestData) => number | null | undef
   // Durability
   air_cannon_cycles:           (d) => d.durability?.airCannonCycles,
   crack_initiation_cycles:     (d) => d.durability?.crackInitiationCycles,
-  crack_propagation:           (d) => d.durability?.crackPropagationMm,
+  crack_propagation:           (d) => d.durability?.crackPropagationObservations,
   deformation:                 (d) => d.durability?.deformationMm,
   // Environmental
-  hot_performance:             (d) => d.environmental?.hotPerformanceScore,
-  cold_performance:            (d) => d.environmental?.coldPerformanceScore,
-  humidity_performance:        (d) => d.environmental?.humidityPerformanceScore,
+  hot_performance:             (d) => d.environmental?.hotTemperaturePerformance,
+  cold_performance:            (d) => d.environmental?.coldTemperaturePerformance,
+  humidity_performance:        (d) => d.environmental?.humidityExposureResults,
   // Subjective
   feel:                        (d) => d.subjective?.feelScore,
   sound:                       (d) => d.subjective?.soundScore,

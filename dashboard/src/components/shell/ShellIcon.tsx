@@ -4,6 +4,7 @@ export type IconName =
   | 'flask'
   | 'layers'
   | 'scan'
+  | 'upload'
   | 'settings'
   | 'bell'
   | 'user'
@@ -68,6 +69,16 @@ export function ShellIcon({ name }: { name: IconName }) {
         <path d="M20 17v2a1 1 0 0 1-1 1h-2" />
         <path d="M7 20H5a1 1 0 0 1-1-1v-2" />
         <path d="M7 12h10" />
+      </svg>
+    );
+  }
+
+  if (name === 'upload') {
+    return (
+      <svg {...iconProps}>
+        <path d="M12 16V5" />
+        <path d="m7 10 5-5 5 5" />
+        <path d="M4 18v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" />
       </svg>
     );
   }

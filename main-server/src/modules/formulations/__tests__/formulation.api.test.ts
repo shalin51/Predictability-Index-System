@@ -42,7 +42,8 @@ describe('formulation API contracts', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.id).toBe(EXISTING_FORMULATION_ID);
-    expect(response.body.materials.length).toBeGreaterThan(0);
+    expect(response.body.resinComponents.length).toBeGreaterThan(0);
+    expect(response.body.manufacturingData.machineUsed).toBe('MACHINE-01');
   });
 
   it('creates a formulation and writes an audit record', async () => {
@@ -51,9 +52,18 @@ describe('formulation API contracts', () => {
       .set('x-user-id', 'tester')
       .send({
         formulationCode: 'FORM-003-A',
-        name: 'Audit Trail Candidate',
-        status: 'draft',
-        batchSizeKg: 25,
+        producedDate: '2026-06-20',
+        resinComponents: [
+          {
+            resinComponent: 'Audit Resin',
+            percentComposition: 100,
+            materialSupplier: 'Audit Supplier',
+            lotNumber: 'LOT-AUDIT-001',
+          },
+        ],
+        manufacturingData: {
+          machineUsed: 'MACHINE-03',
+        },
       });
 
     expect(response.status).toBe(201);
@@ -77,13 +87,17 @@ describe('formulation API contracts', () => {
       .put(`/formulations/${EXISTING_FORMULATION_ID}`)
       .set('x-user-id', 'editor')
       .send({
-        name: 'Standard HDPE Blend v1 Revised',
-        batchSizeKg: 55,
+        producedDate: '2026-06-15',
+        manufacturingData: {
+          machineUsed: 'MACHINE-99',
+          cycleTime: 48,
+        },
       });
 
     expect(response.status).toBe(200);
-    expect(response.body.name).toBe('Standard HDPE Blend v1 Revised');
-    expect(response.body.batchSizeKg).toBe(55);
+    expect(response.body.producedDate).toBe('2026-06-15');
+    expect(response.body.manufacturingData.machineUsed).toBe('MACHINE-99');
+    expect(response.body.manufacturingData.cycleTime).toBe(48);
 
     const auditResult = await getPool().query(
       `SELECT action, changed_by
@@ -103,7 +117,7 @@ describe('formulation API contracts', () => {
       .post('/formulations')
       .send({
         formulationCode: '',
-        name: '',
+        resinComponents: [],
       });
 
     expect(response.status).toBe(400);

@@ -3,17 +3,8 @@ import { useEffect, useState } from 'react';
 import { Card, Divider } from '../../components/ui/Card';
 import { controlStyles } from '../../components/ui/controls';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
-import { StatusDot, type DotStatus } from '../../components/ui/StatusDot';
 import { listFormulations, type FormulationListItem } from '../../services/api';
-import { colors, font, spacing } from '../../theme/tokens';
-
-const STATUS_COLOR: Record<string, DotStatus> = {
-  draft: 'checking',
-  testing: 'checking',
-  approved: 'ok',
-  rejected: 'error',
-  archived: 'error',
-};
+import { colors, font, radius, spacing } from '../../theme/tokens';
 
 export function FormulationListPage({
   onCreate,
@@ -42,7 +33,7 @@ export function FormulationListPage({
   }, [page]);
 
   return (
-    <DashboardPage>
+    <DashboardPage maxWidth={1200}>
       <Card>
         <div style={styles.header}>
           <h1 style={styles.title}>Formulations</h1>
@@ -62,26 +53,35 @@ export function FormulationListPage({
 
         {!loading && data.length === 0 && <EmptyState>No formulations yet.</EmptyState>}
 
-        {data.map((formulation) => (
-          <div
-            key={formulation.id}
-            onClick={() => onSelect?.(formulation.id)}
-            style={{
-              ...styles.row,
-              cursor: onSelect ? 'pointer' : 'default',
-            }}
-          >
-            <div>
-              <div style={styles.code}>{formulation.formulationCode}</div>
-              <div style={styles.name}>{formulation.name}</div>
-            </div>
-            <div style={styles.rowMeta}>
-              <span style={styles.date}>{formulation.producedDate?.split('T')[0] ?? '—'}</span>
-              <StatusDot size={10} status={STATUS_COLOR[formulation.status] ?? 'checking'} />
-              <span style={styles.status}>{formulation.status}</span>
-            </div>
+        {!loading && data.length > 0 && (
+          <div style={styles.tableWrap}>
+            <table style={styles.table}>
+              <thead>
+                <tr>
+                  <th style={styles.th}>Code</th>
+                  <th style={styles.th}>Produced Date</th>
+                  <th style={styles.th}>Record ID</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.map((formulation) => (
+                  <tr
+                    key={formulation.id}
+                    onClick={() => onSelect?.(formulation.id)}
+                    style={{
+                      ...styles.tableRow,
+                      cursor: onSelect ? 'pointer' : 'default',
+                    }}
+                  >
+                    <td style={styles.tdStrong}>{formulation.formulationCode}</td>
+                    <td style={styles.td}>{formatDate(formulation.producedDate)}</td>
+                    <td style={styles.td}>{formulation.id}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ))}
+        )}
 
         {total > 10 && (
           <>
@@ -114,16 +114,11 @@ export function FormulationListPage({
   );
 }
 
+function formatDate(value?: string) {
+  return value?.split('T')[0] ?? '—';
+}
+
 const styles: Record<string, CSSProperties> = {
-  code: {
-    color: colors.text.primary,
-    fontSize: font.size.md,
-    fontWeight: font.weight.semibold,
-  },
-  date: {
-    color: colors.text.muted,
-    fontSize: font.size.sm,
-  },
   header: {
     alignItems: 'center',
     display: 'flex',
@@ -139,10 +134,6 @@ const styles: Record<string, CSSProperties> = {
     color: colors.text.muted,
     fontSize: font.size.sm,
   },
-  name: {
-    color: colors.text.secondary,
-    fontSize: font.size.sm,
-  },
   pagination: {
     alignItems: 'center',
     display: 'flex',
@@ -153,22 +144,39 @@ const styles: Record<string, CSSProperties> = {
     ...controlStyles.secondaryButton,
     padding: '5px 12px',
   },
-  row: {
-    alignItems: 'center',
+  table: {
+    borderCollapse: 'collapse',
+    minWidth: 720,
+    width: '100%',
+  },
+  tableRow: {
     borderBottom: `1px solid ${colors.border}`,
-    display: 'flex',
-    justifyContent: 'space-between',
-    padding: `${spacing.sm}px 0`,
   },
-  rowMeta: {
-    alignItems: 'center',
-    display: 'flex',
-    gap: spacing.sm,
+  tableWrap: {
+    border: `1px solid ${colors.border}`,
+    borderRadius: radius.sm,
+    overflow: 'auto',
   },
-  status: {
+  td: {
     color: colors.text.secondary,
     fontSize: font.size.sm,
-    textTransform: 'capitalize',
+    padding: `${spacing.sm}px ${spacing.md}px`,
+  },
+  tdStrong: {
+    color: colors.text.primary,
+    fontSize: font.size.sm,
+    fontWeight: font.weight.semibold,
+    padding: `${spacing.sm}px ${spacing.md}px`,
+  },
+  th: {
+    backgroundColor: colors.surfaceElevated,
+    color: colors.text.muted,
+    fontSize: font.size.xs,
+    fontWeight: font.weight.semibold,
+    letterSpacing: '0.08em',
+    padding: `${spacing.sm}px ${spacing.md}px`,
+    textAlign: 'left',
+    textTransform: 'uppercase',
   },
   title: {
     color: colors.text.primary,
