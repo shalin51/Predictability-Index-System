@@ -5,21 +5,42 @@ export const NAV: ReadonlyArray<ShellNavItem<DashboardView>> = [
   {
     id: 'dashboard',
     label: 'Dashboard',
-    description: 'High-level record counts.',
+    description: 'Workspace overview.',
     group: 'Operations',
     icon: 'grid',
   },
   {
+    id: 'library',
+    label: 'Library',
+    description: 'Reference assets and supporting datasets.',
+    group: 'Operations',
+    icon: 'upload',
+  },
+  {
     id: 'formulations',
     label: 'Formulations',
-    description: 'Formulation records and production details.',
+    description: 'Recipe workflow and version history.',
     group: 'Workspace',
     icon: 'flask',
   },
   {
-    id: 'benchmarks',
-    label: 'Benchmarks',
-    description: 'Target envelopes and scoring weights.',
+    id: 'production-runs',
+    label: 'Production Runs',
+    description: 'Manufacturing run workspace.',
+    group: 'Workspace',
+    icon: 'scan',
+  },
+  {
+    id: 'lab-testing',
+    label: 'Lab Testing',
+    description: 'Testing workflow workspace.',
+    group: 'Workspace',
+    icon: 'pulse',
+  },
+  {
+    id: 'reports',
+    label: 'Reports',
+    description: 'Reporting workspace.',
     group: 'Workspace',
     icon: 'layers',
   },
@@ -35,43 +56,27 @@ export const NAV: ReadonlyArray<ShellNavItem<DashboardView>> = [
 export const VIEW_META: Record<DashboardView, { title: string; subtitle: string }> = {
   dashboard: {
     title: 'Dashboard',
-    subtitle: 'See current formulation and benchmark counts.',
+    subtitle: 'Workspace overview.',
+  },
+  library: {
+    title: 'Library',
+    subtitle: 'Reference assets and supporting materials.',
   },
   formulations: {
     title: 'Formulations',
-    subtitle: 'Browse and maintain formulation records.',
+    subtitle: 'Recipe composition, approval, and version workflow.',
   },
-  'formulation-create': {
-    title: 'Create formulation',
-    subtitle: 'Add a new formulation record.',
+  'production-runs': {
+    title: 'Production Runs',
+    subtitle: 'Manufacturing run workspace.',
   },
-  'formulation-detail': {
-    title: 'Formulation detail',
-    subtitle: 'Review the selected formulation record.',
+  'lab-testing': {
+    title: 'Lab Testing',
+    subtitle: 'Testing workflow workspace.',
   },
-  'formulation-edit': {
-    title: 'Edit formulation',
-    subtitle: 'Update the current formulation record.',
-  },
-  'formulation-results': {
-    title: 'Test results',
-    subtitle: 'Review stored test result data.',
-  },
-  benchmarks: {
-    title: 'Benchmark control',
-    subtitle: 'Maintain benchmark envelopes, metric weights, and validation balance.',
-  },
-  imports: {
-    title: 'Workbook imports',
-    subtitle: 'Import is currently unavailable.',
-  },
-  analysis: {
-    title: 'Analysis',
-    subtitle: 'Analysis is currently unavailable.',
-  },
-  report: {
-    title: 'Report output',
-    subtitle: 'Export the current executive summary, benchmark breakdown, and recommendations.',
+  reports: {
+    title: 'Reports',
+    subtitle: 'Reporting workspace.',
   },
   settings: {
     title: 'Shell settings',
@@ -80,15 +85,5 @@ export const VIEW_META: Record<DashboardView, { title: string; subtitle: string 
 };
 
 export function getActiveNavView(view: DashboardView): DashboardView {
-  if (
-    view === 'formulation-create'
-    || view === 'formulation-detail'
-    || view === 'formulation-edit'
-    || view === 'formulation-results'
-    || view === 'report'
-  ) {
-    return 'formulations';
-  }
-
   return view;
 }

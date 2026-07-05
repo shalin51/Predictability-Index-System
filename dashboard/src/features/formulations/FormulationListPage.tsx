@@ -3,189 +3,111 @@ import { useEffect, useState } from 'react';
 import { Card, Divider } from '../../components/ui/Card';
 import { controlStyles } from '../../components/ui/controls';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
-import { listFormulations, type FormulationListItem } from '../../services/api';
-import { colors, font, radius, spacing } from '../../theme/tokens';
+import {
+  archiveFormulation,
+  duplicateFormulation,
+  listFormulations,
+  listLibraryOptions,
+  type FormulationRecord,
+  type LibraryRecord,
+} from '../../services/api';
+import { spacing } from '../../theme/tokens';
+import { formatValue, formulationStyles, labelize, totalTone } from './formulationUi';
 
-export function FormulationListPage({
-  onCreate,
-  onSelect,
-}: {
-  onCreate?: () => void;
-  onSelect?: (id: string) => void;
-}) {
-  const [data, setData] = useState<FormulationListItem[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
+export function FormulationListPage({ onCreate, onOpen }: { onCreate: () => void; onOpen: (id: string) => void }) {
+  const [records, setRecords] = useState<FormulationRecord[]>([]);
+  const [benchmarks, setBenchmarks] = useState<LibraryRecord[]>([]);
+  const [materials, setMaterials] = useState<LibraryRecord[]>([]);
+  const [filters, setFilters] = useState({ createdFrom: '', materialId: '', search: '', status: 'all', targetBenchmarkId: '' });
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const load = () => {
     setLoading(true);
     setError('');
+    void listFormulations(filters).then(setRecords).catch((err: Error) => setError(err.message)).finally(() => setLoading(false));
+  };
 
-    void listFormulations(page, 10)
-      .then((response) => {
-        setData(response.data);
-        setTotal(response.total);
+  useEffect(load, [filters]);
+  useEffect(() => {
+    void Promise.all([listLibraryOptions('benchmarks'), listLibraryOptions('materials')])
+      .then(([benchmarkOptions, materialOptions]) => {
+        setBenchmarks(benchmarkOptions);
+        setMaterials(materialOptions);
       })
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [page]);
+      .catch(() => undefined);
+  }, []);
+
+  const setFilter = (key: keyof typeof filters, value: string) => setFilters((current) => ({ ...current, [key]: value }));
 
   return (
-    <DashboardPage maxWidth={1200}>
+    <DashboardPage maxWidth="100%">
       <Card>
-        <div style={styles.header}>
-          <h1 style={styles.title}>Formulations</h1>
-          <div style={styles.headerMeta}>
-            <span style={styles.total}>{total} total</span>
-            {onCreate && (
-              <button onClick={onCreate} style={controlStyles.primaryButton} type="button">
-                New
-              </button>
-            )}
+        <div style={formulationStyles.header}>
+          <div>
+            <h1 style={formulationStyles.title}>Formulations</h1>
+            <p style={formulationStyles.subtitle}>Recipe versions, approval status, and component totals.</p>
           </div>
+          <button onClick={onCreate} style={controlStyles.primaryButton} type="button">New Formulation</button>
         </div>
         <Divider />
-
-        {loading && <div style={styles.muted}>Loading...</div>}
+        <div style={formulationStyles.filters}>
+          <input onChange={(event) => setFilter('search', event.target.value)} placeholder="Search" style={controlStyles.input} value={filters.search} />
+          <select onChange={(event) => setFilter('status', event.target.value)} style={controlStyles.input} value={filters.status}>
+            {['all', 'draft', 'approved', 'molded', 'testing', 'scored', 'archived'].map((status) => <option key={status} value={status}>{labelize(status)}</option>)}
+          </select>
+          <select onChange={(event) => setFilter('targetBenchmarkId', event.target.value)} style={controlStyles.input} value={filters.targetBenchmarkId}>
+            <option value="">Target Benchmark</option>
+            {benchmarks.map((item) => <option key={item.id} value={item.id}>{String(item['label'])}</option>)}
+          </select>
+          <select onChange={(event) => setFilter('materialId', event.target.value)} style={controlStyles.input} value={filters.materialId}>
+            <option value="">Material</option>
+            {materials.map((item) => <option key={item.id} value={item.id}>{String(item['code'] ?? item['label'])}</option>)}
+          </select>
+          <input onChange={(event) => setFilter('createdFrom', event.target.value)} style={controlStyles.input} type="date" value={filters.createdFrom} />
+        </div>
         {error && <MessageBanner tone="danger">{error}</MessageBanner>}
-
-        {!loading && data.length === 0 && <EmptyState>No formulations yet.</EmptyState>}
-
-        {!loading && data.length > 0 && (
-          <div style={styles.tableWrap}>
-            <table style={styles.table}>
+        {loading && <div style={formulationStyles.muted}>Loading...</div>}
+        {!loading && records.length === 0 && <EmptyState>No formulations.</EmptyState>}
+        {records.length > 0 && (
+          <div style={formulationStyles.tableWrap}>
+            <table style={formulationStyles.table}>
               <thead>
                 <tr>
-                  <th style={styles.th}>Code</th>
-                  <th style={styles.th}>Produced Date</th>
-                  <th style={styles.th}>Record ID</th>
+                  {['Formulation Code', 'Version', 'Family', 'Target Benchmark', 'Status', 'Components Total', 'Last Updated', 'Actions'].map((column) => (
+                    <th key={column} style={formulationStyles.th}>{column}</th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {data.map((formulation) => (
-                  <tr
-                    key={formulation.id}
-                    onClick={() => onSelect?.(formulation.id)}
-                    style={{
-                      ...styles.tableRow,
-                      cursor: onSelect ? 'pointer' : 'default',
-                    }}
-                  >
-                    <td style={styles.tdStrong}>{formulation.formulationCode}</td>
-                    <td style={styles.td}>{formatDate(formulation.producedDate)}</td>
-                    <td style={styles.td}>{formulation.id}</td>
+                {records.map((record) => (
+                  <tr key={record.id}>
+                    <td style={formulationStyles.td}>{record.formulationCode}</td>
+                    <td style={formulationStyles.td}>{record.version}</td>
+                    <td style={formulationStyles.td}>{record.family ?? '-'}</td>
+                    <td style={formulationStyles.td}>{record.targetBenchmark ?? '-'}</td>
+                    <td style={formulationStyles.td}>{labelize(record.status)}</td>
+                    <td style={formulationStyles.td}><span style={{ ...formulationStyles.badge, ...totalTone(record.componentsTotal) }}>{formatValue(record.componentsTotal)}%</span></td>
+                    <td style={formulationStyles.td}>{formatValue(record.updatedAt)}</td>
+                    <td style={formulationStyles.td}>
+                      <div style={styles.rowActions}>
+                        <button onClick={() => onOpen(record.id)} style={controlStyles.subtleButton} type="button">View</button>
+                        <button onClick={() => onOpen(record.id)} style={controlStyles.subtleButton} type="button">Edit</button>
+                        <button onClick={() => void duplicateFormulation(record.id).then((next) => onOpen(next.id)).catch((err: Error) => setError(err.message))} style={controlStyles.subtleButton} type="button">Duplicate</button>
+                        <button onClick={() => void archiveFormulation(record.id).then(load).catch((err: Error) => setError(err.message))} style={controlStyles.subtleButton} type="button">Archive</button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         )}
-
-        {total > 10 && (
-          <>
-            <Divider />
-            <div style={styles.pagination}>
-              <button
-                onClick={() => setPage((current) => Math.max(1, current - 1))}
-                disabled={page === 1}
-                style={styles.paginationButton}
-                type="button"
-              >
-                Prev
-              </button>
-              <span style={styles.total}>
-                {page} / {Math.ceil(total / 10)}
-              </span>
-              <button
-                onClick={() => setPage((current) => current + 1)}
-                disabled={page >= Math.ceil(total / 10)}
-                style={styles.paginationButton}
-                type="button"
-              >
-                Next
-              </button>
-            </div>
-          </>
-        )}
       </Card>
     </DashboardPage>
   );
 }
 
-function formatDate(value?: string) {
-  return value?.split('T')[0] ?? '—';
-}
-
 const styles: Record<string, CSSProperties> = {
-  header: {
-    alignItems: 'center',
-    display: 'flex',
-    gap: spacing.sm,
-    justifyContent: 'space-between',
-  },
-  headerMeta: {
-    alignItems: 'center',
-    display: 'flex',
-    gap: spacing.sm,
-  },
-  muted: {
-    color: colors.text.muted,
-    fontSize: font.size.sm,
-  },
-  pagination: {
-    alignItems: 'center',
-    display: 'flex',
-    gap: spacing.sm,
-    justifyContent: 'center',
-  },
-  paginationButton: {
-    ...controlStyles.secondaryButton,
-    padding: '5px 12px',
-  },
-  table: {
-    borderCollapse: 'collapse',
-    minWidth: 720,
-    width: '100%',
-  },
-  tableRow: {
-    borderBottom: `1px solid ${colors.border}`,
-  },
-  tableWrap: {
-    border: `1px solid ${colors.border}`,
-    borderRadius: radius.sm,
-    overflow: 'auto',
-  },
-  td: {
-    color: colors.text.secondary,
-    fontSize: font.size.sm,
-    padding: `${spacing.sm}px ${spacing.md}px`,
-  },
-  tdStrong: {
-    color: colors.text.primary,
-    fontSize: font.size.sm,
-    fontWeight: font.weight.semibold,
-    padding: `${spacing.sm}px ${spacing.md}px`,
-  },
-  th: {
-    backgroundColor: colors.surfaceElevated,
-    color: colors.text.muted,
-    fontSize: font.size.xs,
-    fontWeight: font.weight.semibold,
-    letterSpacing: '0.08em',
-    padding: `${spacing.sm}px ${spacing.md}px`,
-    textAlign: 'left',
-    textTransform: 'uppercase',
-  },
-  title: {
-    color: colors.text.primary,
-    fontSize: font.size.xl,
-    fontWeight: font.weight.bold,
-    margin: 0,
-  },
-  total: {
-    color: colors.text.muted,
-    fontSize: font.size.sm,
-  },
+  rowActions: { display: 'flex', flexWrap: 'wrap', gap: spacing.space2 },
 };

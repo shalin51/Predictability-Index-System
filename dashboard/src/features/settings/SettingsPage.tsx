@@ -60,7 +60,7 @@ export function SettingsPage({
   };
 
   return (
-    <DashboardPage maxWidth={1200}>
+    <DashboardPage maxWidth="100%">
       <Card style={styles.card}>
         <section style={styles.section}>
           <div>
@@ -100,8 +100,7 @@ export function SettingsPage({
                 value={draftPreferences.defaultView}
               >
                 <option value="dashboard">Dashboard</option>
-                <option value="formulations">Formulations</option>
-                <option value="benchmarks">Benchmarks</option>
+                <option value="library">Library</option>
               </select>
             </label>
           </div>
@@ -124,7 +123,7 @@ export function SettingsPage({
             />
             <ToggleRow
               checked={draftPreferences.denseTables}
-              description="Use tighter spacing for benchmark and results tables."
+              description="Use tighter spacing for workspace tables."
               label="Dense table spacing"
               onChange={(checked) => setDraftPreferences({ ...draftPreferences, denseTables: checked })}
             />

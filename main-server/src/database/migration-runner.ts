@@ -2,6 +2,7 @@ import { Client } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 import { config } from '../config/env';
+import { createPgClientConfig } from '../infrastructure/database/pg-config';
 
 const MIGRATIONS_DIR = path.resolve(__dirname, 'migrations');
 const SEEDS_DIR = path.resolve(__dirname, 'seeds');
@@ -14,14 +15,12 @@ function getSqlFiles(dir: string): string[] {
 }
 
 export function createDatabaseClient(): Client {
-  return new Client({
-    host: config.db.host,
-    port: config.db.port,
-    database: config.db.name,
-    user: config.db.user,
-    password: config.db.password,
-    connectionTimeoutMillis: 10_000,
-  });
+  return new Client(
+    createPgClientConfig({
+      database: config.db.name,
+      connectionTimeoutMillis: 10_000,
+    })
+  );
 }
 
 export async function resetDatabase(client: Client): Promise<void> {
@@ -29,6 +28,33 @@ export async function resetDatabase(client: Client): Promise<void> {
   await client.query('DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE');
   await client.query(`
     DROP TABLE IF EXISTS
+      score_report_metrics,
+      score_reports,
+      algorithm_versions,
+      run_metric_summaries,
+      sample_subjective_ratings,
+      test_panelists,
+      environmental_test_results,
+      sample_observations,
+      sample_test_results,
+      test_condition_definitions,
+      test_method_definitions,
+      metric_definitions,
+      samples,
+      production_run_settings,
+      production_runs,
+      formulation_components,
+      formulation_versions,
+      formulation_families,
+      experiments,
+      material_lots,
+      supplier_materials,
+      molds,
+      machines,
+      audit_logs,
+      user_roles,
+      app_users,
+      roles,
       request_logs,
       ball_testing_import_samples,
       ball_testing_import_sheets,
@@ -48,6 +74,18 @@ export async function resetDatabase(client: Client): Promise<void> {
       materials,
       suppliers,
       _migrations
+    CASCADE
+  `);
+  await client.query(`
+    DROP TYPE IF EXISTS
+      criticality_level,
+      traffic_light,
+      metric_data_type,
+      metric_category,
+      sample_status,
+      run_status,
+      formulation_status,
+      record_status
     CASCADE
   `);
 }

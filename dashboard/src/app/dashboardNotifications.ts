@@ -5,9 +5,9 @@ import type { SettingsLandingView } from './dashboardPreferences';
 export function createDefaultNotifications(): ShellNotification[] {
   return [
     {
-      id: 'alert-benchmark',
-      title: 'Benchmark weights validated',
-      detail: 'All benchmark profiles passed weight-balance checks in the latest review cycle.',
+      id: 'alert-workspace',
+      title: 'Workspace ready',
+      detail: 'The current workspace is ready for the next data model.',
       timeLabel: '05m',
       tone: 'success',
       read: false,
@@ -15,7 +15,7 @@ export function createDefaultNotifications(): ShellNotification[] {
     {
       id: 'alert-shell',
       title: 'Dashboard shell upgraded',
-      detail: 'The workspace has been trimmed to focus on formulation and benchmark records.',
+      detail: 'The workspace has been trimmed for the next configuration.',
       timeLabel: 'Now',
       tone: 'info',
       read: false,

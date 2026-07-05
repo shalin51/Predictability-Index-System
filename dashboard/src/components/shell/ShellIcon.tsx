@@ -8,19 +8,20 @@ export type IconName =
   | 'settings'
   | 'bell'
   | 'user'
+  | 'search'
   | 'menu'
   | 'close';
 
 export function ShellIcon({ name }: { name: IconName }) {
   const iconProps = {
     fill: 'none',
-    height: 16,
+    height: 18,
     stroke: 'currentColor',
     strokeLinecap: 'round' as const,
     strokeLinejoin: 'round' as const,
-    strokeWidth: 1.8,
+    strokeWidth: 1.5,
     viewBox: '0 0 24 24',
-    width: 16,
+    width: 18,
   };
 
   if (name === 'pulse') {
@@ -104,6 +105,15 @@ export function ShellIcon({ name }: { name: IconName }) {
       <svg {...iconProps}>
         <path d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9" />
         <path d="M10 21a2 2 0 0 0 4 0" />
+      </svg>
+    );
+  }
+
+  if (name === 'search') {
+    return (
+      <svg {...iconProps}>
+        <circle cx="11" cy="11" r="7" />
+        <path d="m20 20-3.5-3.5" />
       </svg>
     );
   }

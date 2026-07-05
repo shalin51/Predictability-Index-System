@@ -5,7 +5,7 @@
  * With seed: npm run db:seed:dev
  */
 
-import { config } from '../config/env';
+import { config, initializeConfig } from '../config/env';
 import {
   applyMigrations,
   applySeeds,
@@ -17,6 +17,7 @@ const withSeed = process.argv.includes('--seed');
 const resetDb = process.argv.includes('--reset');
 
 async function run(): Promise<void> {
+  await initializeConfig();
   const client = createDatabaseClient();
 
   await client.connect();

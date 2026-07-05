@@ -1,0 +1,19 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "APP_ENV": "dev",
+    "NODE_ENV": "development",
+    "MAIN_SERVER_PORT": "7071",
+    "DB_AUTH_MODE": "password",
+    "DB_HOST": "localhost",
+    "DB_PORT": "5432",
+    "DB_NAME": "AMFPI",
+    "DB_USER": "postgres",
+    "DB_PASSWORD": "CHANGE_ME",
+    "DB_SSL_MODE": "disable",
+    "LOG_LEVEL": "debug",
+    "CORS_ORIGIN": "http://localhost:3000"
+  }
+}

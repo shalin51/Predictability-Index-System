@@ -18,12 +18,13 @@ pnpm-debug.log*
 # Environment files
 *.env.*
 !*.env.example
+local.settings.json
 
 # OS / editor
 .DS_Store
 .vscode/
 .idea/
-
+.deploy/
 # Temporary files
 tmp/
 temp/

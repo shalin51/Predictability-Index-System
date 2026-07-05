@@ -1,173 +1,155 @@
-import type {
-  FormulationListItem,
-  FormulationDetailDto,
-  CreateFormulationDto,
-  UpdateFormulationDto,
-  PaginatedResponse,
-} from '@amfpi/shared';
-import { FormulationRepository } from '../../infrastructure/repositories/formulation.repository';
-import { AuditService } from '../audit/audit.service';
-import { NotFoundError, ConflictError, ValidationError } from '../../errors/app-error';
+import { ConflictError, NotFoundError, ValidationError } from '../../errors/app-error';
+import type { AuditService } from '../audit/audit.service';
+import { FormulationRepository } from './formulation.repository';
+import {
+  normalizeFormulationInput,
+  sumComponents,
+  validateComponentTotal,
+  validateFormulationInput,
+} from './formulation.validator';
+import type { FormulationListQuery, FormulationOptions, FormulationRecord } from './formulation.types';
 
 export class FormulationService {
   constructor(
     private readonly repo: FormulationRepository,
-    private readonly audit: AuditService
+    private readonly auditService: AuditService
   ) {}
 
-  async list(
-    page = 1,
-    pageSize = 20
-  ): Promise<PaginatedResponse<FormulationListItem>> {
-    const offset = (page - 1) * pageSize;
-    const { data, total } = await this.repo.findAll(pageSize, offset);
-    return {
-      data,
-      total,
-      page,
-      pageSize,
-      timestamp: new Date().toISOString(),
-    };
+  async list(query: FormulationListQuery): Promise<FormulationRecord[]> {
+    return this.repo.list(query);
   }
 
-  async getById(id: string): Promise<FormulationDetailDto> {
-    const formulation = await this.repo.findById(id);
-    if (!formulation) throw new NotFoundError(`Formulation ${id}`);
-    return formulation;
+  async options(): Promise<FormulationOptions> {
+    return this.repo.options();
   }
 
-  async create(dto: CreateFormulationDto, createdBy: string): Promise<FormulationDetailDto> {
-    this.validateCreateDto(dto);
+  async detail(id: string): Promise<FormulationRecord> {
+    const record = await this.repo.findById(id);
+    if (!record) throw new NotFoundError(`Formulation ${id}`);
+    record['auditHistory'] = await this.repo.audit(id);
+    return record;
+  }
 
-    // Check for duplicate code
-    const existing = await this.repo.findByCode(dto.formulationCode);
-    if (existing) {
-      throw new ConflictError(`Formulation code '${dto.formulationCode}' already exists`);
-    }
+  async create(input: Record<string, unknown>, changedBy: string): Promise<FormulationRecord> {
+    const payload = normalizeFormulationInput(input);
+    validateFormulationInput(payload);
+    const warnings = await this.repo.validateReferences(payload.components, payload.targetBenchmarkId);
+    if (payload.approve && warnings.length > 0) throw new ValidationError(warnings[0] ?? 'Invalid formulation references');
 
-    const created = await this.repo.create({ ...dto, createdBy });
-
-    await this.audit.log({
+    const record = await this.repo.create(payload);
+    await this.auditService.log({
       tableName: 'formulations',
-      recordId: created.id,
+      recordId: record.id,
       action: 'INSERT',
-      changedBy: createdBy,
-      newValues: created as unknown as Record<string, unknown>,
+      changedBy,
+      newValues: record,
     });
-
-    return created;
+    if (payload.approve) {
+      await this.auditService.log({
+        tableName: 'formulations',
+        recordId: record.id,
+        action: 'UPDATE',
+        changedBy,
+        newValues: { status: 'approved' },
+      });
+    }
+    return record;
   }
 
-  async update(
-    id: string,
-    dto: UpdateFormulationDto,
-    changedBy: string
-  ): Promise<FormulationDetailDto> {
-    this.validateUpdateDto(dto);
-
+  async update(id: string, input: Record<string, unknown>, changedBy: string): Promise<FormulationRecord> {
     const before = await this.repo.findById(id);
     if (!before) throw new NotFoundError(`Formulation ${id}`);
+    if (before['status'] !== 'draft') throw new ConflictError('Approved formulations are locked; duplicate a new version to change the recipe');
 
-    const updated = await this.repo.update(id, dto);
-    if (!updated) throw new NotFoundError(`Formulation ${id}`);
+    const payload = normalizeFormulationInput(input);
+    validateFormulationInput(payload);
+    const warnings = await this.repo.validateReferences(payload.components, payload.targetBenchmarkId);
+    if (payload.approve && warnings.length > 0) throw new ValidationError(warnings[0] ?? 'Invalid formulation references');
 
-    await this.audit.log({
+    let record = await this.repo.update(id, payload);
+    if (!record) throw new NotFoundError(`Formulation ${id}`);
+
+    if (payload.approve) {
+      validateComponentTotal(payload.components);
+      record = await this.repo.approve(id);
+      if (!record) throw new NotFoundError(`Formulation ${id}`);
+    }
+
+    await this.auditService.log({
       tableName: 'formulations',
       recordId: id,
       action: 'UPDATE',
       changedBy,
-      oldValues: before as unknown as Record<string, unknown>,
-      newValues: updated as unknown as Record<string, unknown>,
+      oldValues: before,
+      newValues: record,
     });
-
-    return updated;
+    return record;
   }
 
-  private validateCreateDto(dto: CreateFormulationDto): void {
-    if (!dto.formulationCode?.trim()) {
-      throw new ValidationError('formulationCode is required');
-    }
-    this.validateProducedDate(dto.producedDate);
-    this.validateResinComponents(dto.resinComponents, true);
-    this.validateManufacturingData(dto.manufacturingData);
+  async approve(id: string, changedBy: string): Promise<FormulationRecord> {
+    const before = await this.repo.findById(id);
+    if (!before) throw new NotFoundError(`Formulation ${id}`);
+    if (before['status'] !== 'draft') throw new ConflictError('Only draft formulations can be approved');
+
+    const components = (before['components'] ?? []) as Array<{ percentComposition: number }>;
+    validateComponentTotal(components.map((component) => ({
+      basis: 'weight_percent',
+      materialId: 'x',
+      percentComposition: Number(component.percentComposition),
+      supplierId: 'x',
+    })));
+
+    const record = await this.repo.approve(id);
+    if (!record) throw new NotFoundError(`Formulation ${id}`);
+    await this.auditService.log({
+      tableName: 'formulations',
+      recordId: id,
+      action: 'UPDATE',
+      changedBy,
+      oldValues: before,
+      newValues: record,
+    });
+    return record;
   }
 
-  private validateUpdateDto(dto: UpdateFormulationDto): void {
-    if (Object.keys(dto).length === 0) {
-      throw new ValidationError('At least one field must be provided');
-    }
-    this.validateProducedDate(dto.producedDate);
-    this.validateResinComponents(dto.resinComponents, false);
-    this.validateManufacturingData(dto.manufacturingData);
+  async archive(id: string, changedBy: string): Promise<FormulationRecord> {
+    const before = await this.repo.findById(id);
+    if (!before) throw new NotFoundError(`Formulation ${id}`);
+    const record = await this.repo.archive(id);
+    if (!record) throw new NotFoundError(`Formulation ${id}`);
+    await this.auditService.log({
+      tableName: 'formulations',
+      recordId: id,
+      action: 'UPDATE',
+      changedBy,
+      oldValues: before,
+      newValues: record,
+    });
+    return record;
   }
 
-  private validateProducedDate(value: string | undefined): void {
-    if (value === undefined) {
-      return;
-    }
-
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-      throw new ValidationError('producedDate must be in YYYY-MM-DD format');
-    }
+  async duplicate(id: string, changedBy: string): Promise<FormulationRecord> {
+    const source = await this.repo.findById(id);
+    if (!source) throw new NotFoundError(`Formulation ${id}`);
+    const record = await this.repo.duplicate(id);
+    if (!record) throw new NotFoundError(`Formulation ${id}`);
+    await this.auditService.log({
+      tableName: 'formulations',
+      recordId: record.id,
+      action: 'INSERT',
+      changedBy,
+      oldValues: source,
+      newValues: { ...record, duplicatedFrom: id },
+    });
+    return record;
   }
 
-  private validateResinComponents(
-    resinComponents: CreateFormulationDto['resinComponents'] | undefined,
-    required: boolean
-  ): void {
-    if (resinComponents === undefined) {
-      if (required) {
-        throw new ValidationError('resinComponents are required');
-      }
-      return;
-    }
-
-    if (resinComponents.length === 0) {
-      throw new ValidationError('resinComponents must include at least one item');
-    }
-
-    let total = 0;
-    const seenComponents = new Set<string>();
-    for (const component of resinComponents) {
-      if (!component.resinComponent?.trim()) {
-        throw new ValidationError('resinComponent is required');
-      }
-      if (!component.materialSupplier?.trim()) {
-        throw new ValidationError('materialSupplier is required');
-      }
-      const componentKey = component.resinComponent.trim().toLowerCase();
-      if (seenComponents.has(componentKey)) {
-        throw new ValidationError('resinComponents must not repeat the same resinComponent');
-      }
-      seenComponents.add(componentKey);
-      if (!Number.isFinite(component.percentComposition) || component.percentComposition <= 0 || component.percentComposition > 100) {
-        throw new ValidationError('percentComposition must be greater than 0 and at most 100');
-      }
-      total += component.percentComposition;
-    }
-
-    if (Math.abs(total - 100) > 0.001) {
-      throw new ValidationError('resinComponents percentComposition must total 100');
-    }
-  }
-
-  private validateManufacturingData(dto: CreateFormulationDto['manufacturingData'] | undefined): void {
-    if (!dto) {
-      return;
-    }
-
-    const numericFields = [
-      'injectionPressure',
-      'meltTemperature',
-      'coolingTime',
-      'cycleTime',
-    ] as const;
-
-    for (const field of numericFields) {
-      const value = dto[field];
-      if (value !== undefined && (!Number.isFinite(value) || value < 0)) {
-        throw new ValidationError(`${field} must be a non-negative number`);
-      }
-    }
+  componentTotal(record: FormulationRecord): number {
+    return sumComponents(((record['components'] ?? []) as Array<{ percentComposition: number }>).map((component) => ({
+      basis: 'weight_percent',
+      materialId: 'x',
+      percentComposition: Number(component.percentComposition),
+      supplierId: 'x',
+    })));
   }
 }

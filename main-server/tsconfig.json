@@ -3,6 +3,8 @@
   "compilerOptions": {
     "outDir": "dist",
     "baseUrl": ".",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "paths": {
       "@amfpi/shared": ["../packages/shared/src/index.ts"]
     }

@@ -2,11 +2,15 @@
   "name": "@amfpi/main-server",
   "version": "1.0.0",
   "private": true,
-  "main": "dist/index.js",
+  "main": "dist/main-server/src/functions/index.js",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "npm run build && npm run start:express",
     "build": "tsc",
-    "start": "node dist/index.js",
+    "start": "npm run build && npm run start:express",
+    "start:express": "node dist/main-server/src/index.js",
+    "start:functions": "npm run build && func start --javascript",
+    "deploy:stage": "node scripts/deploy-function.cjs stage",
+    "deploy:prod": "node scripts/deploy-function.cjs prod",
     "db:verify:dev": "tsx src/database/verify-db.ts",
     "db:validate:schema:dev": "tsx src/database/validate-schema.ts",
     "db:migrate:dev": "tsx src/database/migrate.ts",
@@ -21,6 +25,9 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@azure/functions": "^4.7.3",
+    "@azure/identity": "^4.13.0",
+    "@azure/keyvault-secrets": "^4.10.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.18.3",

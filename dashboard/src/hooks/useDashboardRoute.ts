@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  buildDashboardHash,
-  parseDashboardHash,
+  buildDashboardPath,
+  parseDashboardLocation,
   type DashboardRouteState,
   type DashboardView,
 } from '../routing/dashboardRoute';
@@ -14,16 +14,17 @@ interface NavigateOptions {
 export function useDashboardRoute(defaultView: DashboardView) {
   const initialRouteRef = useRef<DashboardRouteState>(
     typeof window === 'undefined'
-      ? { formulationId: '', view: defaultView }
-      : parseDashboardHash(window.location.hash, defaultView),
+      ? { view: defaultView }
+      : parseDashboardLocation(window.location, defaultView),
   );
   const [view, setView] = useState<DashboardView>(() => initialRouteRef.current.view);
-  const [selectedFormulationId, setSelectedFormulationId] = useState<string>(
-    () => initialRouteRef.current.formulationId,
-  );
+  const [librarySection, setLibrarySection] = useState<string>(() => initialRouteRef.current.librarySection ?? 'materials');
+  const [formulationMode, setFormulationMode] = useState<DashboardRouteState['formulationMode']>(() => initialRouteRef.current.formulationMode ?? 'list');
+  const [formulationId, setFormulationId] = useState<string | undefined>(() => initialRouteRef.current.formulationId);
+  const [productionRunMode, setProductionRunMode] = useState<DashboardRouteState['productionRunMode']>(() => initialRouteRef.current.productionRunMode ?? 'list');
+  const [productionRunId, setProductionRunId] = useState<string | undefined>(() => initialRouteRef.current.productionRunId);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const currentHashRef = useRef(buildDashboardHash(initialRouteRef.current));
-  const ignoreHashChangeRef = useRef(false);
+  const currentPathRef = useRef(buildDashboardPath(initialRouteRef.current));
   const hasUnsavedChangesRef = useRef(false);
 
   useEffect(() => {
@@ -31,7 +32,7 @@ export function useDashboardRoute(defaultView: DashboardView) {
   }, [hasUnsavedChanges]);
 
   useEffect(() => {
-    if (view !== 'formulation-create' && view !== 'formulation-edit' && hasUnsavedChanges) {
+    if (hasUnsavedChanges) {
       setHasUnsavedChanges(false);
     }
   }, [hasUnsavedChanges, view]);
@@ -46,22 +47,31 @@ export function useDashboardRoute(defaultView: DashboardView) {
 
   const commitRoute = useCallback((route: DashboardRouteState, replace = false) => {
     setView(route.view);
-    setSelectedFormulationId(route.formulationId);
+    setLibrarySection(route.librarySection ?? 'materials');
+    setFormulationMode(route.formulationMode ?? 'list');
+    setFormulationId(route.formulationId);
+    setProductionRunMode(route.productionRunMode ?? 'list');
+    setProductionRunId(route.productionRunId);
 
-    const nextHash = buildDashboardHash(route);
-    currentHashRef.current = nextHash;
+    const nextPath = buildDashboardPath(route);
+    currentPathRef.current = nextPath;
 
-    if (typeof window === 'undefined' || window.location.hash === nextHash) {
+    if (typeof window === 'undefined') {
       return;
     }
+
+    if (window.location.pathname === nextPath && !window.location.hash) {
+      return;
+    }
+
+    const nextUrl = `${nextPath}${window.location.search}`;
 
     if (replace) {
-      window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}${nextHash}`);
+      window.history.replaceState(null, '', nextUrl);
       return;
     }
 
-    ignoreHashChangeRef.current = true;
-    window.location.hash = nextHash;
+    window.history.pushState(null, '', nextUrl);
   }, []);
 
   const navigate = useCallback((route: DashboardRouteState, options?: NavigateOptions) => {
@@ -78,36 +88,41 @@ export function useDashboardRoute(defaultView: DashboardView) {
       return;
     }
 
-    if (!window.location.hash) {
-      commitRoute(initialRouteRef.current, true);
-    } else {
-      currentHashRef.current = buildDashboardHash(
-        parseDashboardHash(window.location.hash, defaultView),
-      );
+    const initialRoute = parseDashboardLocation(window.location, defaultView);
+    const canonicalPath = buildDashboardPath(initialRoute);
+    currentPathRef.current = canonicalPath;
+
+    if (window.location.pathname !== canonicalPath || window.location.hash) {
+      window.history.replaceState(null, '', `${canonicalPath}${window.location.search}`);
     }
 
-    const handleHashChange = () => {
-      if (ignoreHashChangeRef.current) {
-        ignoreHashChangeRef.current = false;
-        currentHashRef.current = window.location.hash;
-        return;
-      }
-
-      const nextRoute = parseDashboardHash(window.location.hash, defaultView);
+    const handleLocationChange = () => {
+      const nextRoute = parseDashboardLocation(window.location, defaultView);
 
       if (!confirmLeave()) {
-        ignoreHashChangeRef.current = true;
-        window.location.hash = currentHashRef.current;
+        window.history.pushState(null, '', `${currentPathRef.current}${window.location.search}`);
         return;
       }
 
       setView(nextRoute.view);
-      setSelectedFormulationId(nextRoute.formulationId);
-      currentHashRef.current = buildDashboardHash(nextRoute);
+      setLibrarySection(nextRoute.librarySection ?? 'materials');
+      setFormulationMode(nextRoute.formulationMode ?? 'list');
+      setFormulationId(nextRoute.formulationId);
+      setProductionRunMode(nextRoute.productionRunMode ?? 'list');
+      setProductionRunId(nextRoute.productionRunId);
+      currentPathRef.current = buildDashboardPath(nextRoute);
+
+      if (window.location.pathname !== currentPathRef.current || window.location.hash) {
+        window.history.replaceState(null, '', `${currentPathRef.current}${window.location.search}`);
+      }
     };
 
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
+    window.addEventListener('hashchange', handleLocationChange);
+    window.addEventListener('popstate', handleLocationChange);
+    return () => {
+      window.removeEventListener('hashchange', handleLocationChange);
+      window.removeEventListener('popstate', handleLocationChange);
+    };
   }, [commitRoute, confirmLeave, defaultView]);
 
   useEffect(() => {
@@ -126,8 +141,12 @@ export function useDashboardRoute(defaultView: DashboardView) {
 
   return {
     hasUnsavedChanges,
+    formulationId,
+    formulationMode,
+    librarySection,
     navigate,
-    selectedFormulationId,
+    productionRunId,
+    productionRunMode,
     setHasUnsavedChanges,
     view,
   };

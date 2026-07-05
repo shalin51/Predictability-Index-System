@@ -3,14 +3,10 @@ import type { Express, Request, Response } from 'express';
 import cors from 'cors';
 import { config } from './config/env';
 import { createHealthRouter } from './modules/health/health.module';
-import { createFormulationRouter } from './modules/formulations/formulation.module';
-import { createTestResultRouter } from './modules/test-results/test-result.module';
-import { createBenchmarkRouter } from './modules/benchmarks/benchmark.module';
-import { createScoringRouter } from './modules/scoring/scoring.module';
-import { createReportRouter } from './modules/reports/report.module';
-import { createMlRouter } from './modules/ml/ml.module';
 import { createVersionRouter } from './modules/version/version.module';
-import { createBallTestingImportRouter } from './modules/imports/ball-testing-import.module';
+import { createLibraryRouter } from './modules/library/library.module';
+import { createFormulationRouter } from './modules/formulations/formulation.module';
+import { createProductionRunRouter, createSampleRouter } from './modules/production-runs/productionRun.module';
 import { requestLogger } from './middlewares/request-logger';
 import { errorHandler } from './middlewares/error-handler';
 import { authPlaceholder } from './middlewares/auth-placeholder';
@@ -42,14 +38,11 @@ function registerCommonMiddleware(app: Express): void {
 
 function registerRoutes(app: Express): void {
   app.use('/health', createHealthRouter());
-  app.use('/formulations', createFormulationRouter());
-  app.use('/formulations/:id/results', createTestResultRouter());
-  app.use('/benchmarks', createBenchmarkRouter());
-  app.use('/formulations/:id/score', createScoringRouter());
-  app.use('/formulations/:id/report', createReportRouter());
-  app.use('/ml', createMlRouter());
   app.use('/version', createVersionRouter());
-  app.use('/imports', createBallTestingImportRouter());
+  app.use('/library', createLibraryRouter());
+  app.use('/formulations', createFormulationRouter());
+  app.use('/production-runs', createProductionRunRouter());
+  app.use('/samples', createSampleRouter());
 }
 
 function registerFallbackHandlers(app: Express): void {

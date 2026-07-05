@@ -1,227 +1,150 @@
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 import { Card, Divider } from '../../components/ui/Card';
-import { controlStyles } from '../../components/ui/controls';
-import { DashboardPage, MessageBanner } from '../../components/ui/Page';
+import { controlStyles, getTabButtonStyle } from '../../components/ui/controls';
+import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
 import {
+  approveFormulation,
+  archiveFormulation,
+  duplicateFormulation,
   getFormulation,
-  type FormulationDetail,
+  listLibraryOptions,
+  updateFormulation,
+  type FormulationComponentPayload,
+  type FormulationRecord,
+  type LibraryRecord,
 } from '../../services/api';
-import { colors, font, radius, spacing } from '../../theme/tokens';
+import { colors, spacing } from '../../theme/tokens';
+import { FormulationComponentsEditor } from './FormulationComponentsEditor';
+import { formatValue, formulationStyles, labelize, totalTone } from './formulationUi';
 
-interface FormulationDetailPageProps {
-  formulationId: string;
-  onBack: () => void;
-  onEdit: (id: string) => void;
-}
+type DetailTab = 'Overview' | 'Recipe Components' | 'Production Runs' | 'Lab Results' | 'Scores' | 'Audit History';
 
-export function FormulationDetailPage({
-  formulationId,
-  onBack,
-  onEdit,
-}: FormulationDetailPageProps) {
-  const [data, setData] = useState<FormulationDetail | null>(null);
-  const [loading, setLoading] = useState(true);
+export function FormulationDetailPage({ id, onBack, onOpen }: { id: string; onBack: () => void; onOpen: (id: string) => void }) {
+  const [record, setRecord] = useState<FormulationRecord | null>(null);
+  const [components, setComponents] = useState<FormulationComponentPayload[]>([]);
+  const [materials, setMaterials] = useState<LibraryRecord[]>([]);
+  const [suppliers, setSuppliers] = useState<LibraryRecord[]>([]);
+  const [lots, setLots] = useState<LibraryRecord[]>([]);
+  const [tab, setTab] = useState<DetailTab>('Overview');
+  const [editing, setEditing] = useState(false);
+  const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    setLoading(true);
+  const load = () => {
     setError('');
+    void getFormulation(id).then((next) => {
+      setRecord(next);
+      setComponents((next.components ?? []).map((component) => ({
+        basis: 'weight_percent',
+        materialId: component.materialId,
+        materialLotId: component.materialLotId ?? '',
+        percentComposition: component.percentComposition,
+        supplierId: component.supplierId,
+      })));
+    }).catch((err: Error) => setError(err.message));
+  };
 
-    void getFormulation(formulationId)
-      .then(setData)
-      .catch((err: Error) => setError(err.message))
-      .finally(() => setLoading(false));
-  }, [formulationId]);
+  useEffect(load, [id]);
+  useEffect(() => {
+    void Promise.all([listLibraryOptions('materials'), listLibraryOptions('suppliers'), listLibraryOptions('material-lots')])
+      .then(([materialOptions, supplierOptions, lotOptions]) => {
+        setMaterials(materialOptions);
+        setSuppliers(supplierOptions);
+        setLots(lotOptions);
+      })
+      .catch(() => undefined);
+  }, []);
+
+  if (!record) {
+    return (
+      <DashboardPage maxWidth="100%">
+        <Card>{error ? <MessageBanner tone="danger">{error}</MessageBanner> : <div style={formulationStyles.muted}>Loading...</div>}</Card>
+      </DashboardPage>
+    );
+  }
+
+  const locked = record.status !== 'draft';
+  const total = components.reduce((sum, component) => sum + Number(component.percentComposition || 0), 0);
+  const canApprove = record.status === 'draft' && Math.abs(total - 100) < 0.0001;
+
+  const save = async () => {
+    try {
+      const next = await updateFormulation(record.id, {
+        components,
+        experimentId: String(record['experimentId'] ?? '') || null,
+        familyId: String(record['familyId'] ?? '') || null,
+        formulationCode: record.formulationCode,
+        notes: String(record['notes'] ?? ''),
+        targetBenchmarkId: String(record['targetBenchmarkId'] ?? '') || null,
+      });
+      setRecord(next);
+      setEditing(false);
+      setMessage('Saved');
+      load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Save failed');
+    }
+  };
 
   return (
-    <DashboardPage maxWidth={1200}>
+    <DashboardPage maxWidth="100%">
       <Card>
-        <div style={styles.header}>
-          <button onClick={onBack} style={controlStyles.secondaryButton} type="button">
-            Back
-          </button>
-          {data && (
-            <div style={controlStyles.actionRow}>
-              <button onClick={() => onEdit(data.id)} style={controlStyles.primaryButton} type="button">
-                Edit
-              </button>
-            </div>
-          )}
+        <div style={formulationStyles.header}>
+          <div>
+            <button onClick={onBack} style={controlStyles.subtleButton} type="button">Back</button>
+            <h1 style={{ ...formulationStyles.title, marginTop: spacing.space4 }}>{record.formulationCode} / Version {record.versionNo}</h1>
+            <p style={formulationStyles.subtitle}>
+              Status: {labelize(record.status)} | Target Benchmark: {record.targetBenchmark ?? '-'} | Component Total: {formatValue(total)}%
+            </p>
+          </div>
+          <div style={formulationStyles.actions}>
+            <button disabled={locked} onClick={() => setEditing(true)} style={{ ...controlStyles.secondaryButton, ...(locked ? styles.disabled : {}) }} type="button">Edit</button>
+            <button onClick={() => void duplicateFormulation(record.id).then((next) => onOpen(next.id)).catch((err: Error) => setError(err.message))} style={controlStyles.secondaryButton} type="button">Duplicate New Version</button>
+            <button disabled={!canApprove} onClick={() => void approveFormulation(record.id).then((next) => { setRecord(next); setMessage('Approved'); }).catch((err: Error) => setError(err.message))} style={{ ...controlStyles.primaryButton, ...(canApprove ? {} : styles.disabled) }} type="button">Approve</button>
+            <button onClick={() => void archiveFormulation(record.id).then((next) => { setRecord(next); setMessage('Archived'); }).catch((err: Error) => setError(err.message))} style={controlStyles.secondaryButton} type="button">Archive</button>
+            <button disabled={record.status !== 'approved'} style={{ ...controlStyles.secondaryButton, ...(record.status === 'approved' ? {} : styles.disabled) }} type="button">Create Production Run</button>
+          </div>
         </div>
-
-        {loading && <div style={styles.muted}>Loading formulation...</div>}
+        <Divider />
         {error && <MessageBanner tone="danger">{error}</MessageBanner>}
-
-        {!loading && !error && data && (
-          <>
-            <h1 style={styles.title}>{data.formulationCode}</h1>
-            <p style={styles.subtitle}>{data.producedDate ?? 'No production date'}</p>
-
-            <Divider />
-
-            <section style={styles.section}>
-              <h2 style={styles.sectionTitle}>Record</h2>
-              <div style={styles.tableWrap}>
-                <table style={styles.table}>
-                  <tbody>
-                    <TableRow label="Record ID" value={data.id} />
-                    <TableRow label="Code" value={data.formulationCode} />
-                    <TableRow label="Produced Date" value={data.producedDate ?? '—'} />
-                  </tbody>
-                </table>
+        {message && <MessageBanner tone="success">{message}</MessageBanner>}
+        <div style={styles.tabs}>
+          {(['Overview', 'Recipe Components', 'Production Runs', 'Lab Results', 'Scores', 'Audit History'] as DetailTab[]).map((item) => (
+            <button key={item} onClick={() => setTab(item)} style={getTabButtonStyle(tab === item)} type="button">{item}</button>
+          ))}
+        </div>
+        {tab === 'Overview' && (
+          <div style={styles.overviewGrid}>
+            <div style={formulationStyles.panel}>Family<br /><strong>{record.family ?? '-'}</strong></div>
+            <div style={formulationStyles.panel}>Target Benchmark<br /><strong>{record.targetBenchmark ?? '-'}</strong></div>
+            <div style={formulationStyles.panel}>Component Total<br /><span style={{ ...formulationStyles.badge, ...totalTone(total) }}>{formatValue(total)}%</span></div>
+            <div style={formulationStyles.panel}>Last Updated<br /><strong>{formatValue(record.updatedAt)}</strong></div>
+          </div>
+        )}
+        {tab === 'Recipe Components' && (
+          <div style={formulationStyles.stack}>
+            <FormulationComponentsEditor components={components} lots={lots} materials={materials} onChange={setComponents} readOnly={!editing || locked} suppliers={suppliers} />
+            {editing && (
+              <div style={formulationStyles.actions}>
+                <button onClick={() => { setEditing(false); load(); }} style={controlStyles.secondaryButton} type="button">Cancel</button>
+                <button onClick={() => void save()} style={controlStyles.primaryButton} type="button">Save</button>
               </div>
-            </section>
-
-            <Divider />
-
-            <section style={styles.section}>
-              <h2 style={styles.sectionTitle}>Resin Components</h2>
-              {data.resinComponents.length > 0 ? (
-                <div style={styles.tableWrap}>
-                  <table style={styles.table}>
-                    <thead>
-                      <tr>
-                        <th style={styles.th}>Component</th>
-                        <th style={styles.th}>Percent</th>
-                        <th style={styles.th}>Supplier</th>
-                        <th style={styles.th}>Lot Number</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {data.resinComponents.map((component) => (
-                        <tr key={`${component.materialId}-${component.resinComponent}`} style={styles.tableRow}>
-                          <td style={styles.tdStrong}>{component.resinComponent}</td>
-                          <td style={styles.td}>{component.percentComposition}%</td>
-                          <td style={styles.td}>{component.materialSupplier}</td>
-                          <td style={styles.td}>{component.lotNumber ?? '—'}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p style={styles.body}>No resin components attached yet.</p>
-              )}
-            </section>
-
-            <section style={styles.section}>
-              <h2 style={styles.sectionTitle}>Manufacturing Data</h2>
-              {data.manufacturingData ? (
-                <div style={styles.tableWrap}>
-                  <table style={styles.table}>
-                    <tbody>
-                      <TableRow label="Mold Used" value={data.manufacturingData.moldUsed ?? '—'} />
-                      <TableRow
-                        label="Injection Pressure"
-                        value={data.manufacturingData.injectionPressure != null ? String(data.manufacturingData.injectionPressure) : '—'}
-                      />
-                      <TableRow
-                        label="Melt Temperature"
-                        value={data.manufacturingData.meltTemperature != null ? String(data.manufacturingData.meltTemperature) : '—'}
-                      />
-                      <TableRow
-                        label="Cooling Time"
-                        value={data.manufacturingData.coolingTime != null ? String(data.manufacturingData.coolingTime) : '—'}
-                      />
-                      <TableRow
-                        label="Cycle Time"
-                        value={data.manufacturingData.cycleTime != null ? String(data.manufacturingData.cycleTime) : '—'}
-                      />
-                      <TableRow label="Machine Used" value={data.manufacturingData.machineUsed ?? '—'} />
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <p style={styles.body}>No manufacturing data attached yet.</p>
-              )}
-            </section>
-          </>
+            )}
+          </div>
+        )}
+        {(tab === 'Production Runs' || tab === 'Lab Results' || tab === 'Scores') && <EmptyState>No records yet.</EmptyState>}
+        {tab === 'Audit History' && (
+          <pre style={styles.audit}>{JSON.stringify(record['auditHistory'] ?? [], null, 2)}</pre>
         )}
       </Card>
     </DashboardPage>
   );
 }
 
-function TableRow({ label, value }: { label: string; value: string }) {
-  return (
-    <tr style={styles.tableRow}>
-      <th style={styles.th}>{label}</th>
-      <td style={styles.td}>{value}</td>
-    </tr>
-  );
-}
-
 const styles: Record<string, CSSProperties> = {
-  body: {
-    color: colors.text.secondary,
-    fontSize: font.size.sm,
-    lineHeight: 1.6,
-    margin: 0,
-  },
-  header: {
-    display: 'flex',
-    gap: spacing.sm,
-    justifyContent: 'space-between',
-  },
-  muted: {
-    color: colors.text.muted,
-    fontSize: font.size.sm,
-  },
-  section: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: spacing.sm,
-  },
-  sectionTitle: {
-    color: colors.text.primary,
-    fontSize: font.size.md,
-    margin: 0,
-  },
-  subtitle: {
-    color: colors.text.secondary,
-    fontSize: font.size.md,
-    margin: 0,
-  },
-  title: {
-    color: colors.text.primary,
-    fontSize: font.size.xl,
-    fontWeight: font.weight.bold,
-    margin: `${spacing.md}px 0 4px`,
-  },
-  table: {
-    borderCollapse: 'collapse',
-    width: '100%',
-  },
-  tableRow: {
-    borderBottom: `1px solid ${colors.border}`,
-  },
-  tableWrap: {
-    border: `1px solid ${colors.border}`,
-    borderRadius: radius.sm,
-    overflow: 'auto',
-  },
-  td: {
-    color: colors.text.secondary,
-    fontSize: font.size.sm,
-    padding: `${spacing.sm}px ${spacing.md}px`,
-    verticalAlign: 'top',
-  },
-  tdStrong: {
-    color: colors.text.primary,
-    fontSize: font.size.sm,
-    fontWeight: font.weight.semibold,
-    padding: `${spacing.sm}px ${spacing.md}px`,
-  },
-  th: {
-    backgroundColor: colors.surfaceElevated,
-    color: colors.text.muted,
-    fontSize: font.size.xs,
-    fontWeight: font.weight.semibold,
-    letterSpacing: '0.08em',
-    padding: `${spacing.sm}px ${spacing.md}px`,
-    textAlign: 'left',
-    textTransform: 'uppercase',
-    verticalAlign: 'top',
-  },
+  audit: { backgroundColor: colors.surfaceMuted, color: colors.text.secondary, overflow: 'auto', padding: spacing.space4 },
+  disabled: { opacity: 0.5, cursor: 'not-allowed' },
+  overviewGrid: { display: 'grid', gap: spacing.space4, gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' },
+  tabs: { display: 'flex', flexWrap: 'wrap', gap: spacing.space3 },
 };

@@ -1,5 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import { colors, radius, shadow, spacing } from '../../theme/tokens';
+import { colors, font, radius, shadow, spacing } from '../../theme/tokens';
 
 interface CardProps {
   children: ReactNode;
@@ -10,13 +10,15 @@ interface CardProps {
 export function Card({ children, maxWidth = '100%', style }: CardProps) {
   const cardStyle: CSSProperties = {
     backgroundColor: colors.surface,
-    backdropFilter: 'blur(22px)',
     border: `1px solid ${colors.border}`,
     borderRadius: radius.lg,
-    padding: `${spacing.xl}px ${spacing.xl + 8}px`,
+    padding: spacing.space6,
     width: '100%',
     maxWidth,
-    boxShadow: shadow.card,
+    boxShadow: shadow.sm,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: spacing.space4,
     ...style,
   };
   return <div style={cardStyle}>{children}</div>;
@@ -32,15 +34,16 @@ export function CardRow({ label, children }: CardRowProps) {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
+    padding: `${spacing.space1}px 0`,
   };
   const labelStyle: CSSProperties = {
     color: colors.text.secondary,
-    fontSize: 14,
+    fontSize: font.size.small,
   };
   const valueStyle: CSSProperties = {
     color: colors.text.primary,
-    fontSize: 14,
-    fontWeight: 500,
+    fontSize: font.size.small,
+    fontWeight: font.weight.medium,
     display: 'flex',
     alignItems: 'center',
   };
@@ -59,7 +62,7 @@ export function Divider() {
       style={{
         height: 1,
         backgroundColor: colors.border,
-        margin: `${spacing.md}px 0`,
+        margin: `${spacing.space4}px 0`,
       }}
     />
   );

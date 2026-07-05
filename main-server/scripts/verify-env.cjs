@@ -4,21 +4,25 @@
 const fs = require('fs');
 const path = require('path');
 
-const REQUIRED_VARS = [
+const BASE_REQUIRED_VARS = [
   'APP_ENV',
   'NODE_ENV',
   'MAIN_SERVER_PORT',
-  'DB_HOST',
-  'DB_PORT',
-  'DB_NAME',
-  'DB_USER',
-  'DB_PASSWORD',
-  'DATABASE_URL',
   'LOG_LEVEL',
   'CORS_ORIGIN',
 ];
 
 const PLACEHOLDER_VALUES = ['CHANGE_ME', 'your-password', 'secret', 'placeholder'];
+const PASSWORD_MODE_VARS = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
+const ENTRA_DIRECT_VARS = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER'];
+const ENTRA_MODE_VARS = [
+  'AZURE_KEY_VAULT_URL',
+  'AZURE_POSTGRES_SCOPE',
+  'KV_SECRET_DB_HOST',
+  'KV_SECRET_DB_PORT',
+  'KV_SECRET_DB_NAME',
+  'KV_SECRET_DB_USER',
+];
 
 function readEnvFile(envFilePath) {
   const content = fs.readFileSync(envFilePath, 'utf8');
@@ -58,13 +62,18 @@ if (!fs.existsSync(envFilePath)) {
 }
 
 const vars = readEnvFile(envFilePath);
+const authMode = (vars.DB_AUTH_MODE || 'password').toLowerCase();
+const usesKeyVault = Boolean(vars.AZURE_KEY_VAULT_URL);
+const requiredVars = authMode === 'entra'
+  ? [...BASE_REQUIRED_VARS, 'DB_SSL_MODE', ...(usesKeyVault ? ENTRA_MODE_VARS : ENTRA_DIRECT_VARS)]
+  : [...BASE_REQUIRED_VARS, ...PASSWORD_MODE_VARS];
 let passed = 0;
 let failed = 0;
 
 console.log(`\n[verify-env] Checking: ${envFile}`);
 console.log('─'.repeat(52));
 
-for (const varName of REQUIRED_VARS) {
+for (const varName of requiredVars) {
   if (vars[varName] !== undefined && vars[varName] !== '') {
     console.log(`  OK  ${varName}`);
     passed++;
@@ -79,8 +88,8 @@ if (vars.APP_ENV === 'production' && vars.SEED_RESET_DATABASE === 'true') {
   failed++;
 }
 
-if (vars.APP_ENV && vars.APP_ENV !== 'dev') {
-  for (const sensitiveKey of ['DB_PASSWORD', 'DATABASE_URL']) {
+if (vars.APP_ENV && vars.APP_ENV !== 'dev' && authMode !== 'entra') {
+  for (const sensitiveKey of ['DB_PASSWORD']) {
     const value = vars[sensitiveKey];
     if (!value) {
       continue;
@@ -103,4 +112,4 @@ if (failed > 0) {
   process.exit(1);
 }
 
-console.log(`\n[verify-env] Passed. ${passed}/${REQUIRED_VARS.length} required variables present.\n`);
+console.log(`\n[verify-env] Passed. ${passed}/${requiredVars.length} required variables present.\n`);

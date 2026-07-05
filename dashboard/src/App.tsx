@@ -15,8 +15,12 @@ export default function App() {
   const [preferences, setPreferences] = useDashboardPreferences();
   const [theme, setTheme] = useDashboardTheme();
   const {
+    formulationId,
+    formulationMode,
+    librarySection,
     navigate,
-    selectedFormulationId,
+    productionRunId,
+    productionRunMode,
     setHasUnsavedChanges,
     view,
   } = useDashboardRoute(preferences.defaultView);
@@ -45,35 +49,9 @@ export default function App() {
         height: '100vh',
         overflow: 'hidden',
         overflowX: 'hidden',
-        position: 'relative',
         width: '100%',
       }}
     >
-      <div
-        aria-hidden="true"
-        style={{
-          background: `radial-gradient(circle, ${colors.accentSoft} 0%, transparent 72%)`,
-          filter: 'blur(12px)',
-          height: 280,
-          left: -60,
-          position: 'absolute',
-          top: -40,
-          width: 280,
-        }}
-      />
-      <div
-        aria-hidden="true"
-        style={{
-          background: `radial-gradient(circle, ${colors.bgAlt} 0%, transparent 70%)`,
-          bottom: -80,
-          filter: 'blur(18px)',
-          height: 320,
-          position: 'absolute',
-          right: -60,
-          width: 320,
-        }}
-      />
-
       <AppShell
         activeView={activeView}
         navItems={NAV}
@@ -82,11 +60,10 @@ export default function App() {
           setNotifications((current) => current.map((notification) => ({ ...notification, read: true })));
         }}
         onNavigate={(nextView) => {
-          const route = { formulationId: '', view: nextView };
-          void navigate(route);
+          void navigate({ view: nextView });
         }}
         onOpenSettings={() => {
-          void navigate({ formulationId: '', view: 'settings' });
+          void navigate({ view: 'settings' });
         }}
         onThemeChange={handleThemeChange}
         onToggleNotificationRead={(id) => {
@@ -102,9 +79,13 @@ export default function App() {
         >
         <DashboardViewContent
           navigate={navigate}
+          formulationId={formulationId}
+          formulationMode={formulationMode}
+          librarySection={librarySection}
           onSettingsSave={handleSettingsSave}
           preferences={preferences}
-          selectedFormulationId={selectedFormulationId}
+          productionRunId={productionRunId}
+          productionRunMode={productionRunMode}
           setHasUnsavedChanges={setHasUnsavedChanges}
           theme={theme}
           view={view}

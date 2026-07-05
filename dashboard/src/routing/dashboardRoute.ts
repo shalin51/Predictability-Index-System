@@ -1,125 +1,136 @@
 export type DashboardView =
   | 'dashboard'
   | 'formulations'
-  | 'imports'
-  | 'formulation-create'
-  | 'formulation-detail'
-  | 'formulation-edit'
-  | 'formulation-results'
-  | 'benchmarks'
-  | 'analysis'
-  | 'report'
+  | 'library'
+  | 'production-runs'
+  | 'lab-testing'
+  | 'reports'
   | 'settings';
 
 export interface DashboardRouteState {
-  formulationId: string;
+  formulationId?: string;
+  formulationMode?: 'list' | 'new' | 'detail';
+  librarySection?: string;
+  productionRunId?: string;
+  productionRunMode?: 'list' | 'new' | 'detail';
   view: DashboardView;
 }
 
-export function parseDashboardHash(
-  hash: string,
-  defaultView: DashboardView,
-): DashboardRouteState {
-  const normalized = hash.replace(/^#/, '').replace(/^\/+/, '');
-  const segments = normalized
+function normalizeRouteSegments(routeSource: string): string[] {
+  const normalized = routeSource
+    .replace(/^#/, '')
+    .replace(/^\/+/, '')
+    .replace(/[?#].*$/, '');
+
+  return normalized
     .split('/')
     .map((segment) => decodeURIComponent(segment))
     .filter(Boolean);
+}
 
+function parseRouteSegments(segments: string[]): DashboardRouteState | null {
   if (segments.length === 0) {
-    return { formulationId: '', view: defaultView };
+    return null;
   }
 
   if (segments[0] === 'dashboard' || segments[0] === 'heartbeat') {
-    return { formulationId: '', view: 'dashboard' };
+    return { view: 'dashboard' };
   }
 
-  if (segments[0] === 'benchmarks') {
-    return { formulationId: '', view: 'benchmarks' };
-  }
-
-  if (segments[0] === 'imports') {
-    return { formulationId: '', view: 'dashboard' };
-  }
-
-  if (segments[0] === 'analysis') {
-    return { formulationId: '', view: 'dashboard' };
-  }
-
-  if (segments[0] === 'settings') {
-    return { formulationId: '', view: 'settings' };
+  if (segments[0] === 'library') {
+    return { librarySection: segments[1] || 'materials', view: 'library' };
   }
 
   if (segments[0] === 'formulations') {
     if (segments[1] === 'new') {
-      return { formulationId: '', view: 'formulation-create' };
+      return { formulationMode: 'new', view: 'formulations' };
     }
-
-    if (!segments[1]) {
-      return { formulationId: '', view: 'formulations' };
+    if (segments[1]) {
+      return { formulationId: segments[1], formulationMode: 'detail', view: 'formulations' };
     }
-
-    if (segments[2] === 'edit') {
-      return { formulationId: segments[1], view: 'formulation-edit' };
-    }
-
-    if (segments[2] === 'results') {
-      return { formulationId: segments[1], view: 'formulation-results' };
-    }
-
-    if (segments[2] === 'report') {
-      return { formulationId: segments[1], view: 'report' };
-    }
-
-    return { formulationId: segments[1], view: 'formulation-detail' };
+    return { formulationMode: 'list', view: 'formulations' };
   }
 
-  return { formulationId: '', view: defaultView };
+  if (segments[0] === 'production-runs') {
+    if (segments[1] === 'new') {
+      return { productionRunMode: 'new', view: 'production-runs' };
+    }
+    if (segments[1]) {
+      return { productionRunId: segments[1], productionRunMode: 'detail', view: 'production-runs' };
+    }
+    return { productionRunMode: 'list', view: 'production-runs' };
+  }
+
+  if (segments[0] === 'lab-testing') {
+    return { view: 'lab-testing' };
+  }
+
+  if (segments[0] === 'reports') {
+    return { view: 'reports' };
+  }
+
+  if (segments[0] === 'settings') {
+    return { view: 'settings' };
+  }
+
+  return null;
 }
 
-export function buildDashboardHash({
-  formulationId,
-  view,
-}: DashboardRouteState): string {
-  if (view === 'dashboard') {
-    return '#/dashboard';
+export function parseDashboardLocation(
+  location: Pick<Location, 'hash' | 'pathname'>,
+  defaultView: DashboardView,
+): DashboardRouteState {
+  const pathnameRoute = parseRouteSegments(normalizeRouteSegments(location.pathname));
+
+  if (pathnameRoute) {
+    return pathnameRoute;
   }
 
-  if (view === 'benchmarks') {
-    return '#/benchmarks';
+  const hashRoute = parseRouteSegments(normalizeRouteSegments(location.hash));
+
+  if (hashRoute) {
+    return hashRoute;
   }
 
-  if (view === 'imports') {
-    return '#/dashboard';
+  return { view: defaultView };
+}
+
+export function buildDashboardPath({ formulationId, formulationMode, librarySection, productionRunId, productionRunMode, view }: DashboardRouteState): string {
+  if (view === 'library') {
+    return `/library/${encodeURIComponent(librarySection || 'materials')}`;
   }
 
-  if (view === 'analysis') {
-    return '#/dashboard';
+  if (view === 'formulations') {
+    if (formulationMode === 'new') {
+      return '/formulations/new';
+    }
+    if (formulationMode === 'detail' && formulationId) {
+      return `/formulations/${encodeURIComponent(formulationId)}`;
+    }
+    return '/formulations';
+  }
+
+  if (view === 'production-runs') {
+    if (productionRunMode === 'new') {
+      return '/production-runs/new';
+    }
+    if (productionRunMode === 'detail' && productionRunId) {
+      return `/production-runs/${encodeURIComponent(productionRunId)}`;
+    }
+    return '/production-runs';
+  }
+
+  if (view === 'lab-testing') {
+    return '/lab-testing';
+  }
+
+  if (view === 'reports') {
+    return '/reports';
   }
 
   if (view === 'settings') {
-    return '#/settings';
+    return '/settings';
   }
 
-  if (view === 'formulation-create') {
-    return '#/formulations/new';
-  }
-
-  if (view === 'formulation-detail' && formulationId) {
-    return `#/formulations/${encodeURIComponent(formulationId)}`;
-  }
-
-  if (view === 'formulation-edit' && formulationId) {
-    return `#/formulations/${encodeURIComponent(formulationId)}/edit`;
-  }
-
-  if (view === 'formulation-results' && formulationId) {
-    return `#/formulations/${encodeURIComponent(formulationId)}/results`;
-  }
-
-  if (view === 'report' && formulationId) {
-    return `#/formulations/${encodeURIComponent(formulationId)}/report`;
-  }
-
-  return '#/formulations';
+  return '/dashboard';
 }

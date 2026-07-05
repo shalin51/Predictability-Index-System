@@ -5,7 +5,7 @@ export interface DashboardPreferences {
   desktopAlerts: boolean;
 }
 
-export type SettingsLandingView = 'dashboard' | 'formulations' | 'benchmarks';
+export type SettingsLandingView = 'dashboard' | 'library';
 
 export const DEFAULT_PREFERENCES: DashboardPreferences = {
   autoRefresh: true,
@@ -17,9 +17,7 @@ export const DEFAULT_PREFERENCES: DashboardPreferences = {
 export const DASHBOARD_PREFERENCES_KEY = 'dashboard-preferences';
 
 export function isSettingsLandingView(value: string | undefined): value is SettingsLandingView {
-  return value === 'dashboard'
-    || value === 'formulations'
-    || value === 'benchmarks';
+  return value === 'dashboard' || value === 'library';
 }
 
 export function getStoredPreferences(): DashboardPreferences {
@@ -40,13 +38,15 @@ export function getStoredPreferences(): DashboardPreferences {
       desktopAlerts?: boolean;
     };
 
+    const defaultView = parsed.defaultView === 'heartbeat'
+      ? 'dashboard'
+      : isSettingsLandingView(parsed.defaultView)
+        ? parsed.defaultView
+        : DEFAULT_PREFERENCES.defaultView;
+
     return {
       autoRefresh: parsed.autoRefresh ?? DEFAULT_PREFERENCES.autoRefresh,
-      defaultView: parsed.defaultView === 'heartbeat'
-        ? 'dashboard'
-        : isSettingsLandingView(parsed.defaultView)
-          ? parsed.defaultView
-          : DEFAULT_PREFERENCES.defaultView,
+      defaultView,
       denseTables: parsed.denseTables ?? DEFAULT_PREFERENCES.denseTables,
       desktopAlerts: parsed.desktopAlerts ?? DEFAULT_PREFERENCES.desktopAlerts,
     };

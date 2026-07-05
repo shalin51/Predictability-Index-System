@@ -1,5 +1,6 @@
 import { Pool, PoolClient } from 'pg';
 import { config } from '../../config/env';
+import { createPgClientConfig } from './pg-config';
 
 let pool: Pool | null = null;
 
@@ -10,14 +11,10 @@ let pool: Pool | null = null;
 export function getPool(): Pool {
   if (!pool) {
     pool = new Pool({
-      host: config.db.host,
-      port: config.db.port,
-      database: config.db.name,
-      user: config.db.user,
-      password: config.db.password,
-      max: 10,
-      idleTimeoutMillis: 30_000,
-      connectionTimeoutMillis: 5_000,
+      ...createPgClientConfig(),
+      max: config.db.poolMax,
+      idleTimeoutMillis: config.db.idleTimeoutMillis,
+      connectionTimeoutMillis: config.db.connectionTimeoutMillis,
     });
 
     pool.on('error', (err: Error) => {

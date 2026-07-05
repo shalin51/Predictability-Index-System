@@ -43,13 +43,7 @@ export function ShellHeader({
 }: ShellHeaderProps) {
   return (
     <header className="dashboard-shell__header" style={shellStyles.header}>
-      <div className="dashboard-shell__header-intro" style={shellStyles.headerIntro}>
-        <div style={shellStyles.headerKicker}>Control Center</div>
-        <div style={shellStyles.headerTitle}>{title}</div>
-        <div style={shellStyles.headerSubtitle}>{subtitle}</div>
-      </div>
-
-      <div className="dashboard-shell__header-actions" style={shellStyles.headerActions}>
+      <div className="dashboard-shell__header-start" style={shellStyles.headerStart}>
         <button
           aria-label={sidebarOpen ? 'Close left menu' : 'Open left menu'}
           onClick={toggleSidebar}
@@ -59,7 +53,21 @@ export function ShellHeader({
           <ShellIcon name={sidebarOpen ? 'close' : 'menu'} />
         </button>
 
+        <div className="dashboard-shell__header-intro" style={shellStyles.headerIntro}>
+          <div className="dashboard-shell__header-title" style={shellStyles.headerTitle}>{title}</div>
+          <div className="dashboard-shell__header-subtitle" style={shellStyles.headerSubtitle}>{subtitle}</div>
+        </div>
+      </div>
+
+      <div className="dashboard-shell__header-actions" style={shellStyles.headerActions}>
+        <label className="dashboard-shell__search" style={shellStyles.search}>
+          <ShellIcon name="search" />
+          <input aria-label="Search" placeholder="Search" style={shellStyles.searchInput} type="search" />
+          <span style={shellStyles.searchShortcut}>Ctrl K</span>
+        </label>
+
         <button
+          aria-label="Open notifications"
           onClick={() => setOpenMenu(openMenu === 'notifications' ? null : 'notifications')}
           style={shellStyles.iconButton}
           type="button"
@@ -69,12 +77,13 @@ export function ShellHeader({
         </button>
 
         <button
+          aria-label="Open profile menu"
           onClick={() => setOpenMenu(openMenu === 'profile' ? null : 'profile')}
           style={shellStyles.profileButton}
           type="button"
         >
           <div style={shellStyles.profileAvatar}>PI</div>
-          <div style={shellStyles.profileMeta}>
+          <div className="dashboard-shell__profile-meta" style={shellStyles.profileMeta}>
             <span style={shellStyles.profileName}>Plant Ops</span>
             <span style={shellStyles.profileRole}>System owner</span>
           </div>

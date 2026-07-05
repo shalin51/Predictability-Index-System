@@ -1,9 +1,25 @@
-import { config } from '../config/env';
+import { config, initializeConfig } from '../config/env';
 import { createDatabaseClient } from './migration-runner';
 
 const REQUIRED_TABLES = [
-  'formulations',
+  'suppliers',
   'materials',
+  'audit_log',
+  'api_versions',
+  'users',
+  'request_logs',
+  'roles',
+  'app_users',
+  'user_roles',
+  'audit_logs',
+  'supplier_materials',
+  'material_lots',
+  'machines',
+  'molds',
+] as const;
+
+const REMOVED_TABLES = [
+  'formulations',
   'formulation_materials',
   'processing_runs',
   'test_results',
@@ -15,32 +31,21 @@ const REQUIRED_TABLES = [
   'ball_testing_import_batches',
   'ball_testing_import_sheets',
   'ball_testing_import_samples',
-  'audit_log',
+  'formulation_families',
+  'formulation_versions',
+  'formulation_components',
+  'production_runs',
+  'samples',
+  'metric_definitions',
+  'score_reports',
 ] as const;
 
 const REQUIRED_INDEXES = [
-  'idx_formulations_produced_date',
-  'idx_formulation_materials_formulation',
-  'idx_test_results_formulation',
-  'idx_durability_results_formulation',
-  'idx_environmental_results_formulation',
-  'idx_subjective_ratings_formulation',
-  'idx_benchmark_targets_benchmark',
-  'idx_ball_testing_sheets_batch',
-  'idx_ball_testing_samples_sheet',
-] as const;
-
-const REQUIRED_FOREIGN_KEYS = [
-  { table: 'formulation_materials', column: 'formulation_id', references: 'formulations' },
-  { table: 'formulation_materials', column: 'material_id', references: 'materials' },
-  { table: 'processing_runs', column: 'formulation_id', references: 'formulations' },
-  { table: 'test_results', column: 'formulation_id', references: 'formulations' },
-  { table: 'durability_results', column: 'formulation_id', references: 'formulations' },
-  { table: 'environmental_results', column: 'formulation_id', references: 'formulations' },
-  { table: 'subjective_ratings', column: 'formulation_id', references: 'formulations' },
-  { table: 'benchmark_metric_targets', column: 'benchmark_id', references: 'benchmark_profiles' },
-  { table: 'ball_testing_import_sheets', column: 'batch_id', references: 'ball_testing_import_batches' },
-  { table: 'ball_testing_import_samples', column: 'import_sheet_id', references: 'ball_testing_import_sheets' },
+  'idx_audit_log_table_record',
+  'idx_audit_log_created_at',
+  'idx_request_logs_created_at',
+  'idx_request_logs_status',
+  'idx_audit_logs_entity',
 ] as const;
 
 function assertCheck(condition: boolean, label: string): void {
@@ -50,7 +55,22 @@ function assertCheck(condition: boolean, label: string): void {
   console.log(`  ✓ ${label}`);
 }
 
+async function tableExists(client: ReturnType<typeof createDatabaseClient>, table: string): Promise<boolean> {
+  const result = await client.query<{ exists: boolean }>(
+    `
+      SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_name = $1
+      ) AS exists
+    `,
+    [table]
+  );
+  return result.rows[0]?.exists === true;
+}
+
 async function run(): Promise<void> {
+  await initializeConfig();
   const client = createDatabaseClient();
 
   await client.connect();
@@ -59,17 +79,12 @@ async function run(): Promise<void> {
   try {
     console.log('[validate-schema] Checking required tables');
     for (const table of REQUIRED_TABLES) {
-      const result = await client.query<{ exists: boolean }>(
-        `
-          SELECT EXISTS (
-            SELECT 1
-            FROM information_schema.tables
-            WHERE table_schema = 'public' AND table_name = $1
-          ) AS exists
-        `,
-        [table]
-      );
-      assertCheck(result.rows[0]?.exists === true, `table ${table} exists`);
+      assertCheck(await tableExists(client, table), `table ${table} exists`);
+    }
+
+    console.log('[validate-schema] Checking removed tables');
+    for (const table of REMOVED_TABLES) {
+      assertCheck(!(await tableExists(client, table)), `table ${table} removed`);
     }
 
     console.log('[validate-schema] Checking required indexes');
@@ -86,43 +101,6 @@ async function run(): Promise<void> {
       );
       assertCheck(result.rows[0]?.exists === true, `index ${indexName} exists`);
     }
-
-    console.log('[validate-schema] Checking foreign keys');
-    for (const fk of REQUIRED_FOREIGN_KEYS) {
-      const result = await client.query<{ exists: boolean }>(
-        `
-          SELECT EXISTS (
-            SELECT 1
-            FROM information_schema.table_constraints tc
-            JOIN information_schema.key_column_usage kcu
-              ON tc.constraint_name = kcu.constraint_name
-             AND tc.table_schema = kcu.table_schema
-            JOIN information_schema.constraint_column_usage ccu
-              ON ccu.constraint_name = tc.constraint_name
-             AND ccu.table_schema = tc.table_schema
-            WHERE tc.constraint_type = 'FOREIGN KEY'
-              AND tc.table_schema = 'public'
-              AND tc.table_name = $1
-              AND kcu.column_name = $2
-              AND ccu.table_name = $3
-          ) AS exists
-        `,
-        [fk.table, fk.column, fk.references]
-      );
-      assertCheck(
-        result.rows[0]?.exists === true,
-        `foreign key ${fk.table}.${fk.column} -> ${fk.references}.id exists`
-      );
-    }
-
-    console.log('[validate-schema] Checking seeded data');
-    const formulations = await client.query<{ count: string }>('SELECT COUNT(*) AS count FROM formulations');
-    const benchmarks = await client.query<{ count: string }>('SELECT COUNT(*) AS count FROM benchmark_profiles');
-    const metrics = await client.query<{ count: string }>('SELECT COUNT(*) AS count FROM benchmark_metric_targets');
-
-    assertCheck(Number(formulations.rows[0]?.count ?? '0') >= 2, 'seeded formulations available');
-    assertCheck(Number(benchmarks.rows[0]?.count ?? '0') >= 2, 'seeded benchmark profiles available');
-    assertCheck(Number(metrics.rows[0]?.count ?? '0') >= 40, 'seeded benchmark metrics available');
 
     console.log('[validate-schema] Schema validation passed');
   } finally {

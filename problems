@@ -1,0 +1,17 @@
+Please grant me permissions to manage the staging deployment for this app.
+
+Needed access:
+1. Key Vault secret read assignment capability for Function App managed identity `func-p3-stage`.
+2. Permission to assign RBAC roles on Key Vault `kv-p3-project-dev`, or have an admin assign:
+   - `Key Vault Secrets User` to `func-p3-stage`
+   - optionally `Key Vault Secrets Officer` to my user for managing secrets.
+3. PostgreSQL Entra admin support on `psql-p3-dev`.
+4. Confirm/create PostgreSQL Entra principal `func-p3-stage`.
+5. Grant `func-p3-stage` access to database `AMFPI-Staging`.
+6. Permission to manage PostgreSQL firewall rules, or create private endpoint/VNet integration.
+7. Permission to manage Function App `func-p3-stage` app settings and managed identity.
+8. Permission to deploy to Static Web App `predictability-index-dev`.
+9. If `/api` routing through SWA is required, upgrade SWA `predictability-index-dev` from Free to Standard and allow linking to Function App `func-p3-stage`.
+
+Current temporary risk:
+PostgreSQL staging firewall is open to `0.0.0.0 - 255.255.255.255`. Please help replace this with private networking or restricted outbound IP access.

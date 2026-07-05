@@ -59,7 +59,7 @@ const styles: Record<string, CSSProperties> = {
   page: {
     display: 'flex',
     justifyContent: 'center',
-    padding: `${spacing.sm}px 0`,
+    padding: `${spacing.space8}px 0`,
     width: '100%',
   },
   inner: {
@@ -69,39 +69,39 @@ const styles: Record<string, CSSProperties> = {
   sectionHeading: {
     alignItems: 'center',
     display: 'flex',
-    gap: spacing.sm,
+    gap: spacing.space4,
     justifyContent: 'space-between',
   },
   sectionTitle: {
     color: colors.text.primary,
-    fontSize: font.size.lg,
+    fontSize: font.size.h2,
     fontWeight: font.weight.bold,
     margin: 0,
   },
   emptyState: {
     color: colors.text.muted,
-    fontSize: font.size.sm,
+    fontSize: font.size.body,
     lineHeight: 1.6,
-    padding: `${spacing.md}px 0`,
+    padding: `${spacing.space4}px 0`,
   },
   banner: {
     borderRadius: radius.md,
-    fontSize: font.size.sm,
-    padding: `${spacing.md}px ${spacing.lg}px`,
+    fontSize: font.size.body,
+    padding: `${spacing.space4}px ${spacing.space6}px`,
   },
   bannerDanger: {
-    backgroundColor: 'rgba(127, 29, 29, 0.78)',
-    border: '1px solid rgba(252, 165, 165, 0.28)',
-    color: '#fecaca',
+    backgroundColor: colors.status.errorBg,
+    border: `1px solid ${colors.status.error}`,
+    color: colors.status.error,
   },
   bannerWarning: {
-    backgroundColor: '#422006',
-    border: '1px solid #854d0e',
-    color: '#fde68a',
+    backgroundColor: colors.status.warningBg,
+    border: `1px solid ${colors.status.warning}`,
+    color: colors.status.warning,
   },
   bannerSuccess: {
-    backgroundColor: 'rgba(20, 83, 45, 0.78)',
-    border: '1px solid rgba(134, 239, 172, 0.28)',
-    color: '#bbf7d0',
+    backgroundColor: colors.status.okBg,
+    border: `1px solid ${colors.status.ok}`,
+    color: colors.status.ok,
   },
 };

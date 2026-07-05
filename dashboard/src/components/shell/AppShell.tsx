@@ -65,7 +65,9 @@ export function AppShell<T extends string>({
   overviewView,
 }: AppShellProps<T>) {
   const [openMenu, setOpenMenu] = useState<'notifications' | 'profile' | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => (
+    typeof window === 'undefined' ? true : !window.matchMedia('(max-width: 1080px)').matches
+  ));
   const [sidebarScrolling, setSidebarScrolling] = useState(false);
   const [mainScrolling, setMainScrolling] = useState(false);
   const sidebarRef = useRef<HTMLElement>(null);

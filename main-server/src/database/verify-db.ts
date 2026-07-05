@@ -9,10 +9,12 @@
  */
 
 // env.ts must be the first import — it loads process.env from the env file
-import { config } from '../config/env';
+import { config, initializeConfig } from '../config/env';
 import { Client } from 'pg';
+import { createPgClientConfig } from '../infrastructure/database/pg-config';
 
 async function verifyDatabase(): Promise<void> {
+  await initializeConfig();
   console.log('\n[verify-db] ─────────────────────────────────────');
   console.log('[verify-db] PostgreSQL verification starting...');
   console.log(`[verify-db]   Host     : ${config.db.host}:${config.db.port}`);
@@ -20,15 +22,30 @@ async function verifyDatabase(): Promise<void> {
   console.log(`[verify-db]   User     : ${config.db.user}`);
   console.log('[verify-db] ─────────────────────────────────────');
 
-  // Step 1 — connect to the default "postgres" database to check/create our DB
-  const adminClient = new Client({
-    host: config.db.host,
-    port: config.db.port,
-    database: 'postgres',
-    user: config.db.user,
-    password: config.db.password,
-    connectionTimeoutMillis: 5_000,
-  });
+  if (config.db.authMode === 'entra') {
+    const client = new Client(createPgClientConfig({ database: config.db.name, connectionTimeoutMillis: 5_000 }));
+
+    try {
+      await client.connect();
+      await client.query('SELECT 1');
+      console.log(`[verify-db] ✓ Connection to "${config.db.name}" verified`);
+      console.log('[verify-db] ✓ Entra-backed database verification PASSED\n');
+      return;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[verify-db] ✗ Failed to connect to "${config.db.name}": ${msg}\n`);
+      process.exit(1);
+    } finally {
+      await client.end().catch(() => undefined);
+    }
+  }
+
+  const adminClient = new Client(
+    createPgClientConfig({
+      database: 'postgres',
+      connectionTimeoutMillis: 5_000,
+    })
+  );
 
   try {
     await adminClient.connect();
@@ -41,7 +58,6 @@ async function verifyDatabase(): Promise<void> {
 
     if ((result.rowCount ?? 0) === 0) {
       console.log(`[verify-db]   Database "${config.db.name}" not found — creating...`);
-      // Use double-quoted identifier to preserve case; value comes from config (not user input)
       await adminClient.query(`CREATE DATABASE "${config.db.name}"`);
       console.log(`[verify-db] ✓ Database "${config.db.name}" created`);
     } else {
@@ -56,15 +72,7 @@ async function verifyDatabase(): Promise<void> {
 
   await adminClient.end();
 
-  // Step 2 — connect directly to the target database to confirm access
-  const appClient = new Client({
-    host: config.db.host,
-    port: config.db.port,
-    database: config.db.name,
-    user: config.db.user,
-    password: config.db.password,
-    connectionTimeoutMillis: 5_000,
-  });
+  const appClient = new Client(createPgClientConfig({ database: config.db.name, connectionTimeoutMillis: 5_000 }));
 
   try {
     await appClient.connect();
