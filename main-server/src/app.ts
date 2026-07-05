@@ -3,12 +3,14 @@ import type { Express, Request, Response } from 'express';
 import cors from 'cors';
 import { config } from './config/env';
 import { createHealthRouter } from './modules/health/health.module';
+import { createBenchmarkScoringRouter } from './modules/benchmark-scoring/benchmarkScoring.module';
 import { createVersionRouter } from './modules/version/version.module';
 import { createLibraryRouter } from './modules/library/library.module';
 import { createFormulationRouter } from './modules/formulations/formulation.module';
 import { createLabTestingRouter } from './modules/lab-testing/labTesting.module';
 import { createProductionRunRouter, createSampleRouter } from './modules/production-runs/productionRun.module';
 import { createRunSummaryRouter } from './modules/run-summaries/runSummary.module';
+import { createReportRouter } from './modules/reports/report.module';
 import { requestLogger } from './middlewares/request-logger';
 import { errorHandler } from './middlewares/error-handler';
 import { authPlaceholder } from './middlewares/auth-placeholder';
@@ -47,6 +49,8 @@ function registerRoutes(app: Express): void {
   app.use('/samples', createSampleRouter());
   app.use('/lab-testing', createLabTestingRouter());
   app.use('/run-summaries', createRunSummaryRouter());
+  app.use('/benchmark-scoring', createBenchmarkScoringRouter());
+  app.use('/reports', createReportRouter());
 }
 
 function registerFallbackHandlers(app: Express): void {

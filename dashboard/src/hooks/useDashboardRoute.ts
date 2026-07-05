@@ -25,6 +25,9 @@ export function useDashboardRoute(defaultView: DashboardView) {
   const [formulationId, setFormulationId] = useState<string | undefined>(() => initialRouteRef.current.formulationId);
   const [productionRunMode, setProductionRunMode] = useState<DashboardRouteState['productionRunMode']>(() => initialRouteRef.current.productionRunMode ?? 'list');
   const [productionRunId, setProductionRunId] = useState<string | undefined>(() => initialRouteRef.current.productionRunId);
+  const [reportMode, setReportMode] = useState<DashboardRouteState['reportMode']>(() => initialRouteRef.current.reportMode ?? 'list');
+  const [reportId, setReportId] = useState<string | undefined>(() => initialRouteRef.current.reportId);
+  const [reportRunId, setReportRunId] = useState<string | undefined>(() => initialRouteRef.current.reportRunId);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const currentPathRef = useRef(buildDashboardPath(initialRouteRef.current));
   const hasUnsavedChangesRef = useRef(false);
@@ -56,6 +59,9 @@ export function useDashboardRoute(defaultView: DashboardView) {
     setFormulationId(route.formulationId);
     setProductionRunMode(route.productionRunMode ?? 'list');
     setProductionRunId(route.productionRunId);
+    setReportMode(route.reportMode ?? 'list');
+    setReportId(route.reportId);
+    setReportRunId(route.reportRunId);
 
     const nextPath = buildDashboardPath(route);
     currentPathRef.current = nextPath;
@@ -116,6 +122,9 @@ export function useDashboardRoute(defaultView: DashboardView) {
       setFormulationId(nextRoute.formulationId);
       setProductionRunMode(nextRoute.productionRunMode ?? 'list');
       setProductionRunId(nextRoute.productionRunId);
+      setReportMode(nextRoute.reportMode ?? 'list');
+      setReportId(nextRoute.reportId);
+      setReportRunId(nextRoute.reportRunId);
       currentPathRef.current = buildDashboardPath(nextRoute);
 
       if (window.location.pathname !== currentPathRef.current || window.location.hash) {
@@ -155,6 +164,9 @@ export function useDashboardRoute(defaultView: DashboardView) {
     navigate,
     productionRunId,
     productionRunMode,
+    reportId,
+    reportMode,
+    reportRunId,
     setHasUnsavedChanges,
     view,
   };

@@ -33,6 +33,9 @@ const REQUIRED_TABLES = [
   'environmental_test_results',
   'sample_subjective_ratings',
   'run_metric_summaries',
+  'score_reports',
+  'score_report_metrics',
+  'generated_reports',
   'tenants',
   'people',
   'projects',
@@ -61,7 +64,6 @@ const REMOVED_TABLES = [
   'ball_testing_import_batches',
   'ball_testing_import_sheets',
   'ball_testing_import_samples',
-  'score_reports',
 ] as const;
 
 const REQUIRED_INDEXES = [
@@ -79,6 +81,9 @@ const REQUIRED_INDEXES = [
   'idx_environmental_test_results_sample',
   'idx_sample_subjective_ratings_sample',
   'idx_run_metric_summaries_run',
+  'idx_score_reports_run',
+  'idx_score_report_metrics_report',
+  'idx_generated_reports_run',
 ] as const;
 
 function assertCheck(condition: boolean, label: string): void {

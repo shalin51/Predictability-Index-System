@@ -293,6 +293,85 @@ export interface RunSummaryDetail {
   summaries: RunMetricSummaryRecord[];
 }
 
+export type TrafficLight = 'green' | 'yellow' | 'red' | 'gray';
+
+export interface ScoreReportMetric {
+  id: string;
+  benchmarkTargetMean: number;
+  category: string;
+  maxAcceptable?: number | null;
+  metricName: string;
+  metricScore: number;
+  minAcceptable?: number | null;
+  riskLevel?: string | null;
+  riskNote?: string | null;
+  runMeanValue: number;
+  trafficLight: TrafficLight;
+}
+
+export interface ScoreReport {
+  id: string;
+  algorithmCode: string;
+  algorithmVersion: string;
+  benchmarkCode: string;
+  benchmarkName: string;
+  generatedAt: string;
+  isBestMatch: boolean;
+  keyRisks: string[];
+  metrics?: ScoreReportMetric[];
+  overallSimilarityScore: number;
+  predictabilityIndex: number;
+  productionReadinessScore: number;
+  recommendations: string[];
+  trafficLight: TrafficLight;
+}
+
+export interface BenchmarkScoringRunDetail {
+  bestMatch: ScoreReport | null;
+  id: string;
+  reports: ScoreReport[];
+  run: {
+    id: string;
+    formulation: string;
+    runCode: string;
+    status: ProductionRunStatus;
+    targetBenchmark?: string | null;
+  };
+  scoringReady: boolean;
+}
+
+export interface ReportSnapshot {
+  benchmarkComparison: Record<string, unknown>[];
+  executiveSummary: Record<string, unknown>;
+  formulationRecipe: Record<string, unknown>[];
+  historicalComparison: Record<string, unknown>[];
+  keyRisks: string[];
+  labTestResults: Record<string, unknown>[];
+  manufacturingParameters: Record<string, unknown>;
+  metricBreakdown: Record<string, unknown>[];
+  recommendations: string[];
+  recommendationsPlaceholder: string;
+  scoreReports: Record<string, unknown>[];
+  trendAnalysis: Record<string, unknown>[];
+}
+
+export interface GeneratedReportRecord {
+  [key: string]: unknown;
+  id: string;
+  bestMatch?: string | null;
+  formulation: string;
+  generatedAt: string;
+  predictabilityIndex?: number | null;
+  primaryScoreReportId?: string | null;
+  productionRunId: string;
+  reportName: string;
+  reportSnapshot: ReportSnapshot;
+  reportType: string;
+  runCode: string;
+  status: string;
+  trafficLight?: TrafficLight | null;
+}
+
 async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${env.apiBaseUrl}${endpoint}`, options);
   if (!response.ok) {
@@ -536,4 +615,49 @@ export async function regenerateRunSummary(runId: string): Promise<RunSummaryDet
 
 export async function getRunSummaryMissingRequiredMetrics(runId: string): Promise<MissingRequiredMetricRecord[]> {
   return fetchJSON<MissingRequiredMetricRecord[]>(`/run-summaries/runs/${runId}/missing-required-metrics`);
+}
+
+export async function getBenchmarkScoring(runId: string): Promise<BenchmarkScoringRunDetail> {
+  return fetchJSON<BenchmarkScoringRunDetail>(`/benchmark-scoring/runs/${runId}`);
+}
+
+export async function generateBenchmarkScoring(runId: string): Promise<BenchmarkScoringRunDetail> {
+  return fetchJSON<BenchmarkScoringRunDetail>(`/benchmark-scoring/runs/${runId}/generate`, { method: 'POST' });
+}
+
+export async function regenerateBenchmarkScoring(runId: string): Promise<BenchmarkScoringRunDetail> {
+  return fetchJSON<BenchmarkScoringRunDetail>(`/benchmark-scoring/runs/${runId}/regenerate`, { method: 'POST' });
+}
+
+export async function getScoreReport(scoreReportId: string): Promise<ScoreReport> {
+  return fetchJSON<ScoreReport>(`/benchmark-scoring/reports/${scoreReportId}`);
+}
+
+export async function listReports(filters: Record<string, string> = {}): Promise<GeneratedReportRecord[]> {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) params.set(key, value);
+  });
+  const suffix = params.toString() ? `?${params.toString()}` : '';
+  return fetchJSON<GeneratedReportRecord[]>(`/reports${suffix}`);
+}
+
+export async function getReport(reportId: string): Promise<GeneratedReportRecord> {
+  return fetchJSON<GeneratedReportRecord>(`/reports/${reportId}`);
+}
+
+export async function getRunReport(runId: string): Promise<GeneratedReportRecord> {
+  return fetchJSON<GeneratedReportRecord>(`/reports/runs/${runId}`);
+}
+
+export async function generateRunReport(runId: string): Promise<GeneratedReportRecord> {
+  return fetchJSON<GeneratedReportRecord>(`/reports/runs/${runId}/generate`, { method: 'POST' });
+}
+
+export async function regenerateRunReport(runId: string): Promise<GeneratedReportRecord> {
+  return fetchJSON<GeneratedReportRecord>(`/reports/runs/${runId}/regenerate`, { method: 'POST' });
+}
+
+export function reportExportUrl(reportId: string, format: 'csv' | 'pdf'): string {
+  return `${env.apiBaseUrl}/reports/${encodeURIComponent(reportId)}/export/${format}`;
 }

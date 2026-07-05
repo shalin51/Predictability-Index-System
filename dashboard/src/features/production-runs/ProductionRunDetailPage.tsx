@@ -16,6 +16,7 @@ import {
 } from '../../services/api';
 import { colors, spacing } from '../../theme/tokens';
 import { ManufacturingParametersForm } from './components/ManufacturingParametersForm';
+import { BenchmarkScoringPanel } from './components/scores/BenchmarkScoringPanel';
 import { ProductionRunStatusBadge } from './components/ProductionRunStatusBadge';
 import { ProductionRunTimeline } from './components/ProductionRunTimeline';
 import { RunSummaryPanel } from './components/RunSummaryPanel';
@@ -32,7 +33,7 @@ const nextActions: Partial<Record<ProductionRunStatus, { label: string; status: 
   testing: { label: 'Complete Run', status: 'completed' },
 };
 
-export function ProductionRunDetailPage({ id, onBack }: { id: string; onBack: () => void }) {
+export function ProductionRunDetailPage({ id, onBack, onOpenReport }: { id: string; onBack: () => void; onOpenReport?: (runId: string) => void }) {
   const [record, setRecord] = useState<ProductionRunRecord | null>(null);
   const [machines, setMachines] = useState<LibraryRecord[]>([]);
   const [molds, setMolds] = useState<LibraryRecord[]>([]);
@@ -93,7 +94,8 @@ export function ProductionRunDetailPage({ id, onBack }: { id: string; onBack: ()
             <button disabled={locked} onClick={() => setEditing(true)} style={{ ...controlStyles.secondaryButton, ...(locked ? styles.disabled : {}) }} type="button">Edit</button>
             {nextAction && <button onClick={() => void updateProductionRunStatus(record.id, nextAction.status).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.primaryButton} type="button">{nextAction.label}</button>}
             {record.status === 'completed' && <button onClick={() => setTab('Run Summary')} style={controlStyles.secondaryButton} type="button">Run Summary</button>}
-            {record.status === 'scored' && <button disabled style={{ ...controlStyles.secondaryButton, ...styles.disabled }} type="button">View Score Report</button>}
+            {(record.status === 'completed' || record.status === 'scored') && <button onClick={() => setTab('Scores')} style={controlStyles.secondaryButton} type="button">Scores</button>}
+            {(record.status === 'completed' || record.status === 'scored') && onOpenReport && <button onClick={() => onOpenReport(record.id)} style={controlStyles.secondaryButton} type="button">Report</button>}
             <button onClick={() => void archiveProductionRun(record.id).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.secondaryButton} type="button">Archive</button>
           </div>
         </div>
@@ -134,7 +136,7 @@ export function ProductionRunDetailPage({ id, onBack }: { id: string; onBack: ()
         {tab === 'Samples' && (record.samples?.length ? <SampleTable samples={record.samples} /> : <EmptyState>No samples.</EmptyState>)}
         {tab === 'Lab Results' && <EmptyState>No records yet.</EmptyState>}
         {tab === 'Run Summary' && <RunSummaryPanel runId={record.id} />}
-        {tab === 'Scores' && <EmptyState>No records yet.</EmptyState>}
+        {tab === 'Scores' && <BenchmarkScoringPanel runId={record.id} />}
         {tab === 'Audit History' && <pre style={styles.audit}>{JSON.stringify(record['auditHistory'] ?? [], null, 2)}</pre>}
       </Card>
     </DashboardPage>

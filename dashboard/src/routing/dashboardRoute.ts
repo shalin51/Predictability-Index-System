@@ -15,6 +15,9 @@ export interface DashboardRouteState {
   labTestingMode?: 'list' | 'detail';
   productionRunId?: string;
   productionRunMode?: 'list' | 'new' | 'detail';
+  reportId?: string;
+  reportMode?: 'list' | 'detail' | 'run';
+  reportRunId?: string;
   view: DashboardView;
 }
 
@@ -57,6 +60,9 @@ function parseRouteSegments(segments: string[]): DashboardRouteState | null {
     if (segments[1] === 'new') {
       return { productionRunMode: 'new', view: 'production-runs' };
     }
+    if (segments[1] && segments[2] === 'report') {
+      return { reportMode: 'run', reportRunId: segments[1], view: 'reports' };
+    }
     if (segments[1]) {
       return { productionRunId: segments[1], productionRunMode: 'detail', view: 'production-runs' };
     }
@@ -71,7 +77,10 @@ function parseRouteSegments(segments: string[]): DashboardRouteState | null {
   }
 
   if (segments[0] === 'reports') {
-    return { view: 'reports' };
+    if (segments[1]) {
+      return { reportId: segments[1], reportMode: 'detail', view: 'reports' };
+    }
+    return { reportMode: 'list', view: 'reports' };
   }
 
   if (segments[0] === 'settings') {
@@ -100,7 +109,7 @@ export function parseDashboardLocation(
   return { view: defaultView };
 }
 
-export function buildDashboardPath({ formulationId, formulationMode, labRunId, labTestingMode, librarySection, productionRunId, productionRunMode, view }: DashboardRouteState): string {
+export function buildDashboardPath({ formulationId, formulationMode, labRunId, labTestingMode, librarySection, productionRunId, productionRunMode, reportId, reportMode, reportRunId, view }: DashboardRouteState): string {
   if (view === 'library') {
     return `/library/${encodeURIComponent(librarySection || 'materials')}`;
   }
@@ -133,6 +142,12 @@ export function buildDashboardPath({ formulationId, formulationMode, labRunId, l
   }
 
   if (view === 'reports') {
+    if (reportMode === 'detail' && reportId) {
+      return `/reports/${encodeURIComponent(reportId)}`;
+    }
+    if (reportMode === 'run' && reportRunId) {
+      return `/production-runs/${encodeURIComponent(reportRunId)}/report`;
+    }
     return '/reports';
   }
 

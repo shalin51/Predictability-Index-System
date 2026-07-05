@@ -29,6 +29,7 @@ export async function resetDatabase(client: Client): Promise<void> {
   await client.query(`
     DROP TABLE IF EXISTS
       score_report_metrics,
+      generated_reports,
       score_reports,
       algorithm_versions,
       run_metric_summaries,
@@ -96,6 +97,7 @@ export async function resetDatabase(client: Client): Promise<void> {
     DROP TYPE IF EXISTS
       criticality_level,
       traffic_light,
+      traffic_light_status,
       review_queue_status,
       actor_type,
       project_event_type,

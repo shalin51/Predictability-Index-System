@@ -7,9 +7,10 @@ import { CreateProductionRunWizard } from '../features/production-runs/CreatePro
 import { ProductionRunDetailPage } from '../features/production-runs/ProductionRunDetailPage';
 import { ProductionRunListPage } from '../features/production-runs/ProductionRunListPage';
 import { SettingsPage } from '../features/settings/SettingsPage';
-import { WorkspacePlaceholderPage } from '../features/workspace/WorkspacePlaceholderPage';
 import { LabTestingQueuePage } from '../pages/lab-testing/LabTestingQueuePage';
 import { LabTestingRunPage } from '../pages/lab-testing/LabTestingRunPage';
+import { ReportDetailPage } from '../pages/reports/ReportDetailPage';
+import { ReportListPage } from '../pages/reports/ReportListPage';
 import type { DashboardPreferences } from './dashboardPreferences';
 import type { DashboardRouteState, DashboardView } from '../routing/dashboardRoute';
 import { themeOptions, type ThemeName } from '../theme/tokens';
@@ -27,47 +28,11 @@ interface DashboardViewContentProps {
   librarySection: string;
   productionRunId?: string;
   productionRunMode?: DashboardRouteState['productionRunMode'];
+  reportId?: string;
+  reportMode?: DashboardRouteState['reportMode'];
+  reportRunId?: string;
   navigate: (route: DashboardRouteState, options?: { replace?: boolean; skipConfirm?: boolean }) => boolean;
 }
-
-const PLACEHOLDER_CONTENT = {
-  library: {
-    description: 'Ready for the reference data and assets you want to add next.',
-    highlights: [
-      'Reference documents and source files',
-      'Shared datasets and reusable assets',
-      'Import and curation workflows',
-    ],
-    title: 'Library',
-  },
-  'production-runs': {
-    description: 'Ready for manufacturing run records, status tracking, and execution history.',
-    highlights: [
-      'Run schedules and batch tracking',
-      'Manufacturing status and outcomes',
-      'Operator notes and process context',
-    ],
-    title: 'Production Runs',
-  },
-  'lab-testing': {
-    description: 'Ready for sample queues, result entry, and validation review workflows.',
-    highlights: [
-      'Sample intake and test queues',
-      'Result capture and review states',
-      'Validation summaries and comparisons',
-    ],
-    title: 'Lab Testing',
-  },
-  reports: {
-    description: 'Ready for generated summaries, report history, and export workflows.',
-    highlights: [
-      'Generated report history',
-      'Scheduled and manual exports',
-      'Distribution and approval workflow',
-    ],
-    title: 'Reports',
-  },
-} as const;
 
 export function DashboardViewContent({
   onSettingsSave,
@@ -81,6 +46,9 @@ export function DashboardViewContent({
   librarySection,
   productionRunId,
   productionRunMode,
+  reportId,
+  reportMode,
+  reportRunId,
   navigate,
 }: DashboardViewContentProps) {
   if (view === 'dashboard') {
@@ -131,6 +99,7 @@ export function DashboardViewContent({
         <ProductionRunDetailPage
           id={productionRunId}
           onBack={() => navigate({ productionRunMode: 'list', view: 'production-runs' })}
+          onOpenReport={(runId) => navigate({ reportMode: 'run', reportRunId: runId, view: 'reports' })}
         />
       );
     }
@@ -155,14 +124,13 @@ export function DashboardViewContent({
   }
 
   if (view === 'reports') {
-    const content = PLACEHOLDER_CONTENT[view];
-    return (
-      <WorkspacePlaceholderPage
-        description={content.description}
-        highlights={content.highlights}
-        title={content.title}
-      />
-    );
+    if (reportMode === 'detail' && reportId) {
+      return <ReportDetailPage reportId={reportId} onBack={() => navigate({ reportMode: 'list', view: 'reports' })} />;
+    }
+    if (reportMode === 'run' && reportRunId) {
+      return <ReportDetailPage productionRunId={reportRunId} onBack={() => navigate({ productionRunId: reportRunId, productionRunMode: 'detail', view: 'production-runs' })} />;
+    }
+    return <ReportListPage onOpen={(id) => navigate({ reportId: id, reportMode: 'detail', view: 'reports' })} />;
   }
 
   return (
