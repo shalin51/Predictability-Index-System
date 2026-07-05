@@ -32,6 +32,7 @@ const REQUIRED_TABLES = [
   'sample_observations',
   'environmental_test_results',
   'sample_subjective_ratings',
+  'run_metric_summaries',
   'tenants',
   'people',
   'projects',
@@ -77,6 +78,7 @@ const REQUIRED_INDEXES = [
   'idx_sample_test_results_sample',
   'idx_environmental_test_results_sample',
   'idx_sample_subjective_ratings_sample',
+  'idx_run_metric_summaries_run',
 ] as const;
 
 function assertCheck(condition: boolean, label: string): void {

@@ -245,6 +245,54 @@ export interface SubjectiveRatingPayload {
   sampleId: string;
 }
 
+export type RunSummaryStatus = 'not_generated' | 'incomplete' | 'generated' | 'stale' | 'ready_for_scoring';
+
+export interface RunMetricSummaryRecord {
+  id: string;
+  category: string;
+  conditionId?: string | null;
+  conditionName?: string | null;
+  generatedAt: string;
+  maxValue: number;
+  meanValue: number;
+  metricId: string;
+  metricKey: string;
+  metricName: string;
+  minValue: number;
+  nSamples: number;
+  sourceTable: string;
+  status: string;
+  stdDev: number;
+  unit?: string | null;
+}
+
+export interface MissingRequiredMetricRecord {
+  category: string;
+  existingResults: number;
+  id: string;
+  metricKey: string;
+  metricName: string;
+  requiredSamples: number;
+}
+
+export interface RunSummaryDetail {
+  canContinueToScoring: boolean;
+  id: string;
+  missingRequiredMetrics: MissingRequiredMetricRecord[];
+  run: {
+    id: string;
+    formulation: string;
+    labTestingStatus: ProductionRunStatus;
+    lastGeneratedAt?: string | null;
+    latestLabUpdateAt?: string | null;
+    runCode: string;
+    summaryCount: number;
+    targetBenchmark?: string | null;
+  };
+  status: RunSummaryStatus;
+  summaries: RunMetricSummaryRecord[];
+}
+
 async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${env.apiBaseUrl}${endpoint}`, options);
   if (!response.ok) {
@@ -472,4 +520,20 @@ export async function saveObservation(payload: ObservationPayload): Promise<LabR
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
+}
+
+export async function getRunSummary(runId: string): Promise<RunSummaryDetail> {
+  return fetchJSON<RunSummaryDetail>(`/run-summaries/runs/${runId}`);
+}
+
+export async function generateRunSummary(runId: string): Promise<RunSummaryDetail> {
+  return fetchJSON<RunSummaryDetail>(`/run-summaries/runs/${runId}/generate`, { method: 'POST' });
+}
+
+export async function regenerateRunSummary(runId: string): Promise<RunSummaryDetail> {
+  return fetchJSON<RunSummaryDetail>(`/run-summaries/runs/${runId}/regenerate`, { method: 'POST' });
+}
+
+export async function getRunSummaryMissingRequiredMetrics(runId: string): Promise<MissingRequiredMetricRecord[]> {
+  return fetchJSON<MissingRequiredMetricRecord[]>(`/run-summaries/runs/${runId}/missing-required-metrics`);
 }

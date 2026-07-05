@@ -8,6 +8,7 @@ import { createLibraryRouter } from './modules/library/library.module';
 import { createFormulationRouter } from './modules/formulations/formulation.module';
 import { createLabTestingRouter } from './modules/lab-testing/labTesting.module';
 import { createProductionRunRouter, createSampleRouter } from './modules/production-runs/productionRun.module';
+import { createRunSummaryRouter } from './modules/run-summaries/runSummary.module';
 import { requestLogger } from './middlewares/request-logger';
 import { errorHandler } from './middlewares/error-handler';
 import { authPlaceholder } from './middlewares/auth-placeholder';
@@ -45,6 +46,7 @@ function registerRoutes(app: Express): void {
   app.use('/production-runs', createProductionRunRouter());
   app.use('/samples', createSampleRouter());
   app.use('/lab-testing', createLabTestingRouter());
+  app.use('/run-summaries', createRunSummaryRouter());
 }
 
 function registerFallbackHandlers(app: Express): void {

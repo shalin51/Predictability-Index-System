@@ -18,6 +18,7 @@ import { colors, spacing } from '../../theme/tokens';
 import { ManufacturingParametersForm } from './components/ManufacturingParametersForm';
 import { ProductionRunStatusBadge } from './components/ProductionRunStatusBadge';
 import { ProductionRunTimeline } from './components/ProductionRunTimeline';
+import { RunSummaryPanel } from './components/RunSummaryPanel';
 import { SampleTable } from './components/SampleTable';
 import { formatValue, runStyles, statusLabels } from './productionRunUi';
 
@@ -91,7 +92,7 @@ export function ProductionRunDetailPage({ id, onBack }: { id: string; onBack: ()
             <ProductionRunStatusBadge status={record.status} />
             <button disabled={locked} onClick={() => setEditing(true)} style={{ ...controlStyles.secondaryButton, ...(locked ? styles.disabled : {}) }} type="button">Edit</button>
             {nextAction && <button onClick={() => void updateProductionRunStatus(record.id, nextAction.status).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.primaryButton} type="button">{nextAction.label}</button>}
-            {record.status === 'completed' && <button disabled style={{ ...controlStyles.secondaryButton, ...styles.disabled }} type="button">Generate Run Summary later</button>}
+            {record.status === 'completed' && <button onClick={() => setTab('Run Summary')} style={controlStyles.secondaryButton} type="button">Run Summary</button>}
             {record.status === 'scored' && <button disabled style={{ ...controlStyles.secondaryButton, ...styles.disabled }} type="button">View Score Report</button>}
             <button onClick={() => void archiveProductionRun(record.id).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.secondaryButton} type="button">Archive</button>
           </div>
@@ -131,7 +132,9 @@ export function ProductionRunDetailPage({ id, onBack }: { id: string; onBack: ()
           </div>
         )}
         {tab === 'Samples' && (record.samples?.length ? <SampleTable samples={record.samples} /> : <EmptyState>No samples.</EmptyState>)}
-        {(tab === 'Lab Results' || tab === 'Run Summary' || tab === 'Scores') && <EmptyState>No records yet.</EmptyState>}
+        {tab === 'Lab Results' && <EmptyState>No records yet.</EmptyState>}
+        {tab === 'Run Summary' && <RunSummaryPanel runId={record.id} />}
+        {tab === 'Scores' && <EmptyState>No records yet.</EmptyState>}
         {tab === 'Audit History' && <pre style={styles.audit}>{JSON.stringify(record['auditHistory'] ?? [], null, 2)}</pre>}
       </Card>
     </DashboardPage>
