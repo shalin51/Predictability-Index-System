@@ -19,6 +19,8 @@ export function useDashboardRoute(defaultView: DashboardView) {
   );
   const [view, setView] = useState<DashboardView>(() => initialRouteRef.current.view);
   const [librarySection, setLibrarySection] = useState<string>(() => initialRouteRef.current.librarySection ?? 'materials');
+  const [labTestingMode, setLabTestingMode] = useState<DashboardRouteState['labTestingMode']>(() => initialRouteRef.current.labTestingMode ?? 'list');
+  const [labRunId, setLabRunId] = useState<string | undefined>(() => initialRouteRef.current.labRunId);
   const [formulationMode, setFormulationMode] = useState<DashboardRouteState['formulationMode']>(() => initialRouteRef.current.formulationMode ?? 'list');
   const [formulationId, setFormulationId] = useState<string | undefined>(() => initialRouteRef.current.formulationId);
   const [productionRunMode, setProductionRunMode] = useState<DashboardRouteState['productionRunMode']>(() => initialRouteRef.current.productionRunMode ?? 'list');
@@ -48,6 +50,8 @@ export function useDashboardRoute(defaultView: DashboardView) {
   const commitRoute = useCallback((route: DashboardRouteState, replace = false) => {
     setView(route.view);
     setLibrarySection(route.librarySection ?? 'materials');
+    setLabTestingMode(route.labTestingMode ?? 'list');
+    setLabRunId(route.labRunId);
     setFormulationMode(route.formulationMode ?? 'list');
     setFormulationId(route.formulationId);
     setProductionRunMode(route.productionRunMode ?? 'list');
@@ -106,6 +110,8 @@ export function useDashboardRoute(defaultView: DashboardView) {
 
       setView(nextRoute.view);
       setLibrarySection(nextRoute.librarySection ?? 'materials');
+      setLabTestingMode(nextRoute.labTestingMode ?? 'list');
+      setLabRunId(nextRoute.labRunId);
       setFormulationMode(nextRoute.formulationMode ?? 'list');
       setFormulationId(nextRoute.formulationId);
       setProductionRunMode(nextRoute.productionRunMode ?? 'list');
@@ -143,6 +149,8 @@ export function useDashboardRoute(defaultView: DashboardView) {
     hasUnsavedChanges,
     formulationId,
     formulationMode,
+    labRunId,
+    labTestingMode,
     librarySection,
     navigate,
     productionRunId,

@@ -154,6 +154,97 @@ export interface ProductionRunRecord {
   updatedAt: string;
 }
 
+export type LabMetricCategory = 'physical' | 'performance' | 'durability' | 'environmental' | 'subjective';
+
+export interface LabTestingQueueRecord {
+  [key: string]: unknown;
+  id: string;
+  completedResults: number;
+  cureHoursBeforeTest: number;
+  dateProduced: string;
+  formulation: string;
+  machine: string;
+  machineId: string;
+  missingRequiredMetrics: number;
+  mold: string;
+  moldId: string;
+  requiredResultCount: number;
+  runCode: string;
+  sampleCount: number;
+  status: 'ready_for_testing' | 'testing';
+  targetBenchmark: string | null;
+  targetBenchmarkId?: string | null;
+}
+
+export interface LabMetric {
+  id: string;
+  category: LabMetricCategory;
+  dataType: string;
+  defaultUnit?: string | null;
+  displayName: string;
+  methodCode?: string | null;
+  methodName?: string | null;
+  metricKey: string;
+  requiredForScoring: boolean;
+  testMethodId?: string | null;
+}
+
+export interface TestConditionRecord {
+  id: string;
+  conditionCode: string;
+  conditionName: string;
+}
+
+export interface LabResultRecord {
+  [key: string]: unknown;
+  id: string;
+  metricId?: string | null;
+  sampleId: string;
+}
+
+export interface LabTestingResultsResponse {
+  id: string;
+  environmentalResults: LabResultRecord[];
+  metrics: LabMetric[];
+  numericResults: LabResultRecord[];
+  observations: LabResultRecord[];
+  run: LabTestingQueueRecord;
+  samples: SampleRecord[];
+  subjectiveRatings: LabResultRecord[];
+  testConditions: TestConditionRecord[];
+}
+
+export interface SampleResultPayload {
+  auditReason?: string;
+  metricId: string;
+  sampleId: string;
+  testConditionId?: string | null;
+  testMethodId?: string | null;
+  testedAt?: string;
+  testedBy?: string;
+  unit?: string;
+  valueNumeric: number;
+}
+
+export interface ObservationPayload {
+  auditReason?: string;
+  observationText: string;
+  observationType?: string;
+  observedAt?: string;
+  observedBy?: string;
+  sampleId: string;
+}
+
+export interface SubjectiveRatingPayload {
+  auditReason?: string;
+  feedbackText?: string | null;
+  metricId?: string | null;
+  ratedAt?: string;
+  ratedBy?: string;
+  ratingValue?: number | null;
+  sampleId: string;
+}
+
 async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${env.apiBaseUrl}${endpoint}`, options);
   if (!response.ok) {
@@ -324,4 +415,61 @@ export async function updateSample(id: string, payload: SamplePayload): Promise<
 
 export async function archiveSample(id: string): Promise<SampleRecord> {
   return fetchJSON<SampleRecord>(`/samples/${id}/archive`, { method: 'POST' });
+}
+
+export async function listLabTestingQueue(filters: Record<string, string> = {}): Promise<LabTestingQueueRecord[]> {
+  const params = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value) params.set(key, value);
+  });
+  const suffix = params.toString() ? `?${params.toString()}` : '';
+  return fetchJSON<LabTestingQueueRecord[]>(`/lab-testing/queue${suffix}`);
+}
+
+export async function getLabTestingRun(runId: string): Promise<LabTestingQueueRecord> {
+  return fetchJSON<LabTestingQueueRecord>(`/lab-testing/runs/${runId}`);
+}
+
+export async function getLabTestingResults(runId: string): Promise<LabTestingResultsResponse> {
+  return fetchJSON<LabTestingResultsResponse>(`/lab-testing/runs/${runId}/results`);
+}
+
+export async function startLabTesting(runId: string): Promise<LabTestingQueueRecord> {
+  return fetchJSON<LabTestingQueueRecord>(`/lab-testing/runs/${runId}/start`, { method: 'POST' });
+}
+
+export async function completeLabTesting(runId: string): Promise<LabTestingQueueRecord> {
+  return fetchJSON<LabTestingQueueRecord>(`/lab-testing/runs/${runId}/complete`, { method: 'POST' });
+}
+
+export async function saveSampleResult(payload: SampleResultPayload): Promise<LabResultRecord> {
+  return fetchJSON<LabResultRecord>('/lab-testing/results', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function saveEnvironmentalResult(payload: SampleResultPayload): Promise<LabResultRecord> {
+  return fetchJSON<LabResultRecord>('/lab-testing/environmental-results', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function saveSubjectiveRating(payload: SubjectiveRatingPayload): Promise<LabResultRecord> {
+  return fetchJSON<LabResultRecord>('/lab-testing/subjective-ratings', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function saveObservation(payload: ObservationPayload): Promise<LabResultRecord> {
+  return fetchJSON<LabResultRecord>('/lab-testing/observations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 }

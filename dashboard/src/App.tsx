@@ -17,6 +17,8 @@ export default function App() {
   const {
     formulationId,
     formulationMode,
+    labRunId,
+    labTestingMode,
     librarySection,
     navigate,
     productionRunId,
@@ -81,6 +83,8 @@ export default function App() {
           navigate={navigate}
           formulationId={formulationId}
           formulationMode={formulationMode}
+          labRunId={labRunId}
+          labTestingMode={labTestingMode}
           librarySection={librarySection}
           onSettingsSave={handleSettingsSave}
           preferences={preferences}

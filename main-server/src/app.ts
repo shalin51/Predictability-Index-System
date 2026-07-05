@@ -6,6 +6,7 @@ import { createHealthRouter } from './modules/health/health.module';
 import { createVersionRouter } from './modules/version/version.module';
 import { createLibraryRouter } from './modules/library/library.module';
 import { createFormulationRouter } from './modules/formulations/formulation.module';
+import { createLabTestingRouter } from './modules/lab-testing/labTesting.module';
 import { createProductionRunRouter, createSampleRouter } from './modules/production-runs/productionRun.module';
 import { requestLogger } from './middlewares/request-logger';
 import { errorHandler } from './middlewares/error-handler';
@@ -43,6 +44,7 @@ function registerRoutes(app: Express): void {
   app.use('/formulations', createFormulationRouter());
   app.use('/production-runs', createProductionRunRouter());
   app.use('/samples', createSampleRouter());
+  app.use('/lab-testing', createLabTestingRouter());
 }
 
 function registerFallbackHandlers(app: Express): void {

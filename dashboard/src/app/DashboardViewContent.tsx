@@ -8,6 +8,8 @@ import { ProductionRunDetailPage } from '../features/production-runs/ProductionR
 import { ProductionRunListPage } from '../features/production-runs/ProductionRunListPage';
 import { SettingsPage } from '../features/settings/SettingsPage';
 import { WorkspacePlaceholderPage } from '../features/workspace/WorkspacePlaceholderPage';
+import { LabTestingQueuePage } from '../pages/lab-testing/LabTestingQueuePage';
+import { LabTestingRunPage } from '../pages/lab-testing/LabTestingRunPage';
 import type { DashboardPreferences } from './dashboardPreferences';
 import type { DashboardRouteState, DashboardView } from '../routing/dashboardRoute';
 import { themeOptions, type ThemeName } from '../theme/tokens';
@@ -20,6 +22,8 @@ interface DashboardViewContentProps {
   view: DashboardView;
   formulationId?: string;
   formulationMode?: DashboardRouteState['formulationMode'];
+  labRunId?: string;
+  labTestingMode?: DashboardRouteState['labTestingMode'];
   librarySection: string;
   productionRunId?: string;
   productionRunMode?: DashboardRouteState['productionRunMode'];
@@ -72,6 +76,8 @@ export function DashboardViewContent({
   view,
   formulationId,
   formulationMode,
+  labRunId,
+  labTestingMode,
   librarySection,
   productionRunId,
   productionRunMode,
@@ -136,7 +142,19 @@ export function DashboardViewContent({
     );
   }
 
-  if (view === 'lab-testing' || view === 'reports') {
+  if (view === 'lab-testing') {
+    if (labTestingMode === 'detail' && labRunId) {
+      return (
+        <LabTestingRunPage
+          id={labRunId}
+          onBack={() => navigate({ labTestingMode: 'list', view: 'lab-testing' })}
+        />
+      );
+    }
+    return <LabTestingQueuePage onOpen={(id) => navigate({ labRunId: id, labTestingMode: 'detail', view: 'lab-testing' })} />;
+  }
+
+  if (view === 'reports') {
     const content = PLACEHOLDER_CONTENT[view];
     return (
       <WorkspacePlaceholderPage

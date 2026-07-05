@@ -11,6 +11,8 @@ export interface DashboardRouteState {
   formulationId?: string;
   formulationMode?: 'list' | 'new' | 'detail';
   librarySection?: string;
+  labRunId?: string;
+  labTestingMode?: 'list' | 'detail';
   productionRunId?: string;
   productionRunMode?: 'list' | 'new' | 'detail';
   view: DashboardView;
@@ -62,7 +64,10 @@ function parseRouteSegments(segments: string[]): DashboardRouteState | null {
   }
 
   if (segments[0] === 'lab-testing') {
-    return { view: 'lab-testing' };
+    if (segments[1] === 'runs' && segments[2]) {
+      return { labRunId: segments[2], labTestingMode: 'detail', view: 'lab-testing' };
+    }
+    return { labTestingMode: 'list', view: 'lab-testing' };
   }
 
   if (segments[0] === 'reports') {
@@ -95,7 +100,7 @@ export function parseDashboardLocation(
   return { view: defaultView };
 }
 
-export function buildDashboardPath({ formulationId, formulationMode, librarySection, productionRunId, productionRunMode, view }: DashboardRouteState): string {
+export function buildDashboardPath({ formulationId, formulationMode, labRunId, labTestingMode, librarySection, productionRunId, productionRunMode, view }: DashboardRouteState): string {
   if (view === 'library') {
     return `/library/${encodeURIComponent(librarySection || 'materials')}`;
   }
@@ -121,6 +126,9 @@ export function buildDashboardPath({ formulationId, formulationMode, librarySect
   }
 
   if (view === 'lab-testing') {
+    if (labTestingMode === 'detail' && labRunId) {
+      return `/lab-testing/runs/${encodeURIComponent(labRunId)}`;
+    }
     return '/lab-testing';
   }
 
