@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { createInteractiveButtonStyle } from '../../theme/buttonStyles';
 import { colors, font, radius, shadow, spacing } from '../../theme/tokens';
 
 export function getNotificationToneStyle(tone: 'info' | 'warning' | 'success'): CSSProperties {
