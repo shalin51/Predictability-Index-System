@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { getBadgeToneStyle, getCompositionTone } from '../../theme/semantic';
 import { colors, font, radius, spacing } from '../../theme/tokens';
 
 export function labelize(value: string) {
@@ -13,9 +14,7 @@ export function formatValue(value: unknown) {
 }
 
 export function totalTone(total: number): CSSProperties {
-  if (Math.abs(total - 100) < 0.0001) return { backgroundColor: colors.status.okBg, color: colors.status.ok };
-  if (total > 100) return { backgroundColor: colors.status.errorBg, color: colors.status.error };
-  return { backgroundColor: colors.status.warningBg, color: colors.status.warning };
+  return getBadgeToneStyle(getCompositionTone(total));
 }
 
 export const formulationStyles: Record<string, CSSProperties> = {

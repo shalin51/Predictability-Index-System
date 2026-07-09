@@ -58,11 +58,14 @@ export function MessageBanner({ children, tone }: MessageBannerProps) {
 const styles: Record<string, CSSProperties> = {
   page: {
     display: 'flex',
+    height: '100%',
     justifyContent: 'center',
+    minHeight: 0,
     padding: `${spacing.space8}px 0`,
     width: '100%',
   },
   inner: {
+    height: '100%',
     minHeight: 0,
     width: '100%',
   },

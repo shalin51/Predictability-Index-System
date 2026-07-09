@@ -90,16 +90,241 @@ select optgroup {
 }
 
 button {
+  -webkit-tap-highlight-color: transparent;
+  appearance: none;
   transition: all 120ms cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
 }
 
 button:hover {
-  background-color: var(--color-brand-primary-hover);
+  background: var(--button-bg-hover) !important;
+  border-color: var(--button-border-hover) !important;
+  color: var(--button-fg-hover) !important;
 }
 
 button:active {
   transform: scale(0.98);
+}
+
+.ui-button {
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 600;
+  gap: 8px;
+  justify-content: center;
+  line-height: 1.2;
+  text-decoration: none;
+  transition:
+    background-color 120ms cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 120ms cubic-bezier(0.4, 0, 0.2, 1),
+    color 120ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 120ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 120ms cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+}
+
+.ui-button--md {
+  min-height: 40px;
+  padding: 10px 20px;
+}
+
+.ui-button--sm {
+  border-radius: 6px;
+  font-size: 13px;
+  min-height: 32px;
+  padding: 6px 10px;
+}
+
+.ui-button--primary {
+  background-color: var(--color-brand-primary);
+  border-color: var(--color-brand-primary);
+  color: var(--color-brand-foreground);
+}
+
+.ui-button--primary:hover {
+  background-color: var(--color-brand-primary-hover);
+  border-color: var(--color-brand-primary-hover);
+}
+
+.ui-button--secondary {
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.ui-button--secondary:hover {
+  background-color: var(--color-surface-muted);
+  border-color: var(--color-border-strong);
+}
+
+.ui-button--subtle {
+  background-color: var(--color-surface-muted);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+.ui-button--subtle:hover {
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-border-strong);
+}
+
+.ui-button:focus-visible {
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-focus-ring);
+  outline: none;
+}
+
+.ui-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  transform: none;
+}
+
+.ui-modal {
+  -webkit-backdrop-filter: blur(10px);
+  align-items: center;
+  backdrop-filter: blur(10px);
+  background-color: rgba(15, 23, 42, 0.58);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  padding: 24px;
+  position: fixed;
+  z-index: 20;
+}
+
+.ui-modal__panel {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  box-shadow: 0 32px 96px var(--color-shadow);
+  max-height: min(720px, calc(100vh - 48px));
+  overflow: auto;
+  padding: 24px;
+  width: 100%;
+}
+
+.ui-modal__header {
+  align-items: flex-start;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.ui-modal__body {
+  margin: 20px 0;
+}
+
+.ui-modal__footer {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.ui-modal__title {
+  color: var(--color-text-primary);
+  font-size: 24px;
+  margin: 0;
+}
+
+.ui-data-table__scroll {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  min-height: 0;
+  overflow: auto;
+}
+
+.ui-data-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.ui-data-table__head,
+.ui-data-table__cell {
+  font-size: 13px;
+  padding: 12px;
+  text-align: left;
+  user-select: text;
+  vertical-align: top;
+}
+
+.ui-data-table__head {
+  background-color: var(--color-surface-elevated);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.ui-data-table__cell {
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.ui-data-table__head--compact,
+.ui-data-table__cell--compact {
+  padding: 10px 12px;
+}
+
+.ui-data-table__row--interactive {
+  cursor: pointer;
+}
+
+.ui-data-table__row:hover > .ui-data-table__cell {
+  background-color: var(--color-accent-soft);
+}
+
+.ui-data-table__row--selected > .ui-data-table__cell {
+  background-color: var(--color-accent-soft);
+  color: var(--color-text-primary);
+}
+
+.library-page__nav-button {
+  appearance: none;
+  width: 100%;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--color-text-secondary);
+  padding: 9px 10px;
+  text-align: left;
+}
+
+.library-page__nav-button:hover {
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-brand-primary);
+  color: var(--color-text-primary);
+}
+
+.library-page__nav-button:focus-visible {
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-brand-primary);
+  color: var(--color-text-primary);
+}
+
+.library-page__nav-button:active {
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-brand-primary);
+  color: var(--color-text-primary);
+}
+
+.library-page__nav-button--active,
+.library-page__nav-button[aria-current="page"] {
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-brand-primary);
+  color: var(--color-text-primary);
+  font-weight: 600;
+}
+
+.library-page__nav-button--active:hover,
+.library-page__nav-button[aria-current="page"]:hover,
+.library-page__nav-button--active:focus-visible,
+.library-page__nav-button[aria-current="page"]:focus-visible,
+.library-page__nav-button--active:active,
+.library-page__nav-button[aria-current="page"]:active {
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-brand-primary);
+  color: var(--color-text-primary);
 }
 
 /* Data Table Styles (Ledger Style) */
@@ -179,7 +404,7 @@ textarea:focus,
 select:focus {
   background-color: var(--color-bg) !important;
   border-color: var(--color-brand-primary) !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+  box-shadow: 0 0 0 3px var(--color-focus-ring-soft) !important;
 }
 
 /* Table Hover Effects */
@@ -195,8 +420,8 @@ tr[style*="cursor: pointer"]:hover,
 }
 
 ::selection {
-  background: var(--color-accent);
-  color: var(--color-accent-contrast);
+  background: var(--color-accent-soft);
+  color: var(--color-text-primary);
 }
 
 .dashboard-shell {
@@ -230,6 +455,60 @@ tr[style*="cursor: pointer"]:hover,
     width 180ms ease;
 }
 
+.dashboard-shell__nav-button {
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-text-secondary);
+}
+
+.dashboard-shell__nav-button:hover {
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-brand-primary);
+  color: var(--color-text-primary);
+}
+
+.dashboard-shell__nav-button:focus-visible {
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-brand-primary);
+  color: var(--color-text-primary);
+}
+
+.dashboard-shell__nav-button:active {
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-brand-primary);
+  color: var(--color-text-primary);
+}
+
+.dashboard-shell__nav-button--active,
+.dashboard-shell__nav-button[aria-current="page"] {
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-brand-primary);
+  color: var(--color-text-primary);
+}
+
+.dashboard-shell__nav-button--active:hover,
+.dashboard-shell__nav-button[aria-current="page"]:hover,
+.dashboard-shell__nav-button--active:focus-visible,
+.dashboard-shell__nav-button[aria-current="page"]:focus-visible,
+.dashboard-shell__nav-button--active:active,
+.dashboard-shell__nav-button[aria-current="page"]:active {
+  background-color: var(--color-accent-soft);
+  border-color: var(--color-brand-primary);
+  color: var(--color-text-primary);
+}
+
+.dashboard-shell__nav-icon-wrap,
+.dashboard-shell__nav-button:hover .dashboard-shell__nav-icon-wrap,
+.dashboard-shell__nav-button:focus-visible .dashboard-shell__nav-icon-wrap,
+.dashboard-shell__nav-button:active .dashboard-shell__nav-icon-wrap,
+.dashboard-shell__nav-icon-wrap--active,
+.dashboard-shell__nav-button--active .dashboard-shell__nav-icon-wrap,
+.dashboard-shell__nav-button[aria-current="page"] .dashboard-shell__nav-icon-wrap {
+  color: inherit;
+}
+
 .dashboard-shell__main {
   display: flex;
   flex-direction: column;
@@ -241,16 +520,26 @@ tr[style*="cursor: pointer"]:hover,
 }
 
 .dashboard-shell__content {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
   min-width: 0;
-  padding: 24px;
+  overflow: hidden;
+  padding-left: 24px;
   width: 100%;
 }
 
 .dashboard-shell__page {
   animation: shell-fade 220ms ease;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .dashboard-shell__scroll {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
   min-width: 0;
   width: 100%;
 }

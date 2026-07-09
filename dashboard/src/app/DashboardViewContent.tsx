@@ -52,7 +52,13 @@ export function DashboardViewContent({
   navigate,
 }: DashboardViewContentProps) {
   if (view === 'dashboard') {
-    return <DashboardLandingPage />;
+    return (
+      <DashboardLandingPage
+        onOpenLabRun={(id) => navigate({ labRunId: id, labTestingMode: 'detail', view: 'lab-testing' })}
+        onOpenProductionRun={(id) => navigate({ productionRunId: id, productionRunMode: 'detail', view: 'production-runs' })}
+        onOpenReport={(id) => navigate({ reportId: id, reportMode: 'detail', view: 'reports' })}
+      />
+    );
   }
 
   if (view === 'library') {

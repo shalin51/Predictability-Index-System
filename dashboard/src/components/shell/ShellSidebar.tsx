@@ -58,17 +58,21 @@ export function ShellSidebar<T extends string>({
 
                 return (
                   <button
+                    aria-current={active ? 'page' : undefined}
+                    className={`dashboard-shell__nav-button${active ? ' dashboard-shell__nav-button--active' : ''}`}
                     key={item.id}
                     onClick={() => onNavigate(item.id)}
                     style={{
                       ...shellStyles.navButton,
                       ...(sidebarOpen ? {} : shellStyles.navButtonCollapsed),
-                      ...(active ? shellStyles.navButtonActive : {}),
                     }}
                     title={item.label}
                     type="button"
                   >
-                    <span style={{ ...shellStyles.navIconWrap, ...(active ? shellStyles.navIconWrapActive : {}) }}>
+                    <span
+                      className={`dashboard-shell__nav-icon-wrap${active ? ' dashboard-shell__nav-icon-wrap--active' : ''}`}
+                      style={shellStyles.navIconWrap}
+                    >
                       <ShellIcon name={item.icon} />
                     </span>
                     {sidebarOpen && (

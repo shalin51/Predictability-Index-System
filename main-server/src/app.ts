@@ -11,6 +11,7 @@ import { createLabTestingRouter } from './modules/lab-testing/labTesting.module'
 import { createProductionRunRouter, createSampleRouter } from './modules/production-runs/productionRun.module';
 import { createRunSummaryRouter } from './modules/run-summaries/runSummary.module';
 import { createReportRouter } from './modules/reports/report.module';
+import { createDashboardRouter } from './modules/dashboard/dashboard.module';
 import { requestLogger } from './middlewares/request-logger';
 import { errorHandler } from './middlewares/error-handler';
 import { authPlaceholder } from './middlewares/auth-placeholder';
@@ -43,6 +44,7 @@ function registerCommonMiddleware(app: Express): void {
 function registerRoutes(app: Express): void {
   app.use('/health', createHealthRouter());
   app.use('/version', createVersionRouter());
+  app.use('/dashboard', createDashboardRouter());
   app.use('/library', createLibraryRouter());
   app.use('/formulations', createFormulationRouter());
   app.use('/production-runs', createProductionRunRouter());

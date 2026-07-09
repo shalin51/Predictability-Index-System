@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { createInteractiveButtonStyle } from '../../theme/buttonStyles';
 import { colors, font, radius, spacing } from '../../theme/tokens';
 
 export const controlStyles = {
@@ -12,10 +13,14 @@ export const controlStyles = {
     transition: 'all 0.12s ease',
   } satisfies CSSProperties,
   primaryButton: {
-    backgroundColor: colors.brand.primary,
-    border: `1px solid ${colors.brand.primary}`,
+    ...createInteractiveButtonStyle({
+      backgroundColor: colors.brand.primary,
+      backgroundHoverColor: colors.brand.primaryHover,
+      borderColor: colors.brand.primary,
+      borderHoverColor: colors.brand.primaryHover,
+      color: colors.brand.foreground,
+    }),
     borderRadius: radius.md,
-    color: '#ffffff',
     cursor: 'pointer',
     fontSize: font.size.body,
     fontWeight: font.weight.semibold,
@@ -23,10 +28,14 @@ export const controlStyles = {
     transition: 'all 0.12s ease',
   } satisfies CSSProperties,
   secondaryButton: {
-    backgroundColor: colors.surface,
-    border: `1px solid ${colors.border}`,
+    ...createInteractiveButtonStyle({
+      backgroundColor: colors.surface,
+      backgroundHoverColor: colors.surfaceMuted,
+      borderColor: colors.border,
+      borderHoverColor: colors.borderStrong,
+      color: colors.text.primary,
+    }),
     borderRadius: radius.md,
-    color: colors.text.primary,
     cursor: 'pointer',
     fontSize: font.size.body,
     fontWeight: font.weight.medium,
@@ -34,10 +43,14 @@ export const controlStyles = {
     transition: 'all 0.12s ease',
   } satisfies CSSProperties,
   subtleButton: {
-    backgroundColor: colors.surfaceMuted,
-    border: `1px solid ${colors.border}`,
+    ...createInteractiveButtonStyle({
+      backgroundColor: colors.surfaceMuted,
+      backgroundHoverColor: colors.accentSoft,
+      borderColor: colors.border,
+      borderHoverColor: colors.borderStrong,
+      color: colors.text.primary,
+    }),
     borderRadius: radius.md,
-    color: colors.text.primary,
     cursor: 'pointer',
     fontSize: font.size.body,
     padding: '10px 16px',
@@ -74,10 +87,15 @@ export const controlStyles = {
 
 export function getTabButtonStyle(active: boolean): CSSProperties {
   return {
-    backgroundColor: active ? colors.surfaceElevated : 'transparent',
-    border: `1px solid ${active ? colors.borderStrong : 'transparent'}`,
+    ...createInteractiveButtonStyle({
+      backgroundColor: active ? colors.surfaceElevated : 'transparent',
+      backgroundHoverColor: colors.accentSoft,
+      borderColor: active ? colors.borderStrong : 'transparent',
+      borderHoverColor: active ? colors.borderStrong : colors.border,
+      color: active ? colors.text.primary : colors.text.secondary,
+      colorHover: colors.text.primary,
+    }),
     borderRadius: radius.md,
-    color: active ? colors.text.primary : colors.text.secondary,
     cursor: 'pointer',
     fontSize: font.size.small,
     fontWeight: active ? font.weight.semibold : font.weight.medium,

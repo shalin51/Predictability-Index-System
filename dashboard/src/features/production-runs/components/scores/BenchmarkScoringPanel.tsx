@@ -10,6 +10,7 @@ import {
   type ScoreReport,
   type TrafficLight,
 } from '../../../../services/api';
+import { getBadgeToneStyle, getTextToneColor, getTrafficTone } from '../../../../theme/semantic';
 import { colors, font, radius, spacing } from '../../../../theme/tokens';
 import { formatValue, runStyles } from '../../productionRunUi';
 
@@ -157,7 +158,7 @@ function RiskPanel({ risks }: { risks: string[] }) {
 }
 
 function TrafficBadge({ trafficLight }: { trafficLight: TrafficLight }) {
-  return <span style={{ ...styles.badge, backgroundColor: trafficBg(trafficLight), color: trafficColor(trafficLight) }}>{trafficLabel(trafficLight)}</span>;
+  return <span style={{ ...styles.badge, ...getBadgeToneStyle(getTrafficTone(trafficLight)) }}>{trafficLabel(trafficLight)}</span>;
 }
 
 function formatPercent(value?: number) {
@@ -174,17 +175,7 @@ function trafficLabel(value?: TrafficLight) {
 }
 
 function trafficColor(value: TrafficLight) {
-  if (value === 'green') return colors.status.ok;
-  if (value === 'yellow') return colors.status.warning;
-  if (value === 'red') return colors.status.error;
-  return colors.text.muted;
-}
-
-function trafficBg(value: TrafficLight) {
-  if (value === 'green') return colors.status.okBg;
-  if (value === 'yellow') return colors.status.warningBg;
-  if (value === 'red') return colors.status.errorBg;
-  return colors.surfaceMuted;
+  return getTextToneColor(getTrafficTone(value));
 }
 
 const styles = {

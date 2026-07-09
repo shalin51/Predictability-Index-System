@@ -7,6 +7,11 @@ interface CardProps {
   style?: CSSProperties;
 }
 
+interface PanelProps {
+  children: ReactNode;
+  style?: CSSProperties;
+}
+
 export function Card({ children, maxWidth = '100%', style }: CardProps) {
   const cardStyle: CSSProperties = {
     backgroundColor: colors.surface,
@@ -22,6 +27,22 @@ export function Card({ children, maxWidth = '100%', style }: CardProps) {
     ...style,
   };
   return <div style={cardStyle}>{children}</div>;
+}
+
+export function CardHeader({ children }: { children: ReactNode }) {
+  return (
+    <div style={styles.cardHeader}>
+      {children}
+    </div>
+  );
+}
+
+export function CardTitle({ children }: { children: ReactNode }) {
+  return <h1 style={styles.cardTitle}>{children}</h1>;
+}
+
+export function CardSubtitle({ children }: { children: ReactNode }) {
+  return <p style={styles.cardSubtitle}>{children}</p>;
 }
 
 interface CardRowProps {
@@ -56,6 +77,10 @@ export function CardRow({ label, children }: CardRowProps) {
   );
 }
 
+export function Panel({ children, style }: PanelProps) {
+  return <div style={{ ...styles.panel, ...style }}>{children}</div>;
+}
+
 export function Divider() {
   return (
     <div
@@ -67,3 +92,26 @@ export function Divider() {
     />
   );
 }
+
+const styles: Record<string, CSSProperties> = {
+  cardHeader: {
+    alignItems: 'flex-start',
+    display: 'flex',
+    gap: spacing.space4,
+    justifyContent: 'space-between',
+  },
+  cardSubtitle: {
+    color: colors.text.secondary,
+    margin: 0,
+  },
+  cardTitle: {
+    color: colors.text.primary,
+    fontSize: font.size.h1,
+    margin: 0,
+  },
+  panel: {
+    border: `1px solid ${colors.border}`,
+    borderRadius: radius.md,
+    padding: spacing.space4,
+  },
+};

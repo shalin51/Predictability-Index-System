@@ -1,4 +1,4 @@
-import { colors } from '../../../theme/tokens';
+import { getProgressFillColor } from '../../../theme/semantic';
 import { labStyles } from '../labTestingUi';
 
 export function LabTestingProgressBar({ completed, total }: { completed: number; total: number }) {
@@ -6,7 +6,7 @@ export function LabTestingProgressBar({ completed, total }: { completed: number;
   return (
     <div style={{ minWidth: 140 }}>
       <div style={labStyles.progressTrack}>
-        <div style={{ backgroundColor: colors.brand.primary, height: '100%', width: `${pct}%` }} />
+        <div style={{ backgroundColor: getProgressFillColor('brand'), height: '100%', width: `${pct}%` }} />
       </div>
       <div style={labStyles.muted}>{completed} / {total}</div>
     </div>

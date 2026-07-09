@@ -372,6 +372,87 @@ export interface GeneratedReportRecord {
   trafficLight?: TrafficLight | null;
 }
 
+export interface DashboardSummary {
+  activeFormulations: number;
+  greenCandidates: number;
+  redCandidates: number;
+  runsAwaitingScoring: number;
+  runsAwaitingSummary: number;
+  runsReadyForTesting: number;
+  scoredRuns: number;
+  yellowCandidates: number;
+}
+
+export interface DashboardWorkflowStage {
+  count: number;
+  sortOrder: number;
+  stage: string;
+}
+
+export interface DashboardLabQueueItem {
+  completedResults: number;
+  formulation: string;
+  id: string;
+  missingRequiredMetrics: number;
+  requiredResultCount: number;
+  runCode: string;
+  sampleCount: number;
+  status: string;
+}
+
+export interface DashboardLatestScore {
+  bestMatch: string;
+  generatedAt: string;
+  lifetimeSimilarity?: number | null;
+  predictabilityIndex: number;
+  reportId?: string | null;
+  runCode: string;
+  runId: string;
+  scoreReportId: string;
+  status: TrafficLight;
+  x40Similarity?: number | null;
+}
+
+export interface DashboardRiskAlert {
+  benchmarkName: string;
+  generatedAt: string;
+  metricName: string;
+  metricScore: number;
+  risk: string;
+  runCode: string;
+  runId: string;
+  scoreReportId: string;
+  severity?: string | null;
+  trafficLight: TrafficLight;
+}
+
+export interface DashboardRecentReport {
+  generatedAt: string;
+  predictabilityIndex?: number | null;
+  reportId: string;
+  reportName: string;
+  runCode: string;
+  runId: string;
+  status: string;
+}
+
+export interface DashboardBenchmarkOverview {
+  bestMatchCounts: Array<Record<string, unknown>>;
+  latestSimilarity: Array<Record<string, unknown>>;
+  topCandidates: Array<Record<string, unknown>>;
+  trafficCounts: Array<Record<string, unknown>>;
+}
+
+export interface DashboardOverview {
+  benchmarkOverview: DashboardBenchmarkOverview;
+  labQueue: DashboardLabQueueItem[];
+  latestScores: DashboardLatestScore[];
+  recentReports: DashboardRecentReport[];
+  riskAlerts: DashboardRiskAlert[];
+  summary: DashboardSummary;
+  workflowStatus: DashboardWorkflowStage[];
+}
+
 async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const response = await fetch(`${env.apiBaseUrl}${endpoint}`, options);
   if (!response.ok) {
@@ -660,4 +741,36 @@ export async function regenerateRunReport(runId: string): Promise<GeneratedRepor
 
 export function reportExportUrl(reportId: string, format: 'csv' | 'pdf'): string {
   return `${env.apiBaseUrl}/reports/${encodeURIComponent(reportId)}/export/${format}`;
+}
+
+export async function getDashboardOverview(): Promise<DashboardOverview> {
+  return fetchJSON<DashboardOverview>('/dashboard');
+}
+
+export async function getDashboardSummary(): Promise<DashboardSummary> {
+  return fetchJSON<DashboardSummary>('/dashboard/summary');
+}
+
+export async function getDashboardWorkflowStatus(): Promise<DashboardWorkflowStage[]> {
+  return fetchJSON<DashboardWorkflowStage[]>('/dashboard/workflow-status');
+}
+
+export async function getDashboardLabQueue(): Promise<DashboardLabQueueItem[]> {
+  return fetchJSON<DashboardLabQueueItem[]>('/dashboard/lab-queue');
+}
+
+export async function getDashboardLatestScores(): Promise<DashboardLatestScore[]> {
+  return fetchJSON<DashboardLatestScore[]>('/dashboard/latest-scores');
+}
+
+export async function getDashboardRiskAlerts(): Promise<DashboardRiskAlert[]> {
+  return fetchJSON<DashboardRiskAlert[]>('/dashboard/risk-alerts');
+}
+
+export async function getDashboardRecentReports(): Promise<DashboardRecentReport[]> {
+  return fetchJSON<DashboardRecentReport[]>('/dashboard/recent-reports');
+}
+
+export async function getDashboardBenchmarkOverview(): Promise<DashboardBenchmarkOverview> {
+  return fetchJSON<DashboardBenchmarkOverview>('/dashboard/benchmark-overview');
 }

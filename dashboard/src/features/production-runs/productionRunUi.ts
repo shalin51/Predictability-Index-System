@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { colors, font, radius, spacing } from '../../theme/tokens';
 import type { ProductionRunStatus } from '../../services/api';
+import { getBadgeToneStyle, getProductionRunTone } from '../../theme/semantic';
 
 export const statusLabels: Record<ProductionRunStatus, string> = {
   archived: 'Archived',
@@ -21,10 +22,7 @@ export function formatValue(value: unknown) {
 }
 
 export function statusTone(status: ProductionRunStatus): CSSProperties {
-  if (status === 'planned') return { backgroundColor: colors.status.infoBg, color: colors.status.info };
-  if (status === 'archived') return { backgroundColor: colors.surfaceMuted, color: colors.text.muted };
-  if (status === 'completed' || status === 'scored') return { backgroundColor: colors.status.okBg, color: colors.status.ok };
-  return { backgroundColor: colors.status.warningBg, color: colors.status.warning };
+  return getBadgeToneStyle(getProductionRunTone(status));
 }
 
 export const runStyles: Record<string, CSSProperties> = {

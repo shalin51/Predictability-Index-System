@@ -1,7 +1,10 @@
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
-import { Card, Divider } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Card, CardHeader, CardSubtitle, CardTitle, Divider } from '../../components/ui/Card';
 import { controlStyles } from '../../components/ui/controls';
+import { DataTable, DataTableBody, DataTableCell, DataTableHead, DataTableHeader, DataTableRow } from '../../components/ui/DataTable';
+import { Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from '../../components/ui/Modal';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
 import {
   archiveLibraryRecord,
@@ -127,21 +130,39 @@ export function LibraryPage({
   return (
     <DashboardPage maxWidth="100%">
       <div style={styles.layout}>
-        <aside style={styles.nav}>
+        <aside className="library-page__nav" style={styles.nav}>
           {sections.map((item) => (
-            <button key={item} onClick={() => onSectionChange(item)} style={{ ...styles.navButton, ...(item === section ? styles.navButtonActive : {}) }} type="button">
+            <button
+              aria-current={item === section ? 'page' : undefined}
+              className={`library-page__nav-button${item === section ? ' library-page__nav-button--active' : ''}`}
+              key={item}
+              onClick={() => onSectionChange(item)}
+              type="button"
+            >
               {labelize(item)}
             </button>
           ))}
         </aside>
-        <Card>
-          <div style={styles.header}>
+        <Card style={styles.card}>
+          <CardHeader>
             <div>
-              <h1 style={styles.title}>{labelize(section)}</h1>
-              <p style={styles.subtitle}>Controlled Library records for dropdowns, benchmarks, and scoring.</p>
+              <CardTitle>{labelize(section)}</CardTitle>
+              <CardSubtitle>Controlled Library records for dropdowns, benchmarks, and scoring.</CardSubtitle>
             </div>
-            <button onClick={() => startEdit()} style={controlStyles.primaryButton} type="button">New</button>
-          </div>
+            <div style={styles.headerActions}>
+              {section === 'scoring-rules' && (
+                <Button
+                  disabled={!selected}
+                  onClick={() => void validateWeights()}
+                  variant="secondary"
+                  type="button"
+                >
+                  Validate Selected Benchmark
+                </Button>
+              )}
+              <Button onClick={() => startEdit()} type="button" variant="primary">New</Button>
+            </div>
+          </CardHeader>
           <Divider />
           <div style={styles.filters}>
             <input onChange={(event) => setSearch(event.target.value)} placeholder="Search" style={controlStyles.input} value={search} />
@@ -157,38 +178,46 @@ export function LibraryPage({
           {loading && <div style={styles.muted}>Loading...</div>}
           {!loading && records.length === 0 && <EmptyState>No records.</EmptyState>}
           {records.length > 0 && (
-            <div style={styles.grid}>
-              <div style={styles.tableWrap}>
-                <table style={styles.table}>
-                  <thead><tr>{(columns[section] ?? []).map((column) => <th key={column} style={styles.th}>{labelize(column)}</th>)}<th style={styles.th}>Actions</th></tr></thead>
-                  <tbody>
-                    {records.map((record) => (
-                      <tr key={record.id} onClick={() => setSelected(record)} style={styles.tr}>
-                        {(columns[section] ?? []).map((column) => <td key={column} style={styles.td}>{formatValue(record[column])}</td>)}
-                        <td style={styles.td}>
-                          <button onClick={(event) => { event.stopPropagation(); startEdit(record); }} style={styles.linkButton} type="button">Edit</button>
-                          <button onClick={(event) => { event.stopPropagation(); void archiveLibraryRecord(section, record.id).then(load); }} style={styles.linkButton} type="button">Archive</button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <aside style={styles.detail}>
-                <strong>Detail</strong>
-                <pre style={styles.pre}>{selected ? JSON.stringify(selected, null, 2) : 'Select a record.'}</pre>
-                {section === 'scoring-rules' && <button onClick={() => void validateWeights()} style={controlStyles.secondaryButton} type="button">Validate Weights</button>}
-                <Divider />
-                <div style={styles.muted}>Related records, usage history, and audit trail placeholders.</div>
-              </aside>
+            <div style={styles.tableWrap}>
+              <DataTable minWidth={900} selectableRows>
+                <DataTableHeader>
+                  <tr>
+                    {(columns[section] ?? []).map((column) => <DataTableHead key={column}>{labelize(column)}</DataTableHead>)}
+                    <DataTableHead>Actions</DataTableHead>
+                  </tr>
+                </DataTableHeader>
+                <DataTableBody>
+                  {records.map((record) => {
+                    const isSelected = selected?.id === record.id;
+                    return (
+                      <DataTableRow key={record.id} onClick={() => setSelected(record)} selected={isSelected}>
+                        {(columns[section] ?? []).map((column) => (
+                          <DataTableCell key={column}>
+                            {formatValue(record[column])}
+                          </DataTableCell>
+                        ))}
+                        <DataTableCell>
+                          <div style={styles.rowActions}>
+                            <Button onClick={(event) => { event.stopPropagation(); startEdit(record); }} size="sm" type="button" variant="subtle">Edit</Button>
+                            <Button onClick={(event) => { event.stopPropagation(); void archiveLibraryRecord(section, record.id).then(load); }} size="sm" type="button" variant="subtle">Archive</Button>
+                          </div>
+                        </DataTableCell>
+                      </DataTableRow>
+                    );
+                  })}
+                </DataTableBody>
+              </DataTable>
             </div>
           )}
         </Card>
       </div>
       {editing && (
-        <div style={styles.drawer}>
-          <div style={styles.drawerPanel}>
-            <h2 style={styles.title}>{editing.id ? 'Edit' : 'Create'} {labelize(section)}</h2>
+        <Modal ariaLabel={`${editing.id ? 'Edit' : 'Create'} ${labelize(section)}`}>
+          <ModalHeader>
+            <ModalTitle>{editing.id ? 'Edit' : 'Create'} {labelize(section)}</ModalTitle>
+            <Button onClick={() => setEditing(null)} type="button" variant="secondary">Close</Button>
+          </ModalHeader>
+          <ModalBody>
             <div style={styles.form}>
               {fields.map((field) => (
                 <label key={field.key} style={controlStyles.field}>
@@ -197,12 +226,12 @@ export function LibraryPage({
                 </label>
               ))}
             </div>
-            <div style={styles.actions}>
-              <button onClick={() => setEditing(null)} style={controlStyles.secondaryButton} type="button">Cancel</button>
-              <button onClick={() => void save()} style={controlStyles.primaryButton} type="button">Save</button>
-            </div>
-          </div>
-        </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button onClick={() => setEditing(null)} type="button" variant="secondary">Cancel</Button>
+            <Button onClick={() => void save()} type="button" variant="primary">Save</Button>
+          </ModalFooter>
+        </Modal>
       )}
     </DashboardPage>
   );
@@ -240,25 +269,13 @@ function labelize(value: string) {
 
 const styles: Record<string, CSSProperties> = {
   actions: { display: 'flex', gap: spacing.space3, justifyContent: 'flex-end' },
-  detail: { border: `1px solid ${colors.border}`, borderRadius: radius.md, padding: spacing.space4 },
-  drawer: { backgroundColor: 'rgba(15,23,42,.35)', inset: 0, position: 'fixed', zIndex: 20 },
-  drawerPanel: { backgroundColor: colors.surface, height: '100%', marginLeft: 'auto', maxWidth: 560, overflow: 'auto', padding: spacing.space6 },
+  card: { height: '100%', minHeight: 0, overflow: 'hidden' },
   filters: { display: 'flex', gap: spacing.space3, marginBottom: spacing.space4 },
   form: { display: 'grid', gap: spacing.space4, margin: `${spacing.space5}px 0` },
-  grid: { display: 'grid', gap: spacing.space5, gridTemplateColumns: 'minmax(0, 1fr) 320px' },
-  header: { alignItems: 'flex-start', display: 'flex', justifyContent: 'space-between' },
-  layout: { display: 'grid', gap: spacing.space5, gridTemplateColumns: '220px minmax(0, 1fr)' },
-  linkButton: { ...controlStyles.subtleButton, marginRight: spacing.space2, padding: '4px 8px' },
+  headerActions: { display: 'flex', gap: spacing.space3 },
+  layout: { display: 'grid', gap: spacing.space5, gridTemplateColumns: '220px minmax(0, 1fr)', height: '100%', minHeight: 0, overflow: 'hidden' },
   muted: { color: colors.text.muted, fontSize: font.size.small },
-  nav: { border: `1px solid ${colors.border}`, borderRadius: radius.md, display: 'grid', gap: 2, padding: spacing.space3 },
-  navButton: { background: 'transparent', border: 0, borderRadius: radius.sm, color: colors.text.secondary, cursor: 'pointer', padding: '9px 10px', textAlign: 'left' },
-  navButtonActive: { backgroundColor: colors.surfaceElevated, color: colors.text.primary, fontWeight: font.weight.semibold },
-  pre: { color: colors.text.secondary, fontSize: font.size.small, overflow: 'auto', whiteSpace: 'pre-wrap' },
-  subtitle: { color: colors.text.secondary, margin: 0 },
-  table: { borderCollapse: 'collapse', minWidth: 900, width: '100%' },
-  tableWrap: { border: `1px solid ${colors.border}`, borderRadius: radius.md, overflow: 'auto' },
-  td: { borderBottom: `1px solid ${colors.border}`, color: colors.text.secondary, fontSize: font.size.small, padding: spacing.space3 },
-  th: { backgroundColor: colors.surfaceElevated, borderBottom: `1px solid ${colors.border}`, color: colors.text.muted, fontSize: font.size.small, padding: spacing.space3, textAlign: 'left' },
-  title: { color: colors.text.primary, fontSize: font.size.h1, margin: 0 },
-  tr: { cursor: 'pointer' },
+  nav: { alignSelf: 'start', border: `1px solid ${colors.border}`, borderRadius: radius.md, display: 'grid', gap: 2, padding: spacing.space3 },
+  rowActions: { display: 'flex', flexWrap: 'wrap', gap: spacing.space2 },
+  tableWrap: { border: `1px solid ${colors.border}`, borderRadius: radius.md, minHeight: 0, overflow: 'auto' },
 };

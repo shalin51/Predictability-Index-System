@@ -1,18 +1,19 @@
-import { DashboardPage } from '../../components/ui/Page';
-import { WorkspacePlaceholderPage } from '../workspace/WorkspacePlaceholderPage';
+import { DashboardHomePage } from '../../pages/dashboard/DashboardPage';
 
-export function DashboardLandingPage() {
+export function DashboardLandingPage({
+  onOpenLabRun,
+  onOpenProductionRun,
+  onOpenReport,
+}: {
+  onOpenLabRun: (id: string) => void;
+  onOpenProductionRun: (id: string) => void;
+  onOpenReport: (id: string) => void;
+}) {
   return (
-    <DashboardPage maxWidth={1200}>
-      <WorkspacePlaceholderPage
-        description="Ready for the replacement details."
-        highlights={[
-          'No previous setup is wired',
-          'No previous targets are wired',
-          'New data model can be added cleanly',
-        ]}
-        title="Workspace"
-      />
-    </DashboardPage>
+    <DashboardHomePage
+      onOpenLabRun={onOpenLabRun}
+      onOpenProductionRun={onOpenProductionRun}
+      onOpenReport={onOpenReport}
+    />
   );
 }
