@@ -16,6 +16,7 @@ export interface ReportExport {
 }
 
 export interface ReportSnapshot {
+  schemaVersion: 2;
   benchmarkComparison: ReportRecord[];
   executiveSummary: ReportRecord;
   formulationRecipe: ReportRecord[];
@@ -23,6 +24,7 @@ export interface ReportSnapshot {
   keyRisks: string[];
   labTestResults: ReportRecord[];
   manufacturingParameters: ReportRecord;
+  processSetup: ReportRecord;
   metricBreakdown: ReportRecord[];
   recommendations: string[];
   recommendationsPlaceholder: string;

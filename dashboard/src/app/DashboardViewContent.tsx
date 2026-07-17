@@ -6,6 +6,7 @@ import { LibraryPage } from '../features/library/LibraryPage';
 import { CreateProductionRunWizard } from '../features/production-runs/CreateProductionRunWizard';
 import { ProductionRunDetailPage } from '../features/production-runs/ProductionRunDetailPage';
 import { ProductionRunListPage } from '../features/production-runs/ProductionRunListPage';
+import { ImportSetupSheetPage } from '../features/production-runs/ImportSetupSheetPage';
 import { SettingsPage } from '../features/settings/SettingsPage';
 import { LabTestingQueuePage } from '../pages/lab-testing/LabTestingQueuePage';
 import { LabTestingRunPage } from '../pages/lab-testing/LabTestingRunPage';
@@ -92,6 +93,9 @@ export function DashboardViewContent({
   }
 
   if (view === 'production-runs') {
+    if (productionRunMode === 'import') {
+      return <ImportSetupSheetPage onCancel={() => navigate({ productionRunMode: 'list', view: 'production-runs' })} onSaved={(id) => navigate({ productionRunId: id, productionRunMode: 'detail', view: 'production-runs' })} />;
+    }
     if (productionRunMode === 'new') {
       return (
         <CreateProductionRunWizard
@@ -112,6 +116,7 @@ export function DashboardViewContent({
     return (
       <ProductionRunListPage
         onCreate={() => navigate({ productionRunMode: 'new', view: 'production-runs' })}
+        onImport={() => navigate({ productionRunMode: 'import', view: 'production-runs' })}
         onOpen={(id) => navigate({ productionRunId: id, productionRunMode: 'detail', view: 'production-runs' })}
       />
     );

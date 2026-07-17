@@ -75,6 +75,7 @@ export class ReportService {
     const recipe = await this.repo.formulationRecipe(String(run['formulationId']));
     const summaries = await this.repo.runSummaries(String(run.id));
     const labResults = await this.repo.labResults(String(run.id));
+    const processSetup = await this.repo.processSetup(String(run.id));
     const metrics = ((bestMatch?.['metrics'] as ReportRecord[] | undefined) ?? []).map((metric) => ({
       ...metric,
       range: this.formatRange(metric),
@@ -94,6 +95,7 @@ export class ReportService {
     const lifetime = scoreReports.find((report) => report['benchmarkCode'] === 'LIFETIME');
 
     return {
+      schemaVersion: 2,
       benchmarkComparison,
       executiveSummary: {
         bestMatch: bestMatch?.['benchmarkName'] ?? '-',
@@ -119,6 +121,7 @@ export class ReportService {
         meltTemperature: this.withUnit(run['meltTemperature'], run['meltTemperatureUnit']),
         mold: run['mold'],
       },
+      processSetup,
       metricBreakdown: metrics,
       recommendations: this.recommendations(bestMatch),
       recommendationsPlaceholder: 'Recommended formulation adjustments will be generated after report review.',

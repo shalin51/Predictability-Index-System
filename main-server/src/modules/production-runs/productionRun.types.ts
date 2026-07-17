@@ -55,4 +55,9 @@ export interface ProductionRunInput {
 export interface ProductionRunRecord {
   [key: string]: unknown;
   id: string;
+  processSetupRevisionId?: string | null;
+  jobName?: string | null;
+  partNumber?: string | null;
+  operatorName?: string | null;
+  shiftCode?: string | null;
 }

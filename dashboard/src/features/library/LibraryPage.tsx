@@ -11,6 +11,7 @@ import {
   createLibraryRecord,
   listLibraryOptions,
   listLibraryRecords,
+  listProcessSetups,
   updateLibraryRecord,
   validateLibraryScoringWeights,
   type LibraryFieldDefinition,
@@ -30,6 +31,7 @@ const sections = [
   'test-conditions',
   'benchmarks',
   'scoring-rules',
+  'process-setups',
 ] as const;
 
 const columns: Record<string, string[]> = {
@@ -44,6 +46,7 @@ const columns: Record<string, string[]> = {
   'supplier-materials': ['supplierName', 'materialCode', 'materialName', 'supplierMaterialCode', 'status'],
   'test-conditions': ['conditionCode', 'conditionName', 'description', 'status'],
   'test-methods': ['methodCode', 'methodName', 'metricKey', 'cureHours', 'status'],
+  'process-setups': ['machine', 'mold', 'formulation', 'revisionNo', 'status', 'approvedBy', 'approvedAt', 'parameterCount'],
 };
 
 const enumOptions: Record<string, string[]> = {
@@ -84,6 +87,13 @@ export function LibraryPage({
   const load = () => {
     setLoading(true);
     setError('');
+    if (section === 'process-setups') {
+      void listProcessSetups()
+        .then((items) => { setRecords(items); setFields([]); setSelected(items[0] ?? null); })
+        .catch((err: Error) => setError(err.message))
+        .finally(() => setLoading(false));
+      return;
+    }
     void listLibraryRecords(section, { search, status })
       .then((response) => {
         setRecords(response.data);
@@ -160,7 +170,7 @@ export function LibraryPage({
                   Validate Selected Benchmark
                 </Button>
               )}
-              <Button onClick={() => startEdit()} type="button" variant="primary">New</Button>
+              {section !== 'process-setups' && <Button onClick={() => startEdit()} type="button" variant="primary">New</Button>}
             </div>
           </CardHeader>
           <Divider />
@@ -198,8 +208,8 @@ export function LibraryPage({
                         ))}
                         <DataTableCell>
                           <div style={styles.rowActions}>
-                            <Button onClick={(event) => { event.stopPropagation(); startEdit(record); }} size="sm" type="button" variant="subtle">Edit</Button>
-                            <Button onClick={(event) => { event.stopPropagation(); void archiveLibraryRecord(section, record.id).then(load); }} size="sm" type="button" variant="subtle">Archive</Button>
+                            {section !== 'process-setups' && <Button onClick={(event) => { event.stopPropagation(); startEdit(record); }} size="sm" type="button" variant="subtle">Edit</Button>}
+                            {section !== 'process-setups' && <Button onClick={(event) => { event.stopPropagation(); void archiveLibraryRecord(section, record.id).then(load); }} size="sm" type="button" variant="subtle">Archive</Button>}
                           </div>
                         </DataTableCell>
                       </DataTableRow>

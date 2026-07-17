@@ -240,6 +240,10 @@ function applyAppSettings() {
     'WEBSITE_RUN_FROM_PACKAGE=1',
   ];
 
+  for (const name of ['SETUP_IMPORT_STORAGE_ACCOUNT_URL', 'SETUP_IMPORT_STORAGE_CONNECTION_STRING', 'SETUP_IMPORT_STORAGE_CONTAINER']) {
+    if (envFileVars[name]) settings.push(`${name}=${envFileVars[name]}`);
+  }
+
   if (useKeyVault) {
     settings.push(
       `AZURE_KEY_VAULT_URL=${envFileVars.AZURE_KEY_VAULT_URL || config.keyVault.url}`,

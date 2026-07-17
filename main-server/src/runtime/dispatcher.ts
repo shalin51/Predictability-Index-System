@@ -65,12 +65,21 @@ async function readBody(request: HttpRequest): Promise<{ body: unknown; error?: 
     return { body: undefined };
   }
 
-  const rawBody = await request.text();
-  if (!rawBody) {
-    return { body: undefined };
+  const contentType = request.headers.get('content-type')?.toLowerCase() ?? '';
+
+  if (
+    contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') ||
+    contentType.includes('application/octet-stream')
+  ) {
+    const bytes = Buffer.from(await request.arrayBuffer());
+    if (bytes.length > 10 * 1024 * 1024) {
+      return { body: undefined, error: { status: 413, jsonBody: { error: 'Workbook exceeds the 10 MB limit', code: 'PAYLOAD_TOO_LARGE' } } };
+    }
+    return { body: bytes };
   }
 
-  const contentType = request.headers.get('content-type')?.toLowerCase() ?? '';
+  const rawBody = await request.text();
+  if (!rawBody) return { body: undefined };
 
   if (contentType.includes('application/json')) {
     try {
@@ -163,6 +172,12 @@ export async function handleApiRequest(request: HttpRequest, _context: Invocatio
 
   const url = new URL(request.url);
   const normalizedPath = normalizePath(url.pathname);
+  if (request.method.toUpperCase() === 'POST' && normalizedPath === '/setup-sheet-imports/preview') {
+    const contentType = request.headers.get('content-type')?.toLowerCase() ?? '';
+    if (!contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') && !contentType.includes('application/octet-stream')) {
+      return { status: 415, jsonBody: { error: 'Unsupported workbook content type', code: 'UNSUPPORTED_MEDIA_TYPE' } };
+    }
+  }
   const parsedBody = await readBody(request);
   if (parsedBody.error) {
     return parsedBody.error;
@@ -184,7 +199,7 @@ export async function handleApiRequest(request: HttpRequest, _context: Invocatio
 }
 
 app.http('main-server-api', {
-  methods: ['GET', 'POST', 'PUT', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'OPTIONS'],
   authLevel: 'anonymous',
   route: '{*segments}',
   handler: handleApiRequest,

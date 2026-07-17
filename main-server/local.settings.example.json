@@ -13,6 +13,8 @@
     "DB_USER": "postgres",
     "DB_PASSWORD": "CHANGE_ME",
     "DB_SSL_MODE": "disable",
+    "SETUP_IMPORT_STORAGE_CONNECTION_STRING": "UseDevelopmentStorage=true",
+    "SETUP_IMPORT_STORAGE_CONTAINER": "process-setup-imports",
     "LOG_LEVEL": "debug",
     "CORS_ORIGIN": "http://localhost:3000"
   }

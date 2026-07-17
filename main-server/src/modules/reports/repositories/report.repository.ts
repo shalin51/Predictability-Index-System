@@ -167,6 +167,17 @@ export class ReportRepository {
     return result.rows as ReportRecord[];
   }
 
+  async processSetup(runId: string): Promise<ReportRecord> {
+    const [revision, values, notes, drying, material] = await Promise.all([
+      getPool().query(`SELECT psr.revision_no AS "revisionNo", psr.approved_by_display AS "approvedBy", psr.approved_at AS "approvedAt", si.original_filename AS "sourceFilename", si.file_sha256 AS "sourceSha256" FROM production_runs pr LEFT JOIN process_setup_revisions psr ON psr.id = pr.process_setup_revision_id LEFT JOIN setup_sheet_imports si ON si.production_run_id = pr.id WHERE pr.id = $1`, [runId]),
+      getPool().query(`SELECT d.section_key AS section, d.display_name AS "displayName", v.position_type AS "positionType", v.position_index AS "positionIndex", v.position_label AS "positionLabel", v.setpoint_numeric::float AS "setpointNumeric", v.setpoint_text AS "setpointText", v.setpoint_date AS "setpointDate", v.actual_numeric::float AS "actualNumeric", v.actual_text AS "actualText", v.actual_date AS "actualDate", v.unit, v.tolerance_min::float AS "toleranceMin", v.tolerance_max::float AS "toleranceMax", v.notes FROM production_run_process_values v JOIN process_parameter_definitions d ON d.id = v.parameter_definition_id WHERE v.production_run_id = $1 ORDER BY d.sort_order, v.position_index NULLS FIRST`, [runId]),
+      getPool().query(`SELECT note_type AS "noteType", note_text AS "noteText" FROM production_run_notes WHERE production_run_id = $1 ORDER BY created_at`, [runId]),
+      getPool().query(`SELECT dryer_code AS "dryerCode", setpoint_temperature::float AS "setpointTemperature", actual_temperature::float AS "actualTemperature", temperature_unit AS "temperatureUnit", started_at AS "startedAt", ended_at AS "endedAt", duration_hours::float AS "durationHours", approved_by_display AS "approvedBy" FROM material_drying_events WHERE production_run_id = $1 ORDER BY started_at`, [runId]),
+      getPool().query(`SELECT mp.trade_name AS "tradeName", mp.manufacturer, mp.grade, mp.color_pigment AS "colorPigment", mp.melt_flow_index::float AS "meltFlowIndex", mp.specific_gravity::float AS "specificGravity", mp.shrink_rate::float AS "shrinkRate", mp.moisture_absorption_pct::float AS "moistureAbsorptionPct" FROM setup_sheet_imports si JOIN material_processing_profiles mp ON mp.id = si.material_processing_profile_id WHERE si.production_run_id = $1`, [runId]),
+    ]);
+    return { ...(revision.rows[0] ?? {}), values: values.rows, notes: notes.rows, dryingEvents: drying.rows, materialProfile: material.rows[0] ?? null };
+  }
+
   async saveSnapshot(input: {
     generatedBy: string | null;
     primaryScoreReportId: string | null;
@@ -176,8 +187,8 @@ export class ReportRepository {
   }): Promise<ReportRecord> {
     const result = await getPool().query<{ id: string }>(
       `INSERT INTO generated_reports
-        (production_run_id, primary_score_report_id, report_name, report_snapshot, generated_by)
-       VALUES ($1, $2, $3, $4::jsonb, $5)
+        (production_run_id, primary_score_report_id, report_name, report_snapshot, generated_by, snapshot_schema_version)
+       VALUES ($1, $2, $3, $4::jsonb, $5, 2)
        RETURNING id`,
       [
         input.productionRunId,
@@ -218,6 +229,7 @@ export class ReportRepository {
                    gr.report_name AS "reportName",
                    gr.report_type AS "reportType",
                    gr.status,
+                   gr.snapshot_schema_version AS "snapshotSchemaVersion",
                    gr.report_snapshot AS "reportSnapshot",
                    gr.generated_by AS "generatedBy",
                    gr.generated_at AS "generatedAt",

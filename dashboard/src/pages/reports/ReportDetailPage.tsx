@@ -124,12 +124,26 @@ function ReportSections({ record }: { record: GeneratedReportRecord }) {
       <Section title="Manufacturing Parameters">
         <ReportManufacturingPanel data={snapshot.manufacturingParameters} />
       </Section>
+      {snapshot.processSetup && <Section title="Detailed Process Setup"><ProcessSetupReport data={snapshot.processSetup} /></Section>}
       <Section title="Formulation Recipe">
         <ReportRecipePanel rows={snapshot.formulationRecipe} />
       </Section>
       <Section title="Recommendations Placeholder">
         <div style={reportStyles.panel}>{snapshot.recommendations[0] ?? snapshot.recommendationsPlaceholder}</div>
       </Section>
+    </div>
+  );
+}
+
+function ProcessSetupReport({ data }: { data: Record<string, unknown> }) {
+  const values = Array.isArray(data['values']) ? data['values'] as Record<string, unknown>[] : [];
+  if (values.length === 0) return <EmptyState>No imported process setup.</EmptyState>;
+  return (
+    <div style={reportStyles.tableWrap}>
+      <table style={reportStyles.table}>
+        <thead><tr>{['Section', 'Parameter', 'Position', 'Setpoint', 'Actual', 'Unit'].map((column) => <th key={column} style={reportStyles.th}>{column}</th>)}</tr></thead>
+        <tbody>{values.map((value, index) => <tr key={index}><td style={reportStyles.td}>{formatReportValue(value['section'])}</td><td style={reportStyles.td}>{formatReportValue(value['displayName'])}</td><td style={reportStyles.td}>{formatReportValue(value['positionLabel'] ?? value['positionIndex'])}</td><td style={reportStyles.td}>{formatReportValue(value['setpointNumeric'] ?? value['setpointText'] ?? value['setpointDate'])}</td><td style={reportStyles.td}>{formatReportValue(value['actualNumeric'] ?? value['actualText'] ?? value['actualDate'])}</td><td style={reportStyles.td}>{formatReportValue(value['unit'])}</td></tr>)}</tbody>
+      </table>
     </div>
   );
 }

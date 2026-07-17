@@ -20,6 +20,11 @@ interface AppConfig {
   port: number;
   corsOrigin: string;
   logLevel: string;
+  setupImports: {
+    storageAccountUrl: string;
+    storageConnectionString: string;
+    storageContainer: string;
+  };
   db: {
     authMode: DatabaseAuthMode;
     host: string;
@@ -110,6 +115,11 @@ function readProcessConfig(): AppConfig {
     port: parseIntegerEnv(process.env.MAIN_SERVER_PORT, 4000),
     corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:3000',
     logLevel: process.env.LOG_LEVEL ?? 'info',
+    setupImports: {
+      storageAccountUrl: process.env.SETUP_IMPORT_STORAGE_ACCOUNT_URL ?? '',
+      storageConnectionString: process.env.SETUP_IMPORT_STORAGE_CONNECTION_STRING ?? process.env.AzureWebJobsStorage ?? '',
+      storageContainer: process.env.SETUP_IMPORT_STORAGE_CONTAINER ?? 'process-setup-imports',
+    },
     db: {
       authMode: parseAuthMode(process.env.DB_AUTH_MODE),
       host: process.env.DB_HOST ?? 'localhost',
@@ -140,6 +150,7 @@ function assignConfig(target: AppConfig, source: AppConfig): void {
   target.port = source.port;
   target.corsOrigin = source.corsOrigin;
   target.logLevel = source.logLevel;
+  Object.assign(target.setupImports, source.setupImports);
   Object.assign(target.db, source.db);
 }
 

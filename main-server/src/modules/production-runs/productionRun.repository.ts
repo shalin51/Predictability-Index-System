@@ -242,6 +242,9 @@ export class ProductionRunRepository {
                    pr.cooling_time::float AS "coolingTime", pr.cooling_time_unit AS "coolingTimeUnit",
                    pr.cycle_time::float AS "cycleTime", pr.cycle_time_unit AS "cycleTimeUnit",
                    pr.cure_hours_before_test::float AS "cureHoursBeforeTest",
+                   pr.process_setup_revision_id AS "processSetupRevisionId",
+                   pr.job_name AS "jobName", pr.part_number AS "partNumber",
+                   pr.operator_name AS "operatorName", pr.shift_code AS "shiftCode",
                    pr.status::text AS status, COUNT(s.id)::int AS "sampleCount",
                    pr.created_at AS "createdAt", pr.updated_at AS "updatedAt"
             FROM production_runs pr

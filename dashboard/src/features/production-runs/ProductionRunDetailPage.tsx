@@ -21,9 +21,10 @@ import { ProductionRunStatusBadge } from './components/ProductionRunStatusBadge'
 import { ProductionRunTimeline } from './components/ProductionRunTimeline';
 import { RunSummaryPanel } from './components/RunSummaryPanel';
 import { SampleTable } from './components/SampleTable';
+import { ProcessSetupPanel } from './components/ProcessSetupPanel';
 import { formatValue, runStyles, statusLabels } from './productionRunUi';
 
-type DetailTab = 'Overview' | 'Manufacturing Parameters' | 'Samples' | 'Lab Results' | 'Run Summary' | 'Scores' | 'Audit History';
+type DetailTab = 'Overview' | 'Manufacturing Parameters' | 'Process Setup' | 'Samples' | 'Lab Results' | 'Run Summary' | 'Scores' | 'Audit History';
 
 const nextActions: Partial<Record<ProductionRunStatus, { label: string; status: ProductionRunStatus }>> = {
   curing: { label: 'Mark Ready for Testing', status: 'ready_for_testing' },
@@ -104,7 +105,7 @@ export function ProductionRunDetailPage({ id, onBack, onOpenReport }: { id: stri
         {message && <MessageBanner tone="success">{message}</MessageBanner>}
         <ProductionRunTimeline status={record.status} />
         <div style={styles.tabs}>
-          {(['Overview', 'Manufacturing Parameters', 'Samples', 'Lab Results', 'Run Summary', 'Scores', 'Audit History'] as DetailTab[]).map((item) => (
+          {(['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples', 'Lab Results', 'Run Summary', 'Scores', 'Audit History'] as DetailTab[]).map((item) => (
             <button key={item} onClick={() => setTab(item)} style={getTabButtonStyle(tab === item)} type="button">{item}</button>
           ))}
         </div>
@@ -134,6 +135,7 @@ export function ProductionRunDetailPage({ id, onBack, onOpenReport }: { id: stri
           </div>
         )}
         {tab === 'Samples' && (record.samples?.length ? <SampleTable samples={record.samples} /> : <EmptyState>No samples.</EmptyState>)}
+        {tab === 'Process Setup' && <ProcessSetupPanel runId={record.id} />}
         {tab === 'Lab Results' && <EmptyState>No records yet.</EmptyState>}
         {tab === 'Run Summary' && <RunSummaryPanel runId={record.id} />}
         {tab === 'Scores' && <BenchmarkScoringPanel runId={record.id} />}

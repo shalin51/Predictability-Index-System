@@ -26,6 +26,13 @@ export class ReportExportService {
         this.value(row['trafficLight']),
         `Target ${this.value(row['benchmarkTargetMean'])}; range ${this.value(row['range'])}; risk ${this.value(row['risk'])}`,
       ]),
+      ...this.processValues(snapshot).map((row) => [
+        'Process Setup',
+        this.value(row['displayName']),
+        this.value(row['actualNumeric'] ?? row['actualText'] ?? row['actualDate']),
+        '',
+        `Section ${this.value(row['section'])}; position ${this.value(row['positionLabel'] ?? row['positionIndex'])}; setpoint ${this.value(row['setpointNumeric'] ?? row['setpointText'] ?? row['setpointDate'])}; unit ${this.value(row['unit'])}`,
+      ]),
       ...snapshot.keyRisks.map((risk) => ['Key Risks', risk, '', '', '']),
       ...snapshot.formulationRecipe.map((row) => [
         'Formulation Recipe',
@@ -57,6 +64,9 @@ export class ReportExportService {
       '',
       'Metric Breakdown',
       ...snapshot.metricBreakdown.map((row) => `${this.value(row['metricName'])}: run ${this.value(row['runMeanValue'])}, target ${this.value(row['benchmarkTargetMean'])}, range ${this.value(row['range'])}, score ${this.value(row['metricScore'])}, risk ${this.value(row['risk'])}`),
+      '',
+      'Process Setup',
+      ...this.processValues(snapshot).map((row) => `${this.value(row['displayName'])} ${this.value(row['positionLabel'] ?? row['positionIndex'])}: setpoint ${this.value(row['setpointNumeric'] ?? row['setpointText'] ?? row['setpointDate'])}, actual ${this.value(row['actualNumeric'] ?? row['actualText'] ?? row['actualDate'])} ${this.value(row['unit'])}`),
       '',
       'Key Risks',
       ...(snapshot.keyRisks.length ? snapshot.keyRisks : ['No key risks detected']),
@@ -131,6 +141,11 @@ export class ReportExportService {
   private value(value: unknown): string {
     if (value === null || value === undefined || value === '') return '-';
     return String(value);
+  }
+
+  private processValues(snapshot: ReportSnapshot): ReportRecord[] {
+    const values = snapshot.processSetup?.['values'];
+    return Array.isArray(values) ? values as ReportRecord[] : [];
   }
 
   private wrap(value: string, max: number): string[] {

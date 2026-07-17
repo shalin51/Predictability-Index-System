@@ -14,7 +14,7 @@ export interface DashboardRouteState {
   labRunId?: string;
   labTestingMode?: 'list' | 'detail';
   productionRunId?: string;
-  productionRunMode?: 'list' | 'new' | 'detail';
+  productionRunMode?: 'list' | 'new' | 'import' | 'detail';
   reportId?: string;
   reportMode?: 'list' | 'detail' | 'run';
   reportRunId?: string;
@@ -59,6 +59,9 @@ function parseRouteSegments(segments: string[]): DashboardRouteState | null {
   if (segments[0] === 'production-runs') {
     if (segments[1] === 'new') {
       return { productionRunMode: 'new', view: 'production-runs' };
+    }
+    if (segments[1] === 'import') {
+      return { productionRunMode: 'import', view: 'production-runs' };
     }
     if (segments[1] && segments[2] === 'report') {
       return { reportMode: 'run', reportRunId: segments[1], view: 'reports' };
@@ -127,6 +130,9 @@ export function buildDashboardPath({ formulationId, formulationMode, labRunId, l
   if (view === 'production-runs') {
     if (productionRunMode === 'new') {
       return '/production-runs/new';
+    }
+    if (productionRunMode === 'import') {
+      return '/production-runs/import';
     }
     if (productionRunMode === 'detail' && productionRunId) {
       return `/production-runs/${encodeURIComponent(productionRunId)}`;

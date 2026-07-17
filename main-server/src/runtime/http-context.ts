@@ -64,8 +64,8 @@ export function createRequestShape(options: RequestShapeOptions): Request {
 function buildCorsHeaders(requestedHeaders: string | null): Record<string, string> {
   return {
     'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Allow-Headers': requestedHeaders ?? 'Content-Type, x-api-key, x-api-version, x-user-id',
-    'Access-Control-Allow-Methods': 'GET,POST,PUT,OPTIONS',
+    'Access-Control-Allow-Headers': requestedHeaders ?? 'Content-Type, x-api-key, x-api-version, x-user-id, x-file-name',
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,OPTIONS',
     'Access-Control-Allow-Origin': config.corsOrigin,
     Vary: 'Origin',
   };

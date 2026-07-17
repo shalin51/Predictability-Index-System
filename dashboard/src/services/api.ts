@@ -113,6 +113,11 @@ export interface ProductionRunPayload {
   meltTemperature?: number | null;
   meltTemperatureUnit?: string;
   moldId: string;
+  processSetupRevisionId?: string | null;
+  jobName?: string | null;
+  partNumber?: string | null;
+  operatorName?: string | null;
+  shiftCode?: string | null;
   runCode?: string;
   sampleGeneration?: SampleGenerationPayload;
   status?: ProductionRunStatus;
@@ -145,6 +150,11 @@ export interface ProductionRunRecord {
   meltTemperatureUnit: string;
   mold: string;
   moldId: string;
+  processSetupRevisionId?: string | null;
+  jobName?: string | null;
+  partNumber?: string | null;
+  operatorName?: string | null;
+  shiftCode?: string | null;
   runCode: string;
   sampleCount: number;
   samples?: SampleRecord[];
@@ -152,6 +162,43 @@ export interface ProductionRunRecord {
   targetBenchmark: string | null;
   targetBenchmarkId?: string | null;
   updatedAt: string;
+}
+
+export interface SetupImportPreview {
+  id: string;
+  status: string;
+  originalFilename: string;
+  parsedSnapshot: {
+    header: Record<string, string | number | boolean | null | undefined>;
+    parameters: Array<Record<string, unknown>>;
+    notes: Array<Record<string, unknown>>;
+    revisions: Array<Record<string, unknown>>;
+    materialProfile: Record<string, unknown>;
+    dryingEvents: Array<Record<string, unknown>>;
+    hasActualReadings: boolean;
+  };
+  validationResults: { errors: string[]; warnings: string[] };
+  requiredResolutions: string[];
+  sectionSummaries: Array<{ section: string; parameterCount: number; setpointCount: number; actualCount: number }>;
+  matches: {
+    machines: LibraryRecord[];
+    molds: LibraryRecord[];
+    materials: LibraryRecord[];
+    lots: LibraryRecord[];
+    formulations: LibraryRecord[];
+    formulationComponents: LibraryRecord[];
+  };
+  defaultInitialStatus: 'planned' | 'molded';
+  productionRunId?: string | null;
+}
+
+export interface ProcessSetupDetail extends LibraryRecord {
+  values?: Array<Record<string, unknown>>;
+  parameters?: Array<Record<string, unknown>>;
+  notes?: Array<Record<string, unknown>>;
+  materialProfile?: Array<Record<string, unknown>>;
+  dryingEvents?: Array<Record<string, unknown>>;
+  revisionHistory?: Array<Record<string, unknown>>;
 }
 
 export type LabMetricCategory = 'physical' | 'performance' | 'durability' | 'environmental' | 'subjective';
@@ -341,6 +388,7 @@ export interface BenchmarkScoringRunDetail {
 }
 
 export interface ReportSnapshot {
+  schemaVersion?: number;
   benchmarkComparison: Record<string, unknown>[];
   executiveSummary: Record<string, unknown>;
   formulationRecipe: Record<string, unknown>[];
@@ -348,6 +396,7 @@ export interface ReportSnapshot {
   keyRisks: string[];
   labTestResults: Record<string, unknown>[];
   manufacturingParameters: Record<string, unknown>;
+  processSetup?: Record<string, unknown>;
   metricBreakdown: Record<string, unknown>[];
   recommendations: string[];
   recommendationsPlaceholder: string;
@@ -575,6 +624,45 @@ export async function listApprovedFormulationOptions(): Promise<LibraryRecord[]>
 
 export async function getProductionRun(id: string): Promise<ProductionRunRecord> {
   return fetchJSON<ProductionRunRecord>(`/production-runs/${id}`);
+}
+
+export async function previewSetupWorkbook(file: File): Promise<SetupImportPreview> {
+  return fetchJSON<SetupImportPreview>('/setup-sheet-imports/preview', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'x-file-name': encodeURIComponent(file.name),
+    },
+    body: file,
+  });
+}
+
+export async function commitSetupWorkbook(importId: string, payload: Record<string, unknown>): Promise<{ importId: string; productionRunId: string; idempotent: boolean }> {
+  return fetchJSON(`/setup-sheet-imports/${importId}/commit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getProductionRunProcessSetup(runId: string): Promise<ProcessSetupDetail> {
+  return fetchJSON<ProcessSetupDetail>(`/production-runs/${runId}/process-setup`);
+}
+
+export async function updateProductionRunProcessValues(runId: string, payload: Record<string, unknown>): Promise<ProcessSetupDetail> {
+  return fetchJSON<ProcessSetupDetail>(`/production-runs/${runId}/process-values`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function listProcessSetups(): Promise<LibraryRecord[]> {
+  return fetchJSON<LibraryRecord[]>('/process-setups');
+}
+
+export async function getProcessSetup(id: string): Promise<ProcessSetupDetail> {
+  return fetchJSON<ProcessSetupDetail>(`/process-setups/${id}`);
 }
 
 export async function createProductionRun(payload: ProductionRunPayload): Promise<ProductionRunRecord> {
