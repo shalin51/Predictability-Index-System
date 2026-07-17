@@ -1,4 +1,3 @@
-import type { RefObject } from 'react';
 import { ShellSystemStatus } from './ShellSystemStatus';
 import { ShellIcon } from './ShellIcon';
 import { shellStyles } from './shellStyles';
@@ -9,9 +8,7 @@ interface ShellSidebarProps<T extends string> {
   navItems: readonly ShellNavItem<T>[];
   onNavigate: (view: T) => void;
   overviewView: T;
-  scrolling: boolean;
   sidebarOpen: boolean;
-  sidebarRef: RefObject<HTMLElement>;
 }
 
 export function ShellSidebar<T extends string>({
@@ -19,9 +16,7 @@ export function ShellSidebar<T extends string>({
   navItems,
   onNavigate,
   overviewView,
-  scrolling,
   sidebarOpen,
-  sidebarRef,
 }: ShellSidebarProps<T>) {
   const groupedNav = navItems.reduce<Record<string, Array<ShellNavItem<T>>>>((acc, item) => {
     acc[item.group] = acc[item.group] ?? [];
@@ -31,8 +26,7 @@ export function ShellSidebar<T extends string>({
 
   return (
     <aside
-      className={`dashboard-shell__sidebar ${scrolling ? 'dashboard-shell__scrolling' : ''}`}
-      ref={sidebarRef}
+      className="dashboard-shell__sidebar"
       style={{
         ...shellStyles.sidebar,
         ...(sidebarOpen ? {} : shellStyles.sidebarCollapsed),

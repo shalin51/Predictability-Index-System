@@ -1,9 +1,10 @@
-import type { ReactNode, RefObject } from 'react';
-import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
+import { useState } from 'react';
 import { ShellHeader } from './ShellHeader';
 import { ShellSidebar } from './ShellSidebar';
 import type { IconName } from './ShellIcon';
 import { shellStyles } from './shellStyles';
+import { useTransientScrollbars } from '../../hooks/useTransientScrollbars';
 import type { ThemeName } from '../../theme/tokens';
 
 type NotificationTone = 'info' | 'warning' | 'success';
@@ -68,11 +69,9 @@ export function AppShell<T extends string>({
   const [sidebarOpen, setSidebarOpen] = useState(() => (
     typeof window === 'undefined' ? true : !window.matchMedia('(max-width: 1080px)').matches
   ));
-  const [sidebarScrolling, setSidebarScrolling] = useState(false);
-  const [mainScrolling, setMainScrolling] = useState(false);
-  const sidebarRef = useRef<HTMLElement>(null);
-  const mainRef = useRef<HTMLDivElement>(null);
   const unreadCount = notifications.filter((notification) => !notification.read).length;
+
+  useTransientScrollbars();
 
   const closeSidebarOnSmallScreen = () => {
     if (typeof window !== 'undefined' && window.matchMedia('(max-width: 1080px)').matches) {
@@ -84,9 +83,6 @@ export function AppShell<T extends string>({
     onNavigate(view);
     closeSidebarOnSmallScreen();
   };
-
-  useTransientScrollState(sidebarRef, setSidebarScrolling);
-  useTransientScrollState(mainRef, setMainScrolling);
 
   return (
     <div className={`dashboard-shell ${sidebarOpen ? 'dashboard-shell--sidebar-open' : 'dashboard-shell--sidebar-closed'}`}>
@@ -103,14 +99,11 @@ export function AppShell<T extends string>({
         navItems={navItems}
         onNavigate={handleNavigate}
         overviewView={overviewView}
-        scrolling={sidebarScrolling}
         sidebarOpen={sidebarOpen}
-        sidebarRef={sidebarRef}
       />
 
       <div
-        className={`dashboard-shell__main ${mainScrolling ? 'dashboard-shell__scrolling' : ''}`}
-        ref={mainRef}
+        className="dashboard-shell__main"
         style={shellStyles.main}
       >
         <ShellHeader
@@ -139,41 +132,4 @@ export function AppShell<T extends string>({
       </div>
     </div>
   );
-}
-
-function useTransientScrollState<T extends HTMLElement>(
-  ref: RefObject<T>,
-  setScrolling: (scrolling: boolean) => void,
-) {
-  useEffect(() => {
-    const element = ref.current;
-    if (!element) {
-      return;
-    }
-
-    let timeoutId: number | null = null;
-
-    const handleScroll = () => {
-      setScrolling(true);
-
-      if (timeoutId != null) {
-        window.clearTimeout(timeoutId);
-      }
-
-      timeoutId = window.setTimeout(() => {
-        setScrolling(false);
-        timeoutId = null;
-      }, 700);
-    };
-
-    element.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      element.removeEventListener('scroll', handleScroll);
-
-      if (timeoutId != null) {
-        window.clearTimeout(timeoutId);
-      }
-    };
-  }, [ref, setScrolling]);
 }

@@ -13,19 +13,30 @@
   background: transparent;
 }
 
-.dashboard-shell__scrolling {
-  scrollbar-color: var(--color-border) transparent;
-}
-
-.dashboard-shell__scrolling::-webkit-scrollbar-thumb {
-  background: var(--color-border-strong);
+*::-webkit-scrollbar-thumb {
+  background-color: transparent;
   border: 2px solid transparent;
   border-radius: 999px;
   background-clip: padding-box;
+  transition: background-color 140ms ease;
 }
 
-.dashboard-shell__scrolling::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
+*::-webkit-scrollbar-button {
+  display: none;
+  height: 0;
+  width: 0;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.ui-scrollbar--active {
+  scrollbar-color: var(--color-border) transparent;
+}
+
+.ui-scrollbar--active::-webkit-scrollbar-thumb {
+  background-color: var(--color-border-strong);
 }
 
 html,
@@ -521,10 +532,10 @@ tr[style*="cursor: pointer"]:hover,
 
 .dashboard-shell__content {
   display: flex;
-  flex: 1 1 auto;
+  flex: 1 0 auto;
   min-height: 0;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   padding-left: 24px;
   width: 100%;
 }
@@ -532,7 +543,7 @@ tr[style*="cursor: pointer"]:hover,
 .dashboard-shell__page {
   animation: shell-fade 220ms ease;
   display: flex;
-  flex: 1 1 auto;
+  flex: 1 0 auto;
   min-height: 0;
 }
 
