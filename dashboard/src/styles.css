@@ -98,6 +98,14 @@ textarea {
   transform: translateY(-1px);
 }
 
+.dashboard-kpi-card:focus-visible,
+.dashboard-secondary-metric:focus-visible,
+.dashboard-attention-row:focus-visible {
+  border-radius: 8px;
+  box-shadow: 0 0 0 2px var(--color-bg), 0 0 0 4px var(--color-focus-ring);
+  outline: none;
+}
+
 .dashboard-secondary-metrics {
   display: grid;
   gap: 16px;
@@ -738,6 +746,14 @@ tr[style*="cursor: pointer"]:hover,
 }
 
 @media (max-width: 1080px) {
+  .dashboard-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-two-column-grid {
+    grid-template-columns: 1fr;
+  }
+
   .dashboard-shell {
     grid-template-columns: 1fr;
   }
@@ -779,6 +795,23 @@ tr[style*="cursor: pointer"]:hover,
 }
 
 @media (max-width: 720px) {
+  .dashboard-summary-grid,
+  .dashboard-secondary-metrics,
+  .dashboard-workflow-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-empty-state {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 24px;
+  }
+
+  .dashboard-refresh {
+    align-items: flex-end;
+    flex-direction: column;
+  }
+
   .dashboard-shell {
     padding: 0;
   }

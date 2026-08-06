@@ -34,7 +34,7 @@ export function LabQueueWidget({ onOpen, rows }: { onOpen: (id: string) => void;
 function ResultProgress({ completed, required }: { completed: number; required: number }) {
   const percent = required > 0 ? Math.min(100, Math.round((completed / required) * 100)) : 0;
   return (
-    <div style={{ display: 'grid', gap: 6, minWidth: 130 }}>
+    <div aria-label={`${completed} of ${required} required results complete`} style={{ display: 'grid', gap: 6, minWidth: 130 }}>
       <span>{completed} / {required} ({percent}%)</span>
       <div style={dashboardStyles.barTrack}>
         <div className="dashboard-progress-fill" style={{ width: `${percent}%` }} />

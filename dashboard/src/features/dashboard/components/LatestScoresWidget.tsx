@@ -1,7 +1,7 @@
 import { controlStyles } from '../../../components/ui/controls';
 import { EmptyState } from '../../../components/ui/Page';
 import type { DashboardLatestScore } from '../../../services/api';
-import { dashboardStyles, formatDashPercent, formatDashScore, TrafficBadge } from './dashboardFormat';
+import { dashboardStyles, formatDashPercent, formatDashScore, formatDashValue, TrafficBadge } from './dashboardFormat';
 
 export function LatestScoresWidget({ onOpenReport, onOpenRun, rows }: {
   onOpenReport: (id: string) => void;
@@ -15,7 +15,7 @@ export function LatestScoresWidget({ onOpenReport, onOpenRun, rows }: {
       <table style={dashboardStyles.table}>
         <thead>
           <tr>
-            {['Run', 'Best Match', 'Predictability', 'X-40 Similarity', 'Lifetime Similarity', 'Status', 'Action'].map((column) => <th key={column} style={dashboardStyles.th}>{column}</th>)}
+            {['Run', 'Best Match', 'Predictability', 'X-40 Similarity', 'Lifetime Similarity', 'Scored', 'Status', 'Action'].map((column) => <th key={column} style={dashboardStyles.th}>{column}</th>)}
           </tr>
         </thead>
         <tbody>
@@ -26,6 +26,7 @@ export function LatestScoresWidget({ onOpenReport, onOpenRun, rows }: {
               <td style={dashboardStyles.td}>{formatDashScore(row.predictabilityIndex)}</td>
               <td style={dashboardStyles.td}>{formatDashPercent(row.x40Similarity)}</td>
               <td style={dashboardStyles.td}>{formatDashPercent(row.lifetimeSimilarity)}</td>
+              <td style={dashboardStyles.td}>{formatDashValue(row.generatedAt)}</td>
               <td style={dashboardStyles.td}><TrafficBadge value={row.status} /></td>
               <td style={dashboardStyles.td}>
                 <button onClick={() => row.reportId ? onOpenReport(row.reportId) : onOpenRun(row.runId)} style={controlStyles.subtleButton} type="button">
