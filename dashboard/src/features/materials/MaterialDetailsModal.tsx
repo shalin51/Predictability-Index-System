@@ -40,34 +40,13 @@ export function MaterialDetailsModal({ id, onClose }: { id: string; onClose: () 
         {detail && (
           <div style={styles.content}>
             <div style={styles.summary}>
-              <Summary label="Type" value={detail.materialType} />
+              <Summary label="Supplier" value={detail.supplierName} />
+              <Summary label="Product Grade" value={detail.productGrade} />
+              <Summary label="Material Lot" value={detail.materialLot} />
               <Summary label="Chemistry" value={detail.chemistry} />
               <Summary label="Role in Blend" value={detail.roleInBlend} />
-              <Summary label="Source Documents" value={detail.sourceDocuments.length} />
               <Summary label="Property Facts" value={detail.properties.length} />
-              <Summary label="Processing Ranges" value={detail.processingReference.filter((item) => item.parameterKey).length} />
             </div>
-            {detail.processingReference.some((item) => item.parameterKey) && (
-              <div style={styles.content}>
-                <h3 style={styles.heading}>Material Processing Reference</h3>
-                <DataTable compact minWidth={700}>
-                  <DataTableHeader>
-                    <tr><DataTableHead>Parameter</DataTableHead><DataTableHead>Minimum</DataTableHead><DataTableHead>Recommended</DataTableHead><DataTableHead>Maximum</DataTableHead><DataTableHead>Unit</DataTableHead></tr>
-                  </DataTableHeader>
-                  <DataTableBody>
-                    {detail.processingReference.filter((item) => item.parameterKey).map((item) => (
-                      <DataTableRow key={`${item.profileId}-${item.parameterKey}`}>
-                        <DataTableCell>{item.displayName || item.parameterKey}</DataTableCell>
-                        <DataTableCell>{item.minimumValue ?? '-'}</DataTableCell>
-                        <DataTableCell>{item.recommendedValue ?? '-'}</DataTableCell>
-                        <DataTableCell>{item.maximumValue ?? '-'}</DataTableCell>
-                        <DataTableCell>{item.unit || '-'}</DataTableCell>
-                      </DataTableRow>
-                    ))}
-                  </DataTableBody>
-                </DataTable>
-              </div>
-            )}
             <input onChange={(event) => setSearch(event.target.value)} placeholder="Search properties, methods, conditions, or source files" style={controlStyles.input} value={search} />
             <DataTable compact minWidth={1000}>
               <DataTableHeader>

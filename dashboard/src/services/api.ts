@@ -218,12 +218,12 @@ export interface MaterialImportPreview {
 
 export interface MaterialCatalogDetail extends LibraryRecord {
   chemistry?: string | null;
-  defaultUnit?: string | null;
-  description?: string | null;
-  externalIdentifiers: Array<{ namespace: string; externalId: string }>;
+  materialLot?: string | null;
   materialCode: string;
   materialName: string;
-  materialType: string;
+  materialSupplierId?: string | null;
+  notes?: string | null;
+  productGrade?: string | null;
   properties: Array<{
     id: string;
     category: string;
@@ -237,18 +237,10 @@ export interface MaterialCatalogDetail extends LibraryRecord {
     valueNumeric?: number | null;
     valueText?: string | null;
   }>;
-  processingReference: Array<{
-    profileId: string;
-    profileVersion: number;
-    parameterKey?: string | null;
-    displayName?: string | null;
-    minimumValue?: number | null;
-    recommendedValue?: number | null;
-    maximumValue?: number | null;
-    unit?: string | null;
-  }>;
   roleInBlend?: string | null;
-  sourceDocuments: Array<{ id: string; sourceFilename: string; sourceRevisionDate?: string | null; manufacturer?: string | null }>;
+  sourceFile?: string | null;
+  sourceRevisionDate?: string | null;
+  supplierName?: string | null;
 }
 
 export interface ProcessSetupDetail extends LibraryRecord {
@@ -724,7 +716,7 @@ export async function commitMaterialWorkbook(importId: string, materialResolutio
 }
 
 export async function getMaterialCatalog(id: string): Promise<MaterialCatalogDetail> {
-  return fetchJSON<MaterialCatalogDetail>(`/materials/${id}/catalog`);
+  return fetchJSON<MaterialCatalogDetail>(`/materials/${id}`);
 }
 
 export async function getProductionRunProcessSetup(runId: string): Promise<ProcessSetupDetail> {

@@ -3,7 +3,7 @@ import { getPool } from '../../infrastructure/database/pg-pool';
 import type { AuditService } from '../audit/audit.service';
 import { getLibraryConfig } from './library.config';
 import { LibraryRepository } from './library.repository';
-import type { LibraryCollectionResponse, LibraryListQuery, LibraryRecord } from './library.types';
+import type { LibraryCollectionResponse, LibraryEntityConfig, LibraryListQuery, LibraryRecord } from './library.types';
 
 const statuses = new Set(['active', 'inactive', 'archived']);
 
@@ -27,6 +27,7 @@ export class LibraryService {
 
   async create(resource: string, input: Record<string, unknown>, changedBy: string): Promise<LibraryRecord> {
     const config = this.requireConfig(resource);
+    this.validateWritable(config);
     const payload = this.preparePayload(input);
     this.validateRequired(config.requiredFields, payload);
     this.validateEnums(payload);
@@ -45,6 +46,7 @@ export class LibraryService {
 
   async update(resource: string, id: string, input: Record<string, unknown>, changedBy: string): Promise<LibraryRecord> {
     const config = this.requireConfig(resource);
+    this.validateWritable(config);
     const before = await this.repo.rawById(config, id);
     if (!before) throw new NotFoundError(`${config.displayName} ${id}`);
 
@@ -68,6 +70,7 @@ export class LibraryService {
 
   async archive(resource: string, id: string, changedBy: string): Promise<LibraryRecord> {
     const config = this.requireConfig(resource);
+    this.validateWritable(config);
     const before = await this.repo.rawById(config, id);
     if (!before) throw new NotFoundError(`${config.displayName} ${id}`);
 
@@ -114,6 +117,10 @@ export class LibraryService {
         throw new ValidationError(`${field} is required`);
       }
     }
+  }
+
+  private validateWritable(config: LibraryEntityConfig): void {
+    if (config.readOnly) throw new ValidationError(`${config.displayName} is read-only`);
   }
 
   private validateEnums(payload: Record<string, unknown>): void {

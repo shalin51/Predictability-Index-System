@@ -1,34 +1,98 @@
 import type { LibraryEntityConfig } from './library.types';
 
 export const libraryConfigs = {
-  materials: {
-    columns: ['id', 'materialCode', 'materialName', 'materialType', 'chemistry', 'roleInBlend', 'defaultUnit', 'status', 'description', 'notes', 'updatedAt', 'createdAt'],
-    createFields: [
-      { key: 'materialCode', label: 'Material Code', required: true },
-      { key: 'materialName', label: 'Material Name', required: true },
-      { key: 'materialType', label: 'Material Type', required: true },
-      { key: 'chemistry', label: 'Chemistry' },
-      { key: 'roleInBlend', label: 'Role in Blend' },
-      { key: 'defaultUnit', label: 'Default Unit' },
-      { key: 'status', label: 'Status', type: 'select' },
-      { key: 'notes', label: 'Notes', type: 'textarea' },
-      { key: 'description', label: 'Description', type: 'textarea' },
-    ],
-    defaultOrderBy: 'material_code',
-    displayName: 'Material',
-    filterColumn: 'material_type',
+  'material-properties': {
+    columns: ['id', 'materialId', 'productGrade', 'propertyId', 'propertyName', 'sourceLabel', 'valueNumeric', 'valueText', 'qualifier', 'unit', 'testMethod', 'testCondition', 'temperatureC', 'load', 'sourceFile', 'sourceRevisionDate', 'notes'],
+    createFields: [],
+    defaultOrderBy: 'material_id, property_id, material_property_id',
+    displayName: 'Material Property',
     idColumn: 'id',
     listSql: `
-      SELECT id, material_code AS "materialCode", material_name AS "materialName",
-             material_type AS "materialType", chemistry, role_in_blend AS "roleInBlend", default_unit AS "defaultUnit",
-             status::text AS status, description, notes, updated_at AS "updatedAt", created_at AS "createdAt"
-      FROM materials
+      SELECT material_property_id AS id, material_id AS "materialId", product_grade AS "productGrade",
+             property_id AS "propertyId", property_name AS "propertyName", source_label AS "sourceLabel",
+             value_numeric::float AS "valueNumeric", value_text AS "valueText", qualifier, unit,
+             test_method AS "testMethod", test_condition AS "testCondition", temperature_c::float AS "temperatureC",
+             load, source_file AS "sourceFile", source_revision_date AS "sourceRevisionDate", notes
+      FROM material_properties
     `,
-    mutableColumns: ['materialCode', 'materialName', 'materialType', 'chemistry', 'roleInBlend', 'defaultUnit', 'status', 'description', 'notes'],
-    requiredFields: ['materialCode', 'materialName', 'materialType'],
-    routeKey: 'materials',
-    searchColumns: ['material_code', 'material_name', 'material_type', 'chemistry', 'role_in_blend'],
+    mutableColumns: [],
+    readOnly: true,
+    requiredFields: [],
+    routeKey: 'material-properties',
+    searchColumns: ['material_id', 'product_grade', 'property_id', 'property_name', 'source_label', 'unit', 'test_method'],
+    tableName: 'material_property_facts',
+    uniqueChecks: [],
+  },
+  'material-suppliers': {
+    columns: ['id', 'supplierCode', 'supplierName', 'supplierRole', 'contactName', 'contactEmail', 'contactPhone', 'address', 'website', 'contactInfo', 'supplierNotes', 'status', 'updatedAt', 'createdAt'],
+    createFields: [
+      { key: 'supplierCode', label: 'Supplier ID', required: true },
+      { key: 'supplierName', label: 'Supplier Name', required: true },
+      { key: 'supplierRole', label: 'Role' },
+      { key: 'contactName', label: 'Contact Name' },
+      { key: 'contactEmail', label: 'Contact Email' },
+      { key: 'contactPhone', label: 'Contact Phone' },
+      { key: 'address', label: 'Address', type: 'textarea' },
+      { key: 'website', label: 'Website' },
+      { key: 'contactInfo', label: 'Contact Info', type: 'textarea' },
+      { key: 'supplierNotes', label: 'Notes', type: 'textarea' },
+      { key: 'status', label: 'Status', type: 'select' },
+    ],
+    defaultOrderBy: 'supplier_code',
+    displayName: 'Material Supplier',
+    idColumn: 'id',
+    listSql: `
+      SELECT id, supplier_code AS "supplierCode", supplier_name AS "supplierName",
+             supplier_role AS "supplierRole", contact_name AS "contactName", contact_email AS "contactEmail",
+             contact_phone AS "contactPhone", address, website, contact_info AS "contactInfo",
+             supplier_notes AS "supplierNotes", status::text AS status,
+             updated_at AS "updatedAt", created_at AS "createdAt"
+      FROM suppliers
+    `,
+    mutableColumns: ['supplierCode', 'supplierName', 'supplierRole', 'contactName', 'contactEmail', 'contactPhone', 'address', 'website', 'contactInfo', 'supplierNotes', 'status'],
+    requiredFields: ['supplierCode', 'supplierName'],
+    routeKey: 'material-suppliers',
+    searchColumns: ['supplier_code', 'supplier_name', 'supplier_role', 'contact_name', 'contact_email', 'contact_phone', 'contact_info'],
     statusColumn: 'status',
+    tableName: 'suppliers',
+    uniqueChecks: [
+      { columns: ['supplierCode'], message: 'supplier ID must be unique' },
+      { columns: ['supplierName'], message: 'supplier name must be unique' },
+    ],
+  },
+  materials: {
+    columns: ['id', 'materialCode', 'materialName', 'materialSupplierId', 'materialSupplierCode', 'supplierName', 'materialLot', 'productGrade', 'chemistry', 'roleInBlend', 'sourceFile', 'sourceRevisionDate', 'status', 'notes', 'updatedAt', 'createdAt'],
+    createFields: [
+      { key: 'materialCode', label: 'Material ID', required: true },
+      { key: 'materialName', label: 'Material Name', required: true },
+      { key: 'materialSupplierId', label: 'Material Supplier', type: 'select' },
+      { key: 'materialLot', label: 'Material Lot' },
+      { key: 'productGrade', label: 'Product Grade', required: true },
+      { key: 'chemistry', label: 'Chemistry' },
+      { key: 'roleInBlend', label: 'Role in Blend' },
+      { key: 'sourceFile', label: 'Source File' },
+      { key: 'sourceRevisionDate', label: 'Source Revision Date', type: 'date' },
+      { key: 'status', label: 'Status', type: 'select' },
+      { key: 'notes', label: 'Notes', type: 'textarea' },
+    ],
+    defaultOrderBy: 'm.material_code',
+    displayName: 'Material',
+    idColumn: 'id',
+    listSql: `
+      SELECT m.id, m.material_code AS "materialCode", m.material_name AS "materialName",
+             m.supplier_id AS "materialSupplierId", s.supplier_code AS "materialSupplierCode",
+             s.supplier_name AS "supplierName", m.material_lot AS "materialLot", m.product_grade AS "productGrade",
+             m.chemistry, m.role_in_blend AS "roleInBlend", m.source_file AS "sourceFile",
+             m.source_revision_date AS "sourceRevisionDate", m.status::text AS status, m.notes,
+             m.updated_at AS "updatedAt", m.created_at AS "createdAt"
+      FROM materials m
+      LEFT JOIN suppliers s ON s.id = m.supplier_id
+    `,
+    mutableColumns: ['materialCode', 'materialName', 'materialSupplierId', 'materialLot', 'productGrade', 'chemistry', 'roleInBlend', 'sourceFile', 'sourceRevisionDate', 'status', 'notes'],
+    requiredFields: ['materialCode', 'materialName', 'productGrade'],
+    routeKey: 'materials',
+    searchColumns: ['m.material_code', 'm.material_name', 's.supplier_code', 's.supplier_name', 'm.product_grade', 'm.chemistry', 'm.role_in_blend'],
+    statusColumn: 'm.status',
     tableName: 'materials',
     uniqueChecks: [{ columns: ['materialCode'], message: 'material_code must be unique' }],
   },
@@ -295,5 +359,6 @@ const extraLibraryConfigs: Record<string, LibraryEntityConfig> = {
 };
 
 export function getLibraryConfig(resource: string): LibraryEntityConfig | null {
+  if (['suppliers', 'supplier-materials', 'material-lots'].includes(resource)) return null;
   return libraryConfigs[resource as LibraryResourceKey] ?? extraLibraryConfigs[resource] ?? null;
 }

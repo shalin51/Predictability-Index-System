@@ -144,9 +144,21 @@ export class MaterialImportRepository {
           matchedMaterials += 1;
           await client.query(
             `UPDATE materials SET supplier_id = COALESCE(supplier_id, $2), chemistry = COALESCE(NULLIF($3, ''), chemistry),
-               role_in_blend = COALESCE(NULLIF($4, ''), role_in_blend), notes = COALESCE(notes, $5), updated_at = now()
+               role_in_blend = COALESCE(NULLIF($4, ''), role_in_blend), notes = COALESCE(notes, $5),
+               product_grade = COALESCE(NULLIF($6, ''), product_grade),
+               source_file = COALESCE(NULLIF($7, ''), source_file),
+               source_revision_date = COALESCE($8::date, source_revision_date), updated_at = now()
              WHERE id = $1`,
-            [matched.id, supplier.id, material.chemistry, material.roleInBlend ?? null, material.notes ?? null]
+            [
+              matched.id,
+              supplier.id,
+              material.chemistry,
+              material.roleInBlend ?? null,
+              material.notes ?? null,
+              material.productGrade,
+              material.sourceFile,
+              material.sourceRevisionDate ?? null,
+            ]
           );
         }
         materialIds.set(material.externalId.toLowerCase(), matched.id);
@@ -178,10 +190,10 @@ export class MaterialImportRepository {
           `INSERT INTO material_property_facts
             (material_id, property_definition_id, source_document_id, source_label, value_numeric, value_text,
              qualifier, unit, test_method, test_condition, temperature_c, load, duration, frequency,
-             direction, specimen, process_type, zone, source_page, source_revision_date, notes, fact_hash, source_import_id)
-           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20::date,$21,$22,$23)
+             direction, specimen, process_type, zone, source_file, source_page, source_revision_date, notes, fact_hash, source_import_id)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21::date,$22,$23,$24)
            ON CONFLICT (material_id, fact_hash) DO NOTHING`,
-          [materialId, definitionId, documentId, fact.sourceLabel, fact.valueNumeric ?? null, fact.valueText ?? null, fact.qualifier ?? null, fact.unit ?? null, fact.testMethod, fact.testCondition ?? null, fact.temperatureC ?? null, fact.load ?? null, fact.duration ?? null, fact.frequency ?? null, fact.direction ?? null, fact.specimen ?? null, fact.processType ?? null, fact.zone ?? null, fact.sourcePage ?? null, fact.sourceRevisionDate ?? null, fact.notes ?? null, hash, id]
+          [materialId, definitionId, documentId, fact.sourceLabel, fact.valueNumeric ?? null, fact.valueText ?? null, fact.qualifier ?? null, fact.unit ?? null, fact.testMethod, fact.testCondition ?? null, fact.temperatureC ?? null, fact.load ?? null, fact.duration ?? null, fact.frequency ?? null, fact.direction ?? null, fact.specimen ?? null, fact.processType ?? null, fact.zone ?? null, fact.sourceFile, fact.sourcePage ?? null, fact.sourceRevisionDate ?? null, fact.notes ?? null, hash, id]
         );
         createdFacts += inserted.rowCount ?? 0;
       }
@@ -261,9 +273,19 @@ export class MaterialImportRepository {
     const inserted = await client.query<{ id: string }>(
       `INSERT INTO materials
        (name, material_type, supplier_id, unit, description, is_active, material_code, material_name,
-         default_unit, status, notes, chemistry, role_in_blend)
-       VALUES ($1::text,$2,$3,'wt%',$4,true,$5,$1::varchar,'wt%','active',$6,$4,$7) RETURNING id`,
-      [material.productGrade, type, supplierId, material.chemistry, code, material.notes ?? null, material.roleInBlend ?? null]
+         default_unit, status, notes, chemistry, role_in_blend, product_grade, source_file, source_revision_date)
+       VALUES ($1::text,$2,$3,'wt%',$4,true,$5,$1::varchar,'wt%','active',$6,$4,$7,$1::varchar,$8,$9::date) RETURNING id`,
+      [
+        material.productGrade,
+        type,
+        supplierId,
+        material.chemistry,
+        code,
+        material.notes ?? null,
+        material.roleInBlend ?? null,
+        material.sourceFile,
+        material.sourceRevisionDate ?? null,
+      ]
     );
     return { id: inserted.rows[0]?.id ?? '', materialCode: code, materialName: material.productGrade, externalId: material.externalId };
   }

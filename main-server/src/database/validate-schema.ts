@@ -72,6 +72,12 @@ const REQUIRED_TABLES = [
   'audit_events',
 ] as const;
 
+const REQUIRED_VIEWS = [
+  'material_suppliers',
+  'material_property_catalog',
+  'material_properties',
+] as const;
+
 const REMOVED_TABLES = [
   'formulation_materials',
   'processing_runs',
@@ -113,6 +119,7 @@ const REQUIRED_INDEXES = [
   'idx_material_property_facts_property',
   'idx_machine_parameter_capabilities_machine',
   'idx_mold_zones_mold',
+  'idx_suppliers_supplier_code_unique',
 ] as const;
 
 function assertCheck(condition: boolean, label: string): void {
@@ -136,6 +143,20 @@ async function tableExists(client: ReturnType<typeof createDatabaseClient>, tabl
   return result.rows[0]?.exists === true;
 }
 
+async function viewExists(client: ReturnType<typeof createDatabaseClient>, view: string): Promise<boolean> {
+  const result = await client.query<{ exists: boolean }>(
+    `
+      SELECT EXISTS (
+        SELECT 1
+        FROM information_schema.views
+        WHERE table_schema = 'public' AND table_name = $1
+      ) AS exists
+    `,
+    [view]
+  );
+  return result.rows[0]?.exists === true;
+}
+
 async function run(): Promise<void> {
   await initializeConfig();
   const client = createDatabaseClient();
@@ -147,6 +168,11 @@ async function run(): Promise<void> {
     console.log('[validate-schema] Checking required tables');
     for (const table of REQUIRED_TABLES) {
       assertCheck(await tableExists(client, table), `table ${table} exists`);
+    }
+
+    console.log('[validate-schema] Checking required views');
+    for (const view of REQUIRED_VIEWS) {
+      assertCheck(await viewExists(client, view), `view ${view} exists`);
     }
 
     console.log('[validate-schema] Checking removed tables');

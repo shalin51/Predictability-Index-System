@@ -6,14 +6,22 @@ const columnMap: Record<string, Record<string, string>> = {
     defaultUnit: 'default_unit',
     materialCode: 'material_code',
     materialName: 'material_name',
+    materialSupplierId: 'supplier_id',
+    materialLot: 'material_lot',
     materialType: 'material_type',
+    productGrade: 'product_grade',
     chemistry: 'chemistry',
     roleInBlend: 'role_in_blend',
+    sourceFile: 'source_file',
+    sourceRevisionDate: 'source_revision_date',
     description: 'description',
     notes: 'notes',
     status: 'status',
   },
   suppliers: {
+    supplierCode: 'supplier_code',
+    supplierRole: 'supplier_role',
+    supplierNotes: 'supplier_notes',
     contactInfo: 'contact_info',
     contactName: 'contact_name',
     contactEmail: 'contact_email',
@@ -261,6 +269,7 @@ export class LibraryRepository {
   async options(resource: string): Promise<LibraryRecord[]> {
     const configMap: Record<string, string> = {
       materials: `SELECT id, material_name AS label, material_code AS code FROM materials WHERE status = 'active' ORDER BY material_code`,
+      'material-suppliers': `SELECT id, supplier_name AS label, supplier_code AS code FROM suppliers WHERE status = 'active' ORDER BY supplier_code`,
       suppliers: `SELECT id, supplier_name AS label FROM suppliers WHERE status = 'active' ORDER BY supplier_name`,
       'material-lots': `
         SELECT ml.id, CONCAT(ml.lot_number, ' / ', m.material_code) AS label, ml.lot_number AS code,

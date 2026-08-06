@@ -42,7 +42,7 @@ export function MaterialImportPage({ onCancel, onCommitted }: { onCancel: () => 
     <DashboardPage maxWidth="100%">
       <Card>
         <CardHeader>
-          <div><CardTitle>Import Materials</CardTitle><CardSubtitle>Upload the fixed Material Master v1 workbook, preview matches, then commit it.</CardSubtitle></div>
+          <div><CardTitle>Import Materials</CardTitle><CardSubtitle>Upload the fixed single-sheet Material Import v1 workbook, preview matches, then commit it.</CardSubtitle></div>
           <Button onClick={onCancel} variant="secondary" type="button">Back</Button>
         </CardHeader>
         <Divider />

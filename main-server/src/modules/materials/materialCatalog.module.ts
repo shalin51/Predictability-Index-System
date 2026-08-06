@@ -10,6 +10,6 @@ export function createMaterialCatalogController(): MaterialCatalogController {
 export function createMaterialCatalogRouter() {
   const router = Router();
   const controller = createMaterialCatalogController();
-  router.get('/:id/catalog', (req, res) => controller.detail(req, res));
+  router.get('/:id', (req, res) => controller.detail(req, res));
   return router;
 }

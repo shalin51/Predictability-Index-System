@@ -67,7 +67,7 @@ export function DashboardViewContent({
     if (materialMode === 'import') {
       return <MaterialImportPage onCancel={() => navigate({ materialMode: 'list', view: 'materials' })} onCommitted={() => navigate({ materialMode: 'list', view: 'materials' })} />;
     }
-    return <MasterDataPage initialSection="materials" onImport={() => navigate({ materialMode: 'import', view: 'materials' })} sections={['materials', 'supplier-materials', 'material-lots']} />;
+    return <MasterDataPage initialSection="materials" onImport={() => navigate({ materialMode: 'import', view: 'materials' })} sections={['materials', 'material-properties', 'material-suppliers']} />;
   }
 
   if (view === 'suppliers') {

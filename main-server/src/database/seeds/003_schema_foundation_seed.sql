@@ -20,65 +20,12 @@ VALUES
   ('executive', 'Executive')
 ON CONFLICT (role_key) DO UPDATE SET role_name = EXCLUDED.role_name;
 
-INSERT INTO suppliers (name, supplier_name, supplier_type)
-VALUES
-  ('Supplier A', 'Supplier A', 'raw_material'),
-  ('Supplier B', 'Supplier B', 'raw_material'),
-  ('Supplier C', 'Supplier C', 'raw_material')
-ON CONFLICT (name) DO UPDATE
-SET supplier_name = EXCLUDED.supplier_name, supplier_type = EXCLUDED.supplier_type;
-
-INSERT INTO materials (name, material_code, material_name, material_type, unit, default_unit)
-VALUES
-  ('PP7033N', 'PP7033N', 'PP7033N', 'polymer', 'wt%', 'wt%'),
-  ('Vistamaxx 6202', 'VISTAMAXX_6202', 'Vistamaxx 6202', 'polymer', 'wt%', 'wt%'),
-  ('Additive A', 'ADDITIVE_A', 'Additive A', 'additive', 'wt%', 'wt%'),
-  ('Additive B', 'ADDITIVE_B', 'Additive B', 'additive', 'wt%', 'wt%'),
-  ('Yellow Masterbatch', 'YELLOW_MASTERBATCH', 'Yellow Masterbatch', 'colorant', 'wt%', 'wt%')
-ON CONFLICT (name, material_type) DO UPDATE
-SET material_code = EXCLUDED.material_code, material_name = EXCLUDED.material_name, unit = EXCLUDED.unit, default_unit = EXCLUDED.default_unit;
-
-INSERT INTO supplier_materials (supplier_id, material_id, supplier_material_code, status)
-SELECT s.id, m.id, mapping.supplier_material_code, 'active'::record_status
-FROM (
-  VALUES
-    ('Supplier A', 'PP7033N', 'SUP-A-PP7033N'),
-    ('Supplier A', 'VISTAMAXX_6202', 'SUP-A-VM6202'),
-    ('Supplier B', 'ADDITIVE_A', 'SUP-B-ADD-A'),
-    ('Supplier B', 'ADDITIVE_B', 'SUP-B-ADD-B'),
-    ('Supplier C', 'YELLOW_MASTERBATCH', 'SUP-C-YELLOW')
-) AS mapping(supplier_name, material_code, supplier_material_code)
-JOIN suppliers s ON s.supplier_name = mapping.supplier_name
-JOIN materials m ON m.material_code = mapping.material_code
-ON CONFLICT (supplier_id, material_id, supplier_material_code) DO UPDATE SET status = EXCLUDED.status;
-
-INSERT INTO material_lots (supplier_material_id, lot_number, received_date, expiration_date, status)
-SELECT sm.id, lot.lot_number, lot.received_date::date, lot.expiration_date::date, 'active'::record_status
-FROM (
-  VALUES
-    ('SUP-A-PP7033N', 'PP-2026-771A', '2026-06-20', NULL),
-    ('SUP-A-VM6202', 'VM-2026-118B', '2026-06-22', NULL),
-    ('SUP-B-ADD-A', 'ADDA-2026-034', '2026-06-18', '2027-06-18'),
-    ('SUP-B-ADD-B', 'ADDB-2026-041', '2026-06-19', '2027-06-19'),
-    ('SUP-C-YELLOW', 'YEL-2026-012', '2026-06-21', '2027-06-21')
-) AS lot(supplier_material_code, lot_number, received_date, expiration_date)
-JOIN supplier_materials sm ON sm.supplier_material_code = lot.supplier_material_code
-ON CONFLICT (supplier_material_id, lot_number) DO UPDATE
-SET received_date = EXCLUDED.received_date, expiration_date = EXCLUDED.expiration_date, status = EXCLUDED.status;
-
 INSERT INTO machines (machine_code, machine_name, location)
 VALUES
-  ('Machine-01', 'Machine-01', NULL),
-  ('Machine-02', 'Machine-02', NULL),
-  ('Machine-03', 'Machine-03', NULL),
-  ('BOY-125E',   'BOY 125E Injection Molding Machine', 'Production Floor')
+  ('BOY-125E', 'BOY 125E Injection Molding Machine', 'Production Floor')
 ON CONFLICT (machine_code) DO UPDATE
   SET machine_name = EXCLUDED.machine_name,
       location     = COALESCE(machines.location, EXCLUDED.location);
-
-INSERT INTO molds (mold_code, mold_name, mold_type)
-VALUES ('MOLD-A', 'MOLD-A', 'pickleball'), ('MOLD-B', 'MOLD-B', 'pickleball')
-ON CONFLICT (mold_code) DO UPDATE SET mold_name = EXCLUDED.mold_name, mold_type = EXCLUDED.mold_type;
 
 INSERT INTO metric_definitions
   (metric_key, display_name, category, default_unit, data_type, required_for_scoring, higher_is_better, sort_order)

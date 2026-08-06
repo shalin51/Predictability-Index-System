@@ -21,9 +21,8 @@ import { MaterialDetailsModal } from '../materials/MaterialDetailsModal';
 
 const sections = [
   'materials',
-  'suppliers',
-  'supplier-materials',
-  'material-lots',
+  'material-properties',
+  'material-suppliers',
   'machines',
   'machine-parameters',
   'molds',
@@ -40,14 +39,14 @@ const columns: Record<string, string[]> = {
   benchmarks: ['benchmarkCode', 'benchmarkName', 'profileVersion', 'ballBrand', 'ballModel', 'status'],
   machines: ['machineCode', 'machineName', 'manufacturer', 'machineType', 'modelNumber', 'location', 'status'],
   'machine-parameters': ['machineCode', 'displayName', 'sectionKey', 'positionLabel', 'minimumValue', 'maximumValue', 'unit', 'status'],
-  materials: ['materialCode', 'materialName', 'materialType', 'chemistry', 'roleInBlend', 'status', 'updatedAt'],
-  'material-lots': ['materialCode', 'supplierName', 'lotNumber', 'receivedDate', 'expirationDate', 'status'],
+  materials: ['materialCode', 'materialName', 'materialSupplierCode', 'materialLot', 'productGrade', 'chemistry', 'roleInBlend', 'sourceRevisionDate', 'status'],
+  'material-properties': ['materialId', 'productGrade', 'propertyId', 'propertyName', 'valueNumeric', 'valueText', 'qualifier', 'unit', 'testMethod', 'testCondition'],
+  'material-suppliers': ['supplierCode', 'supplierName', 'supplierRole', 'contactName', 'contactEmail', 'contactPhone', 'status'],
   metrics: ['metricKey', 'displayName', 'category', 'defaultUnit', 'dataType', 'benchmarkComparable', 'requiredForScoring', 'status'],
   molds: ['moldCode', 'moldName', 'moldType', 'manufacturer', 'cavityCount', 'zoneCount', 'status'],
   'mold-zones': ['moldCode', 'zoneNumber', 'zoneName', 'zoneType', 'minimumTemperature', 'maximumTemperature', 'temperatureUnit', 'status'],
   'scoring-rules': ['benchmarkCode', 'metricKey', 'targetMean', 'minAcceptable', 'maxAcceptable', 'targetStdDev', 'weight', 'criticality'],
   suppliers: ['supplierName', 'supplierType', 'contactName', 'contactEmail', 'contactPhone', 'status'],
-  'supplier-materials': ['supplierName', 'materialCode', 'materialName', 'supplierMaterialCode', 'status'],
   'test-conditions': ['conditionCode', 'conditionName', 'description', 'status'],
   'test-methods': ['methodCode', 'methodName', 'metricKey', 'cureHours', 'status'],
   'process-setups': ['machine', 'mold', 'formulation', 'revisionNo', 'status', 'approvedBy', 'approvedAt', 'parameterCount'],
@@ -63,11 +62,11 @@ const enumOptions: Record<string, string[]> = {
 const optionResourceByField: Record<string, string> = {
   benchmarkProfileId: 'benchmarks',
   materialId: 'materials',
+  materialSupplierId: 'material-suppliers',
   machineId: 'machines',
   metricId: 'metrics',
   moldId: 'molds',
   supplierId: 'suppliers',
-  supplierMaterialId: 'supplier-materials',
 };
 
 export function LibraryPage({
@@ -84,6 +83,7 @@ export function LibraryPage({
   standalone?: boolean;
 }) {
   const section = sections.includes(activeSection as never) ? activeSection : 'materials';
+  const readOnly = section === 'material-properties';
   const visibleSections = sectionOptions?.filter((item) => sections.includes(item as never)) ?? sections;
   const showSectionNav = visibleSections.length > 1;
   const [records, setRecords] = useState<LibraryRecord[]>([]);
@@ -122,7 +122,7 @@ export function LibraryPage({
   useEffect(load, [section, search, status]);
 
   useEffect(() => {
-    void Promise.all(['benchmarks', 'machines', 'materials', 'metrics', 'molds', 'suppliers', 'supplier-materials'].map((resource) =>
+    void Promise.all(['benchmarks', 'machines', 'materials', 'material-suppliers', 'metrics', 'molds'].map((resource) =>
       listLibraryOptions(resource).then((items) => [resource, items] as const)
     )).then((entries) => setOptions(Object.fromEntries(entries))).catch(() => undefined);
   }, []);
@@ -185,7 +185,7 @@ export function LibraryPage({
                   Validate Selected Benchmark
                 </Button>
               )}
-              {section !== 'process-setups' && <Button onClick={() => startEdit()} type="button" variant="primary">New</Button>}
+              {section !== 'process-setups' && !readOnly && <Button onClick={() => startEdit()} type="button" variant="primary">New</Button>}
               {section === 'materials' && onImport && <Button onClick={onImport} type="button" variant="secondary">Import Materials</Button>}
             </div>
           </CardHeader>
@@ -225,7 +225,7 @@ export function LibraryPage({
                         <DataTableCell>
                           <div style={styles.rowActions}>
                             {section === 'materials' && <Button onClick={(event) => { event.stopPropagation(); setMaterialDetailId(record.id); }} size="sm" type="button" variant="subtle">Details</Button>}
-                            {section !== 'process-setups' && <Button onClick={(event) => { event.stopPropagation(); startEdit(record); }} size="sm" type="button" variant="subtle">Edit</Button>}
+                            {section !== 'process-setups' && !readOnly && <Button onClick={(event) => { event.stopPropagation(); startEdit(record); }} size="sm" type="button" variant="subtle">Edit</Button>}
                           </div>
                         </DataTableCell>
                       </DataTableRow>

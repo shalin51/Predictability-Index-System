@@ -23,6 +23,7 @@ export interface LibraryEntityConfig {
   idColumn: string;
   listSql: string;
   mutableColumns: string[];
+  readOnly?: boolean;
   requiredFields: string[];
   routeKey: string;
   searchColumns: string[];

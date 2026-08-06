@@ -9,6 +9,8 @@ import type {
 } from './materialImport.types';
 
 const REQUIRED_SHEETS = ['Material Register', 'Property Dictionary', 'Property Facts'] as const;
+const SINGLE_SHEET_NAME = 'Materials Import';
+const SINGLE_SHEET_TITLE = 'Material Import - Single Sheet v1';
 const ALLOWED_SHEETS = new Set([
   'Read Me',
   ...REQUIRED_SHEETS,
@@ -42,6 +44,16 @@ export class MaterialWorkbookParser {
     if ((workbook as XLSX.WorkBook & { vbaraw?: unknown }).vbaraw) {
       throw new ValidationError('Macro-enabled workbooks are not supported');
     }
+    if (workbook.Sheets[SINGLE_SHEET_NAME]) {
+      if (workbook.SheetNames.length !== 1) throw new ValidationError(`Single-sheet workbooks may only contain the ${SINGLE_SHEET_NAME} sheet`);
+      if (this.text(this.sheet(workbook, SINGLE_SHEET_NAME), 'A1') !== SINGLE_SHEET_TITLE) {
+        throw new ValidationError('Workbook fingerprint does not match the single-sheet Material Import v1 template');
+      }
+      if (this.hasExternalLinks(workbook)) throw new ValidationError('External workbook links are not supported');
+      const parsed = this.singleSheet(this.sheet(workbook, SINGLE_SHEET_NAME));
+      const validation = this.validate(parsed.snapshot);
+      return { snapshot: parsed.snapshot, validation: { errors: [...new Set([...parsed.errors, ...validation.errors])], warnings: validation.warnings } };
+    }
     const missing = REQUIRED_SHEETS.filter((name) => !workbook.Sheets[name]);
     if (missing.length > 0) throw new ValidationError(`Missing required sheets: ${missing.join(', ')}`);
     const unsupported = workbook.SheetNames.filter((name) => !ALLOWED_SHEETS.has(name));
@@ -69,6 +81,98 @@ export class MaterialWorkbookParser {
 
   validateSnapshot(snapshot: ParsedMaterialWorkbook): MaterialImportValidation {
     return this.validate(snapshot);
+  }
+
+  private singleSheet(sheet: Sheet): { snapshot: ParsedMaterialWorkbook; errors: string[] } {
+    const rows = this.rows(sheet);
+    if (rows.length === 0) throw new ValidationError('Materials Import must contain at least one data row');
+    const materials = new Map<string, ParsedMaterialRecord>();
+    const definitions = new Map<string, ParsedPropertyDefinition>();
+    const propertyFacts: ParsedPropertyFact[] = [];
+    const errors: string[] = [];
+
+    rows.forEach((row, index) => {
+      const rowNumber = index + 5;
+      const material = this.materialFromSingleRow(row, rowNumber);
+      const definition = this.definitionFromSingleRow(row, rowNumber);
+      const existingMaterial = materials.get(material.externalId.toLowerCase());
+      const existingDefinition = definitions.get(definition.propertyKey.toLowerCase());
+      if (existingMaterial && JSON.stringify(existingMaterial) !== JSON.stringify(material)) errors.push(`Inconsistent material details for ${material.externalId}`);
+      if (existingDefinition && JSON.stringify(existingDefinition) !== JSON.stringify(definition)) errors.push(`Inconsistent property definition for ${definition.propertyKey}`);
+      materials.set(material.externalId.toLowerCase(), existingMaterial ?? material);
+      definitions.set(definition.propertyKey.toLowerCase(), existingDefinition ?? definition);
+      propertyFacts.push(this.factFromSingleRow(row, rowNumber));
+    });
+
+    return {
+      snapshot: {
+        templateKey: 'material-master',
+        templateVersion: 'v1',
+        materials: [...materials.values()],
+        propertyDefinitions: [...definitions.values()],
+        propertyFacts,
+      },
+      errors,
+    };
+  }
+
+  private materialFromSingleRow(row: Row, rowNumber: number): ParsedMaterialRecord {
+    return {
+      externalId: this.required(row['material_id'], `Materials Import row ${rowNumber} material_id`),
+      manufacturer: this.required(row['manufacturer'], `Materials Import row ${rowNumber} manufacturer`),
+      productGrade: this.required(row['product_grade'], `Materials Import row ${rowNumber} product_grade`),
+      chemistry: this.required(row['chemistry'], `Materials Import row ${rowNumber} chemistry`),
+      roleInBlend: this.optional(row['role_in_blend']),
+      sourceFile: this.required(row['source_file'], `Materials Import row ${rowNumber} source_file`),
+      sourceRevisionDate: this.date(row['source_revision_date']),
+      notes: this.optional(row['material_notes']),
+    };
+  }
+
+  private definitionFromSingleRow(row: Row, rowNumber: number): ParsedPropertyDefinition {
+    return {
+      propertyKey: this.required(row['property_id'], `Materials Import row ${rowNumber} property_id`),
+      category: this.required(row['category'], `Materials Import row ${rowNumber} category`),
+      canonicalName: this.required(row['property_name'], `Materials Import row ${rowNumber} property_name`),
+      sourceLabelsSynonyms: this.optional(row['source_labels_synonyms']),
+      conditionDimensions: this.optional(row['condition_dimensions']),
+      commonUnits: this.optional(row['common_units']),
+      valueType: this.required(row['value_type'], `Materials Import row ${rowNumber} value_type`),
+      origin: this.optional(row['origin']),
+      implementationNotes: this.optional(row['implementation_notes']),
+    };
+  }
+
+  private factFromSingleRow(row: Row, rowNumber: number): ParsedPropertyFact {
+    const valueNumeric = this.number(row['value_numeric'], `Materials Import row ${rowNumber} value_numeric`);
+    const valueText = this.optional(row['value_text']);
+    if (valueNumeric == null && !valueText) throw new ValidationError(`Materials Import row ${rowNumber} requires value_numeric or value_text`);
+    return {
+      materialExternalId: this.required(row['material_id'], `Materials Import row ${rowNumber} material_id`),
+      manufacturer: this.required(row['manufacturer'], `Materials Import row ${rowNumber} manufacturer`),
+      productGrade: this.required(row['product_grade'], `Materials Import row ${rowNumber} product_grade`),
+      propertyKey: this.required(row['property_id'], `Materials Import row ${rowNumber} property_id`),
+      propertyName: this.required(row['property_name'], `Materials Import row ${rowNumber} property_name`),
+      sourceLabel: this.required(row['source_label'], `Materials Import row ${rowNumber} source_label`),
+      valueNumeric,
+      valueText,
+      qualifier: this.optional(row['qualifier']),
+      unit: this.optional(row['unit']),
+      testMethod: this.required(row['test_method'], `Materials Import row ${rowNumber} test_method`),
+      testCondition: this.optional(row['test_condition']),
+      temperatureC: this.number(row['temperature_c'], `Materials Import row ${rowNumber} temperature_c`),
+      load: this.optional(row['load']),
+      duration: this.optional(row['duration']),
+      frequency: this.optional(row['frequency']),
+      direction: this.optional(row['direction']),
+      specimen: this.optional(row['specimen']),
+      processType: this.optional(row['process_type']),
+      zone: this.optional(row['zone']),
+      sourceFile: this.required(row['source_file'], `Materials Import row ${rowNumber} source_file`),
+      sourcePage: this.optional(row['source_page']),
+      sourceRevisionDate: this.date(row['source_revision_date']),
+      notes: this.optional(row['fact_notes']),
+    };
   }
 
   private materials(sheet: Sheet): ParsedMaterialRecord[] {
