@@ -89,7 +89,7 @@ export function DashboardViewContent({
   }
 
   if (view === 'machines') {
-    const section = librarySection ?? 'machines';
+    const section = 'machines';
     return (
       <MasterDataPage
         activeSection={section}
@@ -98,7 +98,7 @@ export function DashboardViewContent({
         onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'machines' })}
         onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'machines' })}
         recordId={libraryRecordId}
-        sections={['machines', 'machine-parameters']}
+        sections={['machines']}
       />
     );
   }

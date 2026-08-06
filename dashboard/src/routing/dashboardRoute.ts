@@ -79,6 +79,7 @@ function parseRouteSegments(segments: string[]): DashboardRouteState | null {
 
   if (segments[0] === 'library') {
     const legacy = segments[1] === 'suppliers' ? 'material-suppliers' : segments[1];
+    if (legacy === 'machine-parameters') return parseLibraryRoute('machines');
     return legacy && librarySections.has(legacy as LibrarySection)
       ? parseLibraryRoute(legacy as LibrarySection, segments[2])
       : parseLibraryRoute('materials');
@@ -94,6 +95,7 @@ function parseRouteSegments(segments: string[]): DashboardRouteState | null {
   }
 
   if (librarySections.has(segments[0] as LibrarySection)) {
+    if (segments[0] === 'machine-parameters') return parseLibraryRoute('machines');
     return parseLibraryRoute(segments[0] as LibrarySection, segments[1]);
   }
 
@@ -170,7 +172,11 @@ export function buildDashboardPath({ formulationId, formulationMode, labRunId, l
     return `/${section}${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
   }
 
-  if (view === 'machines' || view === 'molds') {
+  if (view === 'machines') {
+    return `/machines${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
+  }
+
+  if (view === 'molds') {
     const section = librarySection ?? view;
     return `/${section}${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
   }

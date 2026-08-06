@@ -9,6 +9,7 @@ import {
   getLibraryRecord,
   getMaterialCatalog,
   listLibraryOptions,
+  listLibraryRecords,
   updateLibraryRecord,
   type LibraryFieldDefinition,
   type LibraryRecord,
@@ -17,6 +18,8 @@ import {
 import { colors, font, spacing } from '../../theme/tokens';
 import { coerceLibraryPayload, LibraryRecordForm, libraryOptionResources } from './LibraryRecordForm';
 import { labelize, LibrarySectionNav } from './LibrarySectionNav';
+import { MachineParametersAccordion } from './MachineParametersAccordion';
+import { RelatedMaterialsTable } from './RelatedMaterialsTable';
 
 export function LibraryRecordDetailPage({
   id,
@@ -41,26 +44,66 @@ export function LibraryRecordDetailPage({
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [search, setSearch] = useState('');
+  const [machineParameters, setMachineParameters] = useState<LibraryRecord[]>([]);
+  const [relatedMaterials, setRelatedMaterials] = useState<LibraryRecord[]>([]);
+  const [relatedError, setRelatedError] = useState('');
 
   useEffect(() => {
+    let active = true;
     setRecord(null);
     setError('');
     setMessage('');
+    setMachineParameters([]);
+    setRelatedMaterials([]);
+    setRelatedError('');
+
     const detailRequest = getLibraryRecord(resource, id);
     const recordRequest = resource === 'materials'
       ? getMaterialCatalog(id)
       : detailRequest.then((response) => response.data);
-    const optionsRequest = Promise.all(libraryOptionResources.map((optionResource) =>
-      listLibraryOptions(optionResource).then((items) => [optionResource, items] as const)
-    ));
-    void Promise.all([detailRequest, recordRequest, optionsRequest])
-      .then(([detail, loadedRecord, optionEntries]) => {
+
+    void Promise.all([detailRequest, recordRequest])
+      .then(([detail, loadedRecord]) => {
+        if (!active) return;
         setFields(detail.fields);
         setForm(detail.data);
-        setOptions(Object.fromEntries(optionEntries));
         setRecord(loadedRecord);
       })
-      .catch((reason: Error) => setError(reason.message));
+      .catch((reason: unknown) => {
+        if (active) setError(getErrorMessage(reason, 'Unable to load record'));
+      });
+
+    void Promise.all(libraryOptionResources.map((optionResource) =>
+      listLibraryOptions(optionResource).then((items) => [optionResource, items] as const)
+    ))
+      .then((entries) => {
+        if (active) setOptions(Object.fromEntries(entries));
+      })
+      .catch(() => undefined);
+
+    if (resource === 'machines') {
+      void listLibraryRecords('machine-parameters', { category: id, status: 'all' })
+        .then((response) => {
+          if (active) setMachineParameters(response.data);
+        })
+        .catch((reason: unknown) => {
+          if (active) setRelatedError(getErrorMessage(reason, 'Unable to load machine parameters'));
+        });
+    }
+
+    if (resource === 'material-suppliers') {
+      void listLibraryRecords('materials', { category: id, status: 'all' })
+        .then((response) => {
+          if (active) setRelatedMaterials(response.data);
+        })
+        .catch((reason: unknown) => {
+          if (active) setRelatedError(getErrorMessage(reason, 'Unable to load related materials'));
+        });
+    }
+
+    return () => {
+      active = false;
+    };
   }, [id, resource]);
 
   useEffect(() => setEditing(initialEditing), [id, initialEditing]);
@@ -126,6 +169,7 @@ export function LibraryRecordDetailPage({
           )}
           {record && !editing && (
             <>
+              {resource === 'machines' && <h2 style={styles.sectionTitle}>Machine Overview</h2>}
               <div style={styles.summary}>
                 {details.map(([key, value]) => (
                   <div key={key} style={styles.detail}>
@@ -134,8 +178,18 @@ export function LibraryRecordDetailPage({
                   </div>
                 ))}
               </div>
+              {resource === 'machines' && (
+                <section style={styles.machineParameters}>
+                  <h2 style={styles.sectionTitle}>Machine Parameters</h2>
+                  <MachineParametersAccordion parameters={machineParameters} />
+                </section>
+              )}
+              {resource === 'material-suppliers' && (
+                <RelatedMaterialsTable error={relatedError} materials={relatedMaterials} />
+              )}
               {resource === 'materials' && (
                 <div style={styles.properties}>
+                  <h2 style={styles.sectionTitle}>Material Properties</h2>
                   <input
                     onChange={(event) => setSearch(event.target.value)}
                     placeholder="Search properties, methods, conditions, or source files"
@@ -168,6 +222,7 @@ export function LibraryRecordDetailPage({
                       ))}
                     </DataTableBody>
                   </DataTable>
+                  {properties.length === 0 && <div style={styles.muted}>No material properties found.</div>}
                 </div>
               )}
             </>
@@ -192,6 +247,10 @@ function formatValue(value: unknown) {
   return String(value);
 }
 
+function getErrorMessage(reason: unknown, fallback: string) {
+  return reason instanceof Error ? reason.message : fallback;
+}
+
 const styles: Record<string, CSSProperties> = {
   actions: { display: 'flex', flexWrap: 'wrap', gap: spacing.space3, justifyContent: 'flex-end' },
   detail: { minWidth: 0 },
@@ -200,5 +259,7 @@ const styles: Record<string, CSSProperties> = {
   muted: { color: colors.text.muted },
   page: { display: 'flex', flexDirection: 'column', gap: spacing.space5, minHeight: '100%' },
   properties: { display: 'grid', gap: spacing.space4, minWidth: 0, overflow: 'auto' },
+  machineParameters: { display: 'grid', gap: spacing.space3, marginTop: spacing.space5, minWidth: 0 },
+  sectionTitle: { color: colors.text.primary, fontSize: font.size.h2, margin: 0 },
   summary: { display: 'grid', gap: spacing.space5, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' },
 };

@@ -77,6 +77,7 @@ export const libraryConfigs = {
     ],
     defaultOrderBy: 'm.material_code',
     displayName: 'Material',
+    filterColumn: 'm.supplier_id',
     idColumn: 'id',
     listSql: `
       SELECT m.id, m.material_code AS "materialCode", m.material_name AS "materialName",
@@ -268,6 +269,7 @@ export const libraryConfigs = {
       { key: 'status', label: 'Status', type: 'select' },
     ],
     defaultOrderBy: 'machine_code, sort_order, position_index NULLS FIRST', displayName: 'Machine Parameter', idColumn: 'id',
+    filterColumn: 'mpc.machine_id',
     listSql: `SELECT mpc.id, mpc.machine_id AS "machineId", m.machine_code AS "machineCode", mpc.parameter_key AS "parameterKey", mpc.display_name AS "displayName", mpc.section_key AS "sectionKey", mpc.position_type AS "positionType", mpc.position_index AS "positionIndex", mpc.position_label AS "positionLabel", mpc.minimum_value::float AS "minimumValue", mpc.maximum_value::float AS "maximumValue", mpc.unit, mpc.notes, mpc.sort_order AS "sortOrder", mpc.status::text AS status FROM machine_parameter_capabilities mpc JOIN machines m ON m.id = mpc.machine_id`,
     mutableColumns: ['machineId', 'parameterKey', 'displayName', 'sectionKey', 'positionType', 'positionIndex', 'positionLabel', 'minimumValue', 'maximumValue', 'unit', 'notes', 'sortOrder', 'status'],
     requiredFields: ['machineId', 'parameterKey', 'displayName', 'sectionKey'], routeKey: 'machine-parameters',
