@@ -12,6 +12,12 @@ export class LibraryController {
     });
   }
 
+  detail(req: Request, res: Response): void {
+    respondJson(res, () => this.service.detail(this.getResource(req), req.params['id'] ?? ''), {
+      errorStatus: this.resolveStatus,
+    });
+  }
+
   options(req: Request, res: Response): void {
     respondJson(res, () => this.service.options(this.getResource(req)), {
       errorStatus: this.resolveStatus,

@@ -19,6 +19,9 @@ export default function App() {
     formulationMode,
     labRunId,
     labTestingMode,
+    libraryRecordId,
+    libraryRecordMode,
+    librarySection,
     materialMode,
     navigate,
     productionRunId,
@@ -87,6 +90,9 @@ export default function App() {
           formulationMode={formulationMode}
           labRunId={labRunId}
           labTestingMode={labTestingMode}
+          libraryRecordId={libraryRecordId}
+          libraryRecordMode={libraryRecordMode}
+          librarySection={librarySection}
           materialMode={materialMode}
           onSettingsSave={handleSettingsSave}
           preferences={preferences}

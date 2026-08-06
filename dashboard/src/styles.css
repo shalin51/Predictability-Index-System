@@ -292,13 +292,14 @@ button:active {
 
 .library-page__nav-button {
   appearance: none;
-  width: 100%;
+  flex: 0 0 auto;
   background: transparent;
   border: 1px solid transparent;
   border-radius: 6px;
   color: var(--color-text-secondary);
   padding: 9px 10px;
-  text-align: left;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .library-page__nav-button:hover {

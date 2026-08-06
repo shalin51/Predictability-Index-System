@@ -27,6 +27,9 @@ interface DashboardViewContentProps {
   formulationMode?: DashboardRouteState['formulationMode'];
   labRunId?: string;
   labTestingMode?: DashboardRouteState['labTestingMode'];
+  libraryRecordId?: string;
+  libraryRecordMode?: DashboardRouteState['libraryRecordMode'];
+  librarySection?: DashboardRouteState['librarySection'];
   materialMode?: DashboardRouteState['materialMode'];
   productionRunId?: string;
   productionRunMode?: DashboardRouteState['productionRunMode'];
@@ -45,6 +48,9 @@ export function DashboardViewContent({
   formulationMode,
   labRunId,
   labTestingMode,
+  libraryRecordId,
+  libraryRecordMode,
+  librarySection,
   materialMode,
   productionRunId,
   productionRunMode,
@@ -67,19 +73,49 @@ export function DashboardViewContent({
     if (materialMode === 'import') {
       return <MaterialImportPage onCancel={() => navigate({ materialMode: 'list', view: 'materials' })} onCommitted={() => navigate({ materialMode: 'list', view: 'materials' })} />;
     }
-    return <MasterDataPage initialSection="materials" onImport={() => navigate({ materialMode: 'import', view: 'materials' })} sections={['materials', 'material-properties', 'material-suppliers']} />;
-  }
-
-  if (view === 'suppliers') {
-    return <MasterDataPage initialSection="suppliers" sections={['suppliers']} />;
+    const section = librarySection ?? 'materials';
+    return (
+      <MasterDataPage
+        activeSection={section}
+        editRecordId={libraryRecordMode === 'edit' ? libraryRecordId : undefined}
+        onImport={() => navigate({ librarySection: 'materials', materialMode: 'import', view: 'materials' })}
+        onEditRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'edit', librarySection: section, view: 'materials' })}
+        onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'materials' })}
+        onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'materials' })}
+        recordId={libraryRecordId}
+        sections={['materials', 'material-properties', 'material-suppliers']}
+      />
+    );
   }
 
   if (view === 'machines') {
-    return <MasterDataPage initialSection="machines" sections={['machines', 'machine-parameters']} />;
+    const section = librarySection ?? 'machines';
+    return (
+      <MasterDataPage
+        activeSection={section}
+        editRecordId={libraryRecordMode === 'edit' ? libraryRecordId : undefined}
+        onEditRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'edit', librarySection: section, view: 'machines' })}
+        onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'machines' })}
+        onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'machines' })}
+        recordId={libraryRecordId}
+        sections={['machines', 'machine-parameters']}
+      />
+    );
   }
 
   if (view === 'molds') {
-    return <MasterDataPage initialSection="molds" sections={['molds', 'mold-zones']} />;
+    const section = librarySection ?? 'molds';
+    return (
+      <MasterDataPage
+        activeSection={section}
+        editRecordId={libraryRecordMode === 'edit' ? libraryRecordId : undefined}
+        onEditRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'edit', librarySection: section, view: 'molds' })}
+        onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'molds' })}
+        onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'molds' })}
+        recordId={libraryRecordId}
+        sections={['molds', 'mold-zones']}
+      />
+    );
   }
 
   if (view === 'formulations') {

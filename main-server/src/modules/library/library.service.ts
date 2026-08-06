@@ -21,6 +21,13 @@ export class LibraryService {
     };
   }
 
+  async detail(resource: string, id: string): Promise<{ data: LibraryRecord; fields: LibraryEntityConfig['createFields'] }> {
+    const config = this.requireConfig(resource);
+    const record = await this.repo.findById(config, id);
+    if (!record) throw new NotFoundError(`${config.displayName} ${id}`);
+    return { data: record, fields: config.createFields };
+  }
+
   async options(resource: string): Promise<LibraryRecord[]> {
     return this.repo.options(resource);
   }

@@ -11,6 +11,7 @@ export function createLibraryRouter() {
   router.get('/scoring-rules/validate-weights', (req, res) => controller.validateWeights(req, res));
   router.get('/:resource/options', (req, res) => controller.options(req, res));
   router.get('/:resource', (req, res) => controller.list(req, res));
+  router.get('/:resource/:id', (req, res) => controller.detail(req, res));
   router.post('/:resource', (req, res) => controller.create(req, res));
   router.put('/:resource/:id', (req, res) => controller.update(req, res));
   router.put('/:resource/:id/archive', (req, res) => controller.archive(req, res));

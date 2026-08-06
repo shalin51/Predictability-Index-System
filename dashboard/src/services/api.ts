@@ -584,6 +584,10 @@ export async function listLibraryRecords(
   return fetchJSON<LibraryCollectionResponse>(`/library/${resource}${suffix}`);
 }
 
+export async function getLibraryRecord(resource: string, id: string): Promise<{ data: LibraryRecord; fields: LibraryFieldDefinition[] }> {
+  return fetchJSON<{ data: LibraryRecord; fields: LibraryFieldDefinition[] }>(`/library/${resource}/${encodeURIComponent(id)}`);
+}
+
 export async function createLibraryRecord(resource: string, payload: Record<string, unknown>): Promise<LibraryRecord> {
   return fetchJSON<LibraryRecord>(`/library/${resource}`, {
     method: 'POST',

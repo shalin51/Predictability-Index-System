@@ -1,22 +1,38 @@
-import { useEffect, useState } from 'react';
 import { LibraryPage } from './LibraryPage';
+import { LibraryRecordDetailPage } from './LibraryRecordDetailPage';
 
 interface MasterDataPageProps {
-  initialSection: string;
+  activeSection: string;
+  editRecordId?: string;
   onImport?: () => void;
+  onEditRecord: (id: string) => void;
+  onOpenRecord: (id: string) => void;
+  onSectionChange: (section: string) => void;
+  recordId?: string;
   sections: readonly string[];
 }
 
-export function MasterDataPage({ initialSection, onImport, sections }: MasterDataPageProps) {
-  const [activeSection, setActiveSection] = useState(initialSection);
-
-  useEffect(() => setActiveSection(initialSection), [initialSection]);
+export function MasterDataPage({ activeSection, editRecordId, onEditRecord, onImport, onOpenRecord, onSectionChange, recordId, sections }: MasterDataPageProps) {
+  if (recordId) {
+    return (
+      <LibraryRecordDetailPage
+        id={recordId}
+        initialEditing={editRecordId === recordId}
+        onBack={() => onSectionChange(activeSection)}
+        onSectionChange={onSectionChange}
+        resource={activeSection}
+        sections={sections}
+      />
+    );
+  }
 
   return (
     <LibraryPage
       activeSection={activeSection}
       onImport={onImport}
-      onSectionChange={setActiveSection}
+      onEditRecord={onEditRecord}
+      onOpenRecord={onOpenRecord}
+      onSectionChange={onSectionChange}
       sectionOptions={sections}
       standalone
     />

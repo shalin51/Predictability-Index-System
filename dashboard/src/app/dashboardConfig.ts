@@ -17,13 +17,6 @@ export const NAV: ReadonlyArray<ShellNavItem<DashboardView>> = [
     icon: 'upload',
   },
   {
-    id: 'suppliers',
-    label: 'Suppliers',
-    description: 'Supplier records and contact information.',
-    group: 'Operations',
-    icon: 'layers',
-  },
-  {
     id: 'machines',
     label: 'Machines',
     description: 'Machine models, specifications, and capabilities.',
@@ -82,10 +75,6 @@ export const VIEW_META: Record<DashboardView, { title: string; subtitle: string 
   materials: {
     title: 'Materials',
     subtitle: 'Material properties, processing guidance, and source data.',
-  },
-  suppliers: {
-    title: 'Suppliers',
-    subtitle: 'Supplier relationships and contact information.',
   },
   machines: {
     title: 'Machines',

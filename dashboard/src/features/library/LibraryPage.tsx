@@ -17,7 +17,8 @@ import {
   type LibraryRecord,
 } from '../../services/api';
 import { colors, font, radius, spacing } from '../../theme/tokens';
-import { MaterialDetailsModal } from '../materials/MaterialDetailsModal';
+import { coerceLibraryPayload, LibraryRecordForm, libraryOptionResources } from './LibraryRecordForm';
+import { labelize, LibrarySectionNav } from './LibrarySectionNav';
 
 const sections = [
   'materials',
@@ -52,33 +53,20 @@ const columns: Record<string, string[]> = {
   'process-setups': ['machine', 'mold', 'formulation', 'revisionNo', 'status', 'approvedBy', 'approvedAt', 'parameterCount'],
 };
 
-const enumOptions: Record<string, string[]> = {
-  category: ['physical', 'performance', 'durability', 'environmental', 'subjective'],
-  criticality: ['low', 'medium', 'high', 'critical'],
-  dataType: ['numeric', 'text', 'boolean', 'rating'],
-  status: ['active', 'inactive', 'archived'],
-};
-
-const optionResourceByField: Record<string, string> = {
-  benchmarkProfileId: 'benchmarks',
-  materialId: 'materials',
-  materialSupplierId: 'material-suppliers',
-  machineId: 'machines',
-  metricId: 'metrics',
-  moldId: 'molds',
-  supplierId: 'suppliers',
-};
-
 export function LibraryPage({
   activeSection,
   onSectionChange,
   onImport,
+  onEditRecord,
+  onOpenRecord,
   sectionOptions,
   standalone = false,
 }: {
   activeSection: string;
   onSectionChange: (section: string) => void;
   onImport?: () => void;
+  onEditRecord: (id: string) => void;
+  onOpenRecord: (id: string) => void;
   sectionOptions?: readonly string[];
   standalone?: boolean;
 }) {
@@ -97,7 +85,6 @@ export function LibraryPage({
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [materialDetailId, setMaterialDetailId] = useState<string | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -122,7 +109,7 @@ export function LibraryPage({
   useEffect(load, [section, search, status]);
 
   useEffect(() => {
-    void Promise.all(['benchmarks', 'machines', 'materials', 'material-suppliers', 'metrics', 'molds'].map((resource) =>
+    void Promise.all(libraryOptionResources.map((resource) =>
       listLibraryOptions(resource).then((items) => [resource, items] as const)
     )).then((entries) => setOptions(Object.fromEntries(entries))).catch(() => undefined);
   }, []);
@@ -134,7 +121,7 @@ export function LibraryPage({
 
   const save = async () => {
     try {
-      const payload = coercePayload(fields, form);
+      const payload = coerceLibraryPayload(fields, form);
       if (editing?.id) await updateLibraryRecord(section, editing.id, payload);
       else await createLibraryRecord(section, payload);
       setEditing(null);
@@ -155,19 +142,7 @@ export function LibraryPage({
   return (
     <DashboardPage maxWidth="100%">
       <div style={{ ...styles.layout, ...(!showSectionNav ? styles.layoutStandalone : {}) }}>
-        {showSectionNav && <aside className="library-page__nav" style={styles.nav}>
-          {visibleSections.map((item) => (
-            <button
-              aria-current={item === section ? 'page' : undefined}
-              className={`library-page__nav-button${item === section ? ' library-page__nav-button--active' : ''}`}
-              key={item}
-              onClick={() => onSectionChange(item)}
-              type="button"
-            >
-              {labelize(item)}
-            </button>
-          ))}
-        </aside>}
+        <LibrarySectionNav activeSection={section} onSectionChange={onSectionChange} sections={visibleSections} />
         <Card style={styles.card}>
           <CardHeader>
             <div>
@@ -224,8 +199,8 @@ export function LibraryPage({
                         ))}
                         <DataTableCell>
                           <div style={styles.rowActions}>
-                            {section === 'materials' && <Button onClick={(event) => { event.stopPropagation(); setMaterialDetailId(record.id); }} size="sm" type="button" variant="subtle">Details</Button>}
-                            {section !== 'process-setups' && !readOnly && <Button onClick={(event) => { event.stopPropagation(); startEdit(record); }} size="sm" type="button" variant="subtle">Edit</Button>}
+                            <Button onClick={(event) => { event.stopPropagation(); onOpenRecord(record.id); }} size="sm" type="button" variant="subtle">View</Button>
+                            {section !== 'process-setups' && !readOnly && <Button onClick={(event) => { event.stopPropagation(); onEditRecord(record.id); }} size="sm" type="button" variant="subtle">Edit</Button>}
                           </div>
                         </DataTableCell>
                       </DataTableRow>
@@ -245,12 +220,7 @@ export function LibraryPage({
           </ModalHeader>
           <ModalBody>
             <div style={styles.form}>
-              {fields.map((field) => (
-                <label key={field.key} style={controlStyles.field}>
-                  <span style={controlStyles.fieldLabel}>{field.label}</span>
-                  <Field field={field} onChange={(value) => setForm((current) => ({ ...current, [field.key]: value }))} options={options[optionResourceByField[field.key] ?? ''] ?? []} value={form[field.key]} />
-                </label>
-              ))}
+              <LibraryRecordForm fields={fields} form={form} onChange={(key, value) => setForm((current) => ({ ...current, [key]: value }))} options={options} />
             </div>
           </ModalBody>
           <ModalFooter>
@@ -259,28 +229,8 @@ export function LibraryPage({
           </ModalFooter>
         </Modal>
       )}
-      {materialDetailId && <MaterialDetailsModal id={materialDetailId} onClose={() => setMaterialDetailId(null)} />}
     </DashboardPage>
   );
-}
-
-function Field({ field, onChange, options, value }: { field: LibraryFieldDefinition; onChange: (value: unknown) => void; options: LibraryRecord[]; value: unknown }) {
-  if (field.type === 'textarea') return <textarea onChange={(event) => onChange(event.target.value)} style={controlStyles.textarea} value={String(value ?? '')} />;
-  if (field.type === 'boolean') return <input checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} type="checkbox" />;
-  if (field.type === 'select') {
-    return (
-      <select onChange={(event) => onChange(event.target.value)} style={controlStyles.input} value={String(value ?? '')}>
-        <option value="">Select</option>
-        {(enumOptions[field.key] ?? []).map((item) => <option key={item} value={item}>{labelize(item)}</option>)}
-        {options.map((item) => <option key={item.id} value={item.id}>{String(item['label'] ?? item['code'] ?? item.id)}</option>)}
-      </select>
-    );
-  }
-  return <input onChange={(event) => onChange(event.target.value)} style={controlStyles.input} type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'} value={String(value ?? '')} />;
-}
-
-function coercePayload(fields: LibraryFieldDefinition[], form: Record<string, unknown>) {
-  return Object.fromEntries(fields.map((field) => [field.key, field.type === 'number' && form[field.key] !== '' ? Number(form[field.key]) : form[field.key]]));
 }
 
 function formatValue(value: unknown) {
@@ -290,20 +240,15 @@ function formatValue(value: unknown) {
   return String(value);
 }
 
-function labelize(value: string) {
-  return value.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[-_]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
-}
-
 const styles: Record<string, CSSProperties> = {
   actions: { display: 'flex', gap: spacing.space3, justifyContent: 'flex-end' },
-  card: { height: '100%', minHeight: 0, overflow: 'hidden' },
+  card: { flex: '1 1 auto', minHeight: 0, overflow: 'hidden' },
   filters: { display: 'flex', gap: spacing.space3, marginBottom: spacing.space4 },
   form: { display: 'grid', gap: spacing.space4, margin: `${spacing.space5}px 0` },
   headerActions: { display: 'flex', gap: spacing.space3 },
-  layout: { display: 'grid', gap: spacing.space5, gridTemplateColumns: '220px minmax(0, 1fr)', height: '100%', minHeight: 0, overflow: 'hidden' },
-  layoutStandalone: { gridTemplateColumns: 'minmax(0, 1fr)' },
+  layout: { display: 'flex', flexDirection: 'column', gap: spacing.space5, height: '100%', minHeight: 0, overflow: 'hidden' },
+  layoutStandalone: {},
   muted: { color: colors.text.muted, fontSize: font.size.small },
-  nav: { alignSelf: 'start', border: `1px solid ${colors.border}`, borderRadius: radius.md, display: 'grid', gap: 2, padding: spacing.space3 },
   rowActions: { display: 'flex', flexWrap: 'wrap', gap: spacing.space2 },
   tableWrap: { border: `1px solid ${colors.border}`, borderRadius: radius.md, minHeight: 0, overflow: 'auto' },
 };

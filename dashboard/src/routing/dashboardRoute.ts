@@ -2,7 +2,6 @@ export type DashboardView =
   | 'dashboard'
   | 'formulations'
   | 'materials'
-  | 'suppliers'
   | 'machines'
   | 'molds'
   | 'production-runs'
@@ -10,9 +9,21 @@ export type DashboardView =
   | 'reports'
   | 'settings';
 
+export type LibrarySection =
+  | 'materials'
+  | 'material-properties'
+  | 'material-suppliers'
+  | 'machines'
+  | 'machine-parameters'
+  | 'molds'
+  | 'mold-zones';
+
 export interface DashboardRouteState {
   formulationId?: string;
   formulationMode?: 'list' | 'new' | 'detail';
+  libraryRecordId?: string;
+  libraryRecordMode?: 'view' | 'edit';
+  librarySection?: LibrarySection;
   materialMode?: 'list' | 'import';
   labRunId?: string;
   labTestingMode?: 'list' | 'detail';
@@ -22,6 +33,27 @@ export interface DashboardRouteState {
   reportMode?: 'list' | 'detail' | 'run';
   reportRunId?: string;
   view: DashboardView;
+}
+
+const libraryViewBySection: Record<LibrarySection, DashboardView> = {
+  machines: 'machines',
+  'machine-parameters': 'machines',
+  materials: 'materials',
+  'material-properties': 'materials',
+  'material-suppliers': 'materials',
+  molds: 'molds',
+  'mold-zones': 'molds',
+};
+
+const librarySections = new Set<LibrarySection>(Object.keys(libraryViewBySection) as LibrarySection[]);
+
+function parseLibraryRoute(section: LibrarySection, recordId?: string): DashboardRouteState {
+  return {
+    libraryRecordId: recordId,
+    librarySection: section,
+    materialMode: section === 'materials' ? 'list' : undefined,
+    view: libraryViewBySection[section],
+  };
 }
 
 function normalizeRouteSegments(routeSource: string): string[] {
@@ -46,19 +78,23 @@ function parseRouteSegments(segments: string[]): DashboardRouteState | null {
   }
 
   if (segments[0] === 'library') {
-    const legacy = segments[1];
-    if (legacy === 'suppliers') return { view: 'suppliers' };
-    if (legacy === 'machines' || legacy === 'machine-parameters') return { view: 'machines' };
-    if (legacy === 'molds' || legacy === 'mold-zones') return { view: 'molds' };
-    return { materialMode: 'list', view: 'materials' };
+    const legacy = segments[1] === 'suppliers' ? 'material-suppliers' : segments[1];
+    return legacy && librarySections.has(legacy as LibrarySection)
+      ? parseLibraryRoute(legacy as LibrarySection, segments[2])
+      : parseLibraryRoute('materials');
   }
 
   if (segments[0] === 'materials') {
-    return { materialMode: segments[1] === 'import' ? 'import' : 'list', view: 'materials' };
+    if (segments[1] === 'import') return { librarySection: 'materials', materialMode: 'import', view: 'materials' };
+    return parseLibraryRoute('materials', segments[1]);
   }
 
-  if (segments[0] === 'suppliers' || segments[0] === 'machines' || segments[0] === 'molds') {
-    return { view: segments[0] };
+  if (segments[0] === 'suppliers') {
+    return parseLibraryRoute('material-suppliers', segments[1]);
+  }
+
+  if (librarySections.has(segments[0] as LibrarySection)) {
+    return parseLibraryRoute(segments[0] as LibrarySection, segments[1]);
   }
 
   if (segments[0] === 'formulations') {
@@ -127,13 +163,16 @@ export function parseDashboardLocation(
   return { view: defaultView };
 }
 
-export function buildDashboardPath({ formulationId, formulationMode, labRunId, labTestingMode, materialMode, productionRunId, productionRunMode, reportId, reportMode, reportRunId, view }: DashboardRouteState): string {
+export function buildDashboardPath({ formulationId, formulationMode, labRunId, labTestingMode, libraryRecordId, librarySection, materialMode, productionRunId, productionRunMode, reportId, reportMode, reportRunId, view }: DashboardRouteState): string {
   if (view === 'materials') {
-    return materialMode === 'import' ? '/materials/import' : '/materials';
+    if (materialMode === 'import') return '/materials/import';
+    const section = librarySection ?? 'materials';
+    return `/${section}${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
   }
 
-  if (view === 'suppliers' || view === 'machines' || view === 'molds') {
-    return `/${view}`;
+  if (view === 'machines' || view === 'molds') {
+    const section = librarySection ?? view;
+    return `/${section}${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
   }
 
   if (view === 'formulations') {

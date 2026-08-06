@@ -18,6 +18,9 @@ export function useDashboardRoute(defaultView: DashboardView) {
       : parseDashboardLocation(window.location, defaultView),
   );
   const [view, setView] = useState<DashboardView>(() => initialRouteRef.current.view);
+  const [librarySection, setLibrarySection] = useState<DashboardRouteState['librarySection']>(() => initialRouteRef.current.librarySection);
+  const [libraryRecordId, setLibraryRecordId] = useState<string | undefined>(() => initialRouteRef.current.libraryRecordId);
+  const [libraryRecordMode, setLibraryRecordMode] = useState<DashboardRouteState['libraryRecordMode']>(() => initialRouteRef.current.libraryRecordMode ?? 'view');
   const [materialMode, setMaterialMode] = useState<DashboardRouteState['materialMode']>(() => initialRouteRef.current.materialMode ?? 'list');
   const [labTestingMode, setLabTestingMode] = useState<DashboardRouteState['labTestingMode']>(() => initialRouteRef.current.labTestingMode ?? 'list');
   const [labRunId, setLabRunId] = useState<string | undefined>(() => initialRouteRef.current.labRunId);
@@ -52,6 +55,9 @@ export function useDashboardRoute(defaultView: DashboardView) {
 
   const commitRoute = useCallback((route: DashboardRouteState, replace = false) => {
     setView(route.view);
+    setLibrarySection(route.librarySection);
+    setLibraryRecordId(route.libraryRecordId);
+    setLibraryRecordMode(route.libraryRecordMode ?? 'view');
     setMaterialMode(route.materialMode ?? 'list');
     setLabTestingMode(route.labTestingMode ?? 'list');
     setLabRunId(route.labRunId);
@@ -115,6 +121,9 @@ export function useDashboardRoute(defaultView: DashboardView) {
       }
 
       setView(nextRoute.view);
+      setLibrarySection(nextRoute.librarySection);
+      setLibraryRecordId(nextRoute.libraryRecordId);
+      setLibraryRecordMode(nextRoute.libraryRecordMode ?? 'view');
       setMaterialMode(nextRoute.materialMode ?? 'list');
       setLabTestingMode(nextRoute.labTestingMode ?? 'list');
       setLabRunId(nextRoute.labRunId);
@@ -160,6 +169,9 @@ export function useDashboardRoute(defaultView: DashboardView) {
     formulationMode,
     labRunId,
     labTestingMode,
+    libraryRecordId,
+    libraryRecordMode,
+    librarySection,
     materialMode,
     navigate,
     productionRunId,
