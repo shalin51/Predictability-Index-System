@@ -15,7 +15,7 @@ export function RecentReportsWidget({ onOpen, rows }: { onOpen: (id: string) => 
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
+          {rows.slice(0, 3).map((row) => (
             <tr key={row.reportId}>
               <td style={dashboardStyles.td}>{row.reportName}</td>
               <td style={dashboardStyles.td}>{row.runCode}</td>
@@ -31,6 +31,7 @@ export function RecentReportsWidget({ onOpen, rows }: { onOpen: (id: string) => 
           ))}
         </tbody>
       </table>
+      {rows.length > 3 && <div className="dashboard-table-footer"><a href="/reports" style={dashboardStyles.actionLink}>View all reports</a></div>}
     </div>
   );
 }

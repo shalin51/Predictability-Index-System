@@ -72,6 +72,111 @@ textarea {
   font-family: inherit;
 }
 
+.dashboard-summary-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.dashboard-kpi-card,
+.dashboard-secondary-metric {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  color: var(--color-text-primary);
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  text-decoration: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.dashboard-kpi-card:hover,
+.dashboard-secondary-metric:hover {
+  border-color: var(--color-brand-primary);
+  box-shadow: 0 4px 14px var(--color-shadow);
+  transform: translateY(-1px);
+}
+
+.dashboard-secondary-metrics {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dashboard-secondary-metric {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.dashboard-workflow-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dashboard-two-column-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-refresh,
+.dashboard-empty-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.dashboard-empty-state {
+  align-items: center;
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: 12px;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+  padding: 32px;
+}
+
+.dashboard-attention-row {
+  align-items: center;
+  color: var(--color-text-primary);
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  text-decoration: none;
+}
+
+.dashboard-attention-row:hover {
+  color: var(--color-brand-primary);
+}
+
+.dashboard-progress-fill {
+  background: var(--color-brand-primary);
+  height: 100%;
+}
+
+.dashboard-table-footer {
+  background: var(--color-surface-elevated);
+  padding: 12px;
+  text-align: right;
+}
+
+.dashboard-loading {
+  animation: dashboard-loading-pulse 1.2s ease-in-out infinite;
+  background: var(--color-surface-muted);
+  border-radius: 12px;
+  height: 220px;
+}
+
+@keyframes dashboard-loading-pulse {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
+
 button,
 input,
 select,

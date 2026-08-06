@@ -11,7 +11,7 @@ export function LabQueueWidget({ onOpen, rows }: { onOpen: (id: string) => void;
       <table style={dashboardStyles.table}>
         <thead>
           <tr>
-            {['Run Code', 'Formulation', 'Samples', 'Missing Metrics', 'Status', 'Action'].map((column) => <th key={column} style={dashboardStyles.th}>{column}</th>)}
+            {['Run Code', 'Formulation', 'Result Progress', 'Missing Metrics', 'Status', 'Action'].map((column) => <th key={column} style={dashboardStyles.th}>{column}</th>)}
           </tr>
         </thead>
         <tbody>
@@ -19,7 +19,7 @@ export function LabQueueWidget({ onOpen, rows }: { onOpen: (id: string) => void;
             <tr key={row.id}>
               <td style={dashboardStyles.td}>{row.runCode}</td>
               <td style={dashboardStyles.td}>{row.formulation}</td>
-              <td style={dashboardStyles.td}>{row.sampleCount}</td>
+              <td style={dashboardStyles.td}><ResultProgress completed={row.completedResults} required={row.requiredResultCount} /></td>
               <td style={dashboardStyles.td}>{row.missingRequiredMetrics}</td>
               <td style={dashboardStyles.td}>{formatDashValue(row.status)}</td>
               <td style={dashboardStyles.td}><button onClick={() => onOpen(row.id)} style={controlStyles.subtleButton} type="button">Open</button></td>
@@ -27,6 +27,18 @@ export function LabQueueWidget({ onOpen, rows }: { onOpen: (id: string) => void;
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+function ResultProgress({ completed, required }: { completed: number; required: number }) {
+  const percent = required > 0 ? Math.min(100, Math.round((completed / required) * 100)) : 0;
+  return (
+    <div style={{ display: 'grid', gap: 6, minWidth: 130 }}>
+      <span>{completed} / {required} ({percent}%)</span>
+      <div style={dashboardStyles.barTrack}>
+        <div className="dashboard-progress-fill" style={{ width: `${percent}%` }} />
+      </div>
     </div>
   );
 }

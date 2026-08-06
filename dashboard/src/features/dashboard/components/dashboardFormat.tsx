@@ -34,9 +34,9 @@ export function TrafficBadge({ value }: { value?: TrafficLight | string | null }
 export const dashboardStyles: Record<string, CSSProperties> = {
   badge: { borderRadius: radius.sm, display: 'inline-flex', fontSize: font.size.small, fontWeight: font.weight.semibold, padding: '4px 8px' },
   barTrack: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, height: 8, overflow: 'hidden', width: '100%' },
-  cardGrid: { display: 'grid', gap: spacing.space4, gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' },
-  gridTwo: { display: 'grid', gap: spacing.space4, gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' },
+  actionLink: { color: colors.brand.primary, fontSize: font.size.small, fontWeight: font.weight.semibold, textDecoration: 'none' },
   header: { alignItems: 'flex-start', display: 'flex', gap: spacing.space4, justifyContent: 'space-between' },
+  kpiValue: { color: colors.text.primary, fontSize: font.size.display, lineHeight: 1.1 },
   muted: { color: colors.text.muted, fontSize: font.size.small },
   panel: { border: `1px solid ${colors.border}`, borderRadius: radius.md, padding: spacing.space4 },
   sectionTitle: { color: colors.text.primary, fontSize: font.size.h3, margin: 0 },

@@ -1,19 +1,28 @@
-import { getChartFillColor } from '../../../theme/semantic';
 import type { DashboardWorkflowStage } from '../../../services/api';
 import { dashboardStyles } from './dashboardFormat';
 
 export function WorkflowStatusPanel({ rows }: { rows: DashboardWorkflowStage[] }) {
-  const max = Math.max(...rows.map((row) => row.count), 1);
+  const groups = [
+    { stages: ['Draft Formulation', 'Approved Formulation'], title: 'Formulations' },
+    { stages: ['Production Run Created', 'Ready for Testing', 'Testing', 'Completed'], title: 'Production Runs' },
+    { stages: ['Summary Generated', 'Scored', 'Report Generated'], title: 'Outputs' },
+  ];
+
   return (
-    <div style={dashboardStyles.stack}>
-      {rows.map((row) => (
-        <div key={row.stage} style={dashboardStyles.panel}>
-          <div style={dashboardStyles.header}>
-            <strong>{row.stage}</strong>
-            <span style={dashboardStyles.muted}>{row.count}</span>
-          </div>
-          <div style={dashboardStyles.barTrack}>
-            <div style={{ backgroundColor: getChartFillColor('brand'), height: '100%', width: `${(row.count / max) * 100}%` }} />
+    <div className="dashboard-workflow-grid">
+      {groups.map((group) => (
+        <div key={group.title} style={dashboardStyles.panel}>
+          <h3 style={dashboardStyles.sectionTitle}>{group.title}</h3>
+          <div style={dashboardStyles.stack}>
+            {group.stages.map((stage) => {
+              const count = rows.find((row) => row.stage === stage)?.count ?? 0;
+              return (
+                <div key={stage} style={dashboardStyles.header}>
+                  <span style={dashboardStyles.muted}>{stage}</span>
+                  <strong>{count}</strong>
+                </div>
+              );
+            })}
           </div>
         </div>
       ))}
