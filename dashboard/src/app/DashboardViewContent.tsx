@@ -104,7 +104,7 @@ export function DashboardViewContent({
   }
 
   if (view === 'molds') {
-    const section = librarySection ?? 'molds';
+    const section = 'molds';
     return (
       <MasterDataPage
         activeSection={section}
@@ -113,7 +113,7 @@ export function DashboardViewContent({
         onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'molds' })}
         onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'molds' })}
         recordId={libraryRecordId}
-        sections={['molds', 'mold-zones']}
+        sections={['molds']}
       />
     );
   }

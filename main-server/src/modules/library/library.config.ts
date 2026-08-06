@@ -290,6 +290,7 @@ export const libraryConfigs = {
       { key: 'status', label: 'Status', type: 'select' },
     ],
     defaultOrderBy: 'mold_code, zone_number', displayName: 'Mold Zone', idColumn: 'id',
+    filterColumn: 'mz.mold_id',
     listSql: `SELECT mz.id, mz.mold_id AS "moldId", m.mold_code AS "moldCode", mz.zone_number AS "zoneNumber", mz.zone_name AS "zoneName", mz.zone_type AS "zoneType", mz.minimum_temperature::float AS "minimumTemperature", mz.maximum_temperature::float AS "maximumTemperature", mz.temperature_unit AS "temperatureUnit", mz.notes, mz.status::text AS status FROM mold_zones mz JOIN molds m ON m.id = mz.mold_id`,
     mutableColumns: ['moldId', 'zoneNumber', 'zoneName', 'zoneType', 'minimumTemperature', 'maximumTemperature', 'temperatureUnit', 'notes', 'status'],
     requiredFields: ['moldId', 'zoneNumber'], routeKey: 'mold-zones', searchColumns: ['m.mold_code', 'mz.zone_name', 'mz.zone_type'],
