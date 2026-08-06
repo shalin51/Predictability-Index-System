@@ -1,4 +1,3 @@
-import { ShellSystemStatus } from './ShellSystemStatus';
 import { ShellIcon } from './ShellIcon';
 import { shellStyles } from './shellStyles';
 import type { ShellNavItem } from './AppShell';
@@ -7,7 +6,6 @@ interface ShellSidebarProps<T extends string> {
   activeView: T;
   navItems: readonly ShellNavItem<T>[];
   onNavigate: (view: T) => void;
-  overviewView: T;
   sidebarOpen: boolean;
 }
 
@@ -15,7 +13,6 @@ export function ShellSidebar<T extends string>({
   activeView,
   navItems,
   onNavigate,
-  overviewView,
   sidebarOpen,
 }: ShellSidebarProps<T>) {
   const groupedNav = navItems.reduce<Record<string, Array<ShellNavItem<T>>>>((acc, item) => {
@@ -81,9 +78,6 @@ export function ShellSidebar<T extends string>({
           </div>
         ))}
 
-        <div style={{ ...shellStyles.statusWrap, ...(sidebarOpen ? {} : shellStyles.statusWrapCollapsed) }}>
-          <ShellSystemStatus compact={!sidebarOpen} onOpenOverview={() => onNavigate(overviewView)} />
-        </div>
       </div>
     </aside>
   );

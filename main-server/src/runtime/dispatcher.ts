@@ -172,7 +172,7 @@ export async function handleApiRequest(request: HttpRequest, _context: Invocatio
 
   const url = new URL(request.url);
   const normalizedPath = normalizePath(url.pathname);
-  if (request.method.toUpperCase() === 'POST' && normalizedPath === '/setup-sheet-imports/preview') {
+  if (request.method.toUpperCase() === 'POST' && ['/setup-sheet-imports/preview', '/production-run-imports/preview', '/material-imports/preview'].includes(normalizedPath)) {
     const contentType = request.headers.get('content-type')?.toLowerCase() ?? '';
     if (!contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') && !contentType.includes('application/octet-stream')) {
       return { status: 415, jsonBody: { error: 'Unsupported workbook content type', code: 'UNSUPPORTED_MEDIA_TYPE' } };

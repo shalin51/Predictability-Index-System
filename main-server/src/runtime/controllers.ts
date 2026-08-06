@@ -45,6 +45,8 @@ import { ReportRepository } from '../modules/reports/repositories/report.reposit
 import { ReportExportService } from '../modules/reports/services/reportExport.service';
 import { ReportService } from '../modules/reports/services/report.service';
 import { createProcessSetupController } from '../modules/process-setups/processSetup.module';
+import { createMaterialImportController } from '../modules/material-imports/materialImport.module';
+import { createMaterialCatalogController } from '../modules/materials/materialCatalog.module';
 
 const auditService = new AuditService();
 const libraryRepo = new LibraryRepository();
@@ -72,4 +74,6 @@ export const controllers = {
   ),
   reports: new ReportController(new ReportService(reportRepo, auditService), new ReportExportService(reportRepo)),
   processSetups: createProcessSetupController(),
+  materialImports: createMaterialImportController(),
+  materials: createMaterialCatalogController(),
 };

@@ -5,7 +5,6 @@ import { controlStyles, getTabButtonStyle } from '../../components/ui/controls';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
 import {
   approveFormulation,
-  archiveFormulation,
   duplicateFormulation,
   getFormulation,
   listLibraryOptions,
@@ -102,7 +101,6 @@ export function FormulationDetailPage({ id, onBack, onOpen }: { id: string; onBa
             <button disabled={locked} onClick={() => setEditing(true)} style={{ ...controlStyles.secondaryButton, ...(locked ? styles.disabled : {}) }} type="button">Edit</button>
             <button onClick={() => void duplicateFormulation(record.id).then((next) => onOpen(next.id)).catch((err: Error) => setError(err.message))} style={controlStyles.secondaryButton} type="button">Duplicate New Version</button>
             <button disabled={!canApprove} onClick={() => void approveFormulation(record.id).then((next) => { setRecord(next); setMessage('Approved'); }).catch((err: Error) => setError(err.message))} style={{ ...controlStyles.primaryButton, ...(canApprove ? {} : styles.disabled) }} type="button">Approve</button>
-            <button onClick={() => void archiveFormulation(record.id).then((next) => { setRecord(next); setMessage('Archived'); }).catch((err: Error) => setError(err.message))} style={controlStyles.secondaryButton} type="button">Archive</button>
             <button disabled={record.status !== 'approved'} style={{ ...controlStyles.secondaryButton, ...(record.status === 'approved' ? {} : styles.disabled) }} type="button">Create Production Run</button>
           </div>
         </div>

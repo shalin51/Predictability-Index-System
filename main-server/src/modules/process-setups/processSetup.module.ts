@@ -3,11 +3,11 @@ import { AuditService } from '../audit/audit.service';
 import { ProcessSetupController } from './processSetup.controller';
 import { ProcessSetupRepository } from './processSetup.repository';
 import { ProcessSetupService } from './processSetup.service';
-import { AzureSetupImportStorage } from './setupImport.storage';
+import { createSetupImportStorage } from './setupImport.storage';
 import { SetupWorkbookParser } from './setupWorkbook.parser';
 
 export function createProcessSetupController(): ProcessSetupController {
-  return new ProcessSetupController(new ProcessSetupService(new ProcessSetupRepository(), new SetupWorkbookParser(), new AzureSetupImportStorage(), new AuditService()));
+  return new ProcessSetupController(new ProcessSetupService(new ProcessSetupRepository(), new SetupWorkbookParser(), createSetupImportStorage(), new AuditService()));
 }
 
 export function createSetupImportRouter() {

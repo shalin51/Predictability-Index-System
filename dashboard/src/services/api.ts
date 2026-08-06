@@ -192,6 +192,65 @@ export interface SetupImportPreview {
   productionRunId?: string | null;
 }
 
+export interface MaterialImportPreview {
+  id: string;
+  status: string;
+  originalFilename: string;
+  validationResults: { errors: string[]; warnings: string[] };
+  summary: {
+    materials: number;
+    propertyDefinitions: number;
+    propertyFacts: number;
+    createMaterials: number;
+    matchedMaterials: number;
+  };
+  matches: Array<{
+    externalId: string;
+    productGrade: string;
+    manufacturer: string;
+    matchedMaterialId?: string | null;
+    matchedMaterialCode?: string | null;
+    action: 'match' | 'create';
+  }>;
+  materialOptions: LibraryRecord[];
+  commitSummary?: Record<string, number> | null;
+}
+
+export interface MaterialCatalogDetail extends LibraryRecord {
+  chemistry?: string | null;
+  defaultUnit?: string | null;
+  description?: string | null;
+  externalIdentifiers: Array<{ namespace: string; externalId: string }>;
+  materialCode: string;
+  materialName: string;
+  materialType: string;
+  properties: Array<{
+    id: string;
+    category: string;
+    propertyKey: string;
+    propertyName: string;
+    qualifier?: string | null;
+    sourceFilename?: string | null;
+    testCondition?: string | null;
+    testMethod: string;
+    unit?: string | null;
+    valueNumeric?: number | null;
+    valueText?: string | null;
+  }>;
+  processingReference: Array<{
+    profileId: string;
+    profileVersion: number;
+    parameterKey?: string | null;
+    displayName?: string | null;
+    minimumValue?: number | null;
+    recommendedValue?: number | null;
+    maximumValue?: number | null;
+    unit?: string | null;
+  }>;
+  roleInBlend?: string | null;
+  sourceDocuments: Array<{ id: string; sourceFilename: string; sourceRevisionDate?: string | null; manufacturer?: string | null }>;
+}
+
 export interface ProcessSetupDetail extends LibraryRecord {
   values?: Array<Record<string, unknown>>;
   parameters?: Array<Record<string, unknown>>;
@@ -627,7 +686,7 @@ export async function getProductionRun(id: string): Promise<ProductionRunRecord>
 }
 
 export async function previewSetupWorkbook(file: File): Promise<SetupImportPreview> {
-  return fetchJSON<SetupImportPreview>('/setup-sheet-imports/preview', {
+  return fetchJSON<SetupImportPreview>('/production-run-imports/preview', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -638,11 +697,34 @@ export async function previewSetupWorkbook(file: File): Promise<SetupImportPrevi
 }
 
 export async function commitSetupWorkbook(importId: string, payload: Record<string, unknown>): Promise<{ importId: string; productionRunId: string; idempotent: boolean }> {
-  return fetchJSON(`/setup-sheet-imports/${importId}/commit`, {
+  return fetchJSON(`/production-run-imports/${importId}/commit`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
+}
+
+export async function previewMaterialWorkbook(file: File): Promise<MaterialImportPreview> {
+  return fetchJSON<MaterialImportPreview>('/material-imports/preview', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'x-file-name': encodeURIComponent(file.name),
+    },
+    body: file,
+  });
+}
+
+export async function commitMaterialWorkbook(importId: string, materialResolutions: Record<string, string>): Promise<{ importId: string; summary: Record<string, number>; idempotent: boolean }> {
+  return fetchJSON(`/material-imports/${importId}/commit`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ materialResolutions }),
+  });
+}
+
+export async function getMaterialCatalog(id: string): Promise<MaterialCatalogDetail> {
+  return fetchJSON<MaterialCatalogDetail>(`/materials/${id}/catalog`);
 }
 
 export async function getProductionRunProcessSetup(runId: string): Promise<ProcessSetupDetail> {

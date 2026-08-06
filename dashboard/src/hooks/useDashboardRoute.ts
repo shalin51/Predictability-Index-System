@@ -18,7 +18,7 @@ export function useDashboardRoute(defaultView: DashboardView) {
       : parseDashboardLocation(window.location, defaultView),
   );
   const [view, setView] = useState<DashboardView>(() => initialRouteRef.current.view);
-  const [librarySection, setLibrarySection] = useState<string>(() => initialRouteRef.current.librarySection ?? 'materials');
+  const [materialMode, setMaterialMode] = useState<DashboardRouteState['materialMode']>(() => initialRouteRef.current.materialMode ?? 'list');
   const [labTestingMode, setLabTestingMode] = useState<DashboardRouteState['labTestingMode']>(() => initialRouteRef.current.labTestingMode ?? 'list');
   const [labRunId, setLabRunId] = useState<string | undefined>(() => initialRouteRef.current.labRunId);
   const [formulationMode, setFormulationMode] = useState<DashboardRouteState['formulationMode']>(() => initialRouteRef.current.formulationMode ?? 'list');
@@ -52,7 +52,7 @@ export function useDashboardRoute(defaultView: DashboardView) {
 
   const commitRoute = useCallback((route: DashboardRouteState, replace = false) => {
     setView(route.view);
-    setLibrarySection(route.librarySection ?? 'materials');
+    setMaterialMode(route.materialMode ?? 'list');
     setLabTestingMode(route.labTestingMode ?? 'list');
     setLabRunId(route.labRunId);
     setFormulationMode(route.formulationMode ?? 'list');
@@ -115,7 +115,7 @@ export function useDashboardRoute(defaultView: DashboardView) {
       }
 
       setView(nextRoute.view);
-      setLibrarySection(nextRoute.librarySection ?? 'materials');
+      setMaterialMode(nextRoute.materialMode ?? 'list');
       setLabTestingMode(nextRoute.labTestingMode ?? 'list');
       setLabRunId(nextRoute.labRunId);
       setFormulationMode(nextRoute.formulationMode ?? 'list');
@@ -160,7 +160,7 @@ export function useDashboardRoute(defaultView: DashboardView) {
     formulationMode,
     labRunId,
     labTestingMode,
-    librarySection,
+    materialMode,
     navigate,
     productionRunId,
     productionRunMode,

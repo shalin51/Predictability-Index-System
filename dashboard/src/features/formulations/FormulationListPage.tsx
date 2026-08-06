@@ -4,7 +4,6 @@ import { Card, Divider } from '../../components/ui/Card';
 import { controlStyles } from '../../components/ui/controls';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
 import {
-  archiveFormulation,
   duplicateFormulation,
   listFormulations,
   listLibraryOptions,
@@ -94,7 +93,6 @@ export function FormulationListPage({ onCreate, onOpen }: { onCreate: () => void
                         <button onClick={() => onOpen(record.id)} style={controlStyles.subtleButton} type="button">View</button>
                         <button onClick={() => onOpen(record.id)} style={controlStyles.subtleButton} type="button">Edit</button>
                         <button onClick={() => void duplicateFormulation(record.id).then((next) => onOpen(next.id)).catch((err: Error) => setError(err.message))} style={controlStyles.subtleButton} type="button">Duplicate</button>
-                        <button onClick={() => void archiveFormulation(record.id).then(load).catch((err: Error) => setError(err.message))} style={controlStyles.subtleButton} type="button">Archive</button>
                       </div>
                     </td>
                   </tr>

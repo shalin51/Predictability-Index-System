@@ -90,7 +90,7 @@ export function ImportSetupSheetPage({ onCancel, onSaved }: { onCancel: () => vo
     <DashboardPage maxWidth="100%">
       <Card>
         <div style={runStyles.header}>
-          <div><h1 style={runStyles.title}>Import BOY 125E Setup Sheet</h1><p style={runStyles.subtitle}>Preview and validate an approved operator workbook before creating a production run.</p></div>
+          <div><h1 style={runStyles.title}>Import Production Run</h1><p style={runStyles.subtitle}>Upload the fixed BOY 125E Production Run v1 workbook, validate it, and create a traceable run.</p></div>
           <button onClick={onCancel} style={controlStyles.secondaryButton} type="button">Cancel</button>
         </div>
         <Divider />

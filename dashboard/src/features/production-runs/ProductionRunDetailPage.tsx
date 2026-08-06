@@ -4,7 +4,6 @@ import { Card, Divider } from '../../components/ui/Card';
 import { controlStyles, getTabButtonStyle } from '../../components/ui/controls';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
 import {
-  archiveProductionRun,
   getProductionRun,
   listLibraryOptions,
   updateProductionRun,
@@ -97,7 +96,6 @@ export function ProductionRunDetailPage({ id, onBack, onOpenReport }: { id: stri
             {record.status === 'completed' && <button onClick={() => setTab('Run Summary')} style={controlStyles.secondaryButton} type="button">Run Summary</button>}
             {(record.status === 'completed' || record.status === 'scored') && <button onClick={() => setTab('Scores')} style={controlStyles.secondaryButton} type="button">Scores</button>}
             {(record.status === 'completed' || record.status === 'scored') && onOpenReport && <button onClick={() => onOpenReport(record.id)} style={controlStyles.secondaryButton} type="button">Report</button>}
-            <button onClick={() => void archiveProductionRun(record.id).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.secondaryButton} type="button">Archive</button>
           </div>
         </div>
         <Divider />

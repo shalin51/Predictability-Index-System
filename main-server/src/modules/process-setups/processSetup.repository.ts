@@ -141,6 +141,7 @@ export class ProcessSetupRepository {
       if ((importRow.validationResults?.errors ?? []).length > 0) throw new Error('VALIDATION_FAILED');
       const snapshot = importRow.parsedSnapshot;
       await this.validateResolution(client, input);
+      await this.syncMoldDefinition(client, snapshot, input.moldId);
       const setupHash = this.hash({
         header: { machine: input.machineId, mold: input.moldId, formulation: input.formulationId, revision: snapshot.header.revisionNo },
         parameters: snapshot.parameters.filter((parameter) => parameter.setpoint != null || parameter.notes).map(({ actual: _actual, ...parameter }) => parameter),
@@ -213,6 +214,32 @@ export class ProcessSetupRepository {
       );
       const expectedMaterialId = input.materialId ?? componentMaterialId;
       if (!lot.rows[0] || (expectedMaterialId && lot.rows[0].material_id !== expectedMaterialId)) throw new Error('MATERIAL_COMPONENT_MISMATCH');
+    }
+  }
+
+  private async syncMoldDefinition(client: PoolClient, snapshot: ParsedSetupWorkbook, moldId: string): Promise<void> {
+    await client.query(
+      `UPDATE molds SET manufacturer = COALESCE(NULLIF($2, ''), manufacturer),
+         hot_runner_controller = COALESCE(NULLIF($3, ''), hot_runner_controller),
+         zone_count = COALESCE($4, zone_count), updated_at = now() WHERE id = $1`,
+      [moldId, snapshot.hotRunner.manufacturer ?? null, snapshot.hotRunner.controllerModel ?? null, snapshot.hotRunner.zoneCount ?? null]
+    );
+    const zones = snapshot.hotRunner.zones ?? snapshot.hotRunner.zoneNumbers.map((zoneNumber) => ({ zoneNumber, zoneName: null }));
+    for (const zone of zones) {
+      const alarmLow = snapshot.parameters.find((item) => item.key === 'hot_runner.alarm_low' && item.positionIndex === zone.zoneNumber)?.setpoint;
+      const alarmHigh = snapshot.parameters.find((item) => item.key === 'hot_runner.alarm_high' && item.positionIndex === zone.zoneNumber)?.setpoint;
+      await client.query(
+        `INSERT INTO mold_zones
+          (mold_id, zone_number, zone_name, zone_type, minimum_temperature, maximum_temperature, temperature_unit, status)
+         VALUES ($1,$2,$3,$4,$5,$6,'°F','active')
+         ON CONFLICT (mold_id, zone_number) DO UPDATE SET
+           zone_name = COALESCE(EXCLUDED.zone_name, mold_zones.zone_name),
+           zone_type = COALESCE(EXCLUDED.zone_type, mold_zones.zone_type),
+           minimum_temperature = COALESCE(EXCLUDED.minimum_temperature, mold_zones.minimum_temperature),
+           maximum_temperature = COALESCE(EXCLUDED.maximum_temperature, mold_zones.maximum_temperature),
+           status = 'active', updated_at = now()`,
+        [moldId, zone.zoneNumber, zone.zoneName ?? null, zone.zoneName?.toLowerCase().includes('manifold') ? 'manifold' : zone.zoneName?.toLowerCase().includes('sprue') ? 'sprue' : 'gate', typeof alarmLow === 'number' ? alarmLow : null, typeof alarmHigh === 'number' ? alarmHigh : null]
+      );
     }
   }
 

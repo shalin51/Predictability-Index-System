@@ -16,6 +16,13 @@ const REQUIRED_TABLES = [
   'material_lots',
   'machines',
   'molds',
+  'machine_parameter_capabilities',
+  'mold_zones',
+  'material_catalog_imports',
+  'material_external_identifiers',
+  'material_source_documents',
+  'material_property_definitions',
+  'material_property_facts',
   'metric_definitions',
   'test_method_definitions',
   'test_condition_definitions',
@@ -101,6 +108,11 @@ const REQUIRED_INDEXES = [
   'idx_material_drying_events_run',
   'idx_setup_sheet_imports_status_created',
   'idx_setup_sheet_imports_run',
+  'idx_material_catalog_imports_status_created',
+  'idx_material_property_facts_material',
+  'idx_material_property_facts_property',
+  'idx_machine_parameter_capabilities_machine',
+  'idx_mold_zones_mold',
 ] as const;
 
 function assertCheck(condition: boolean, label: string): void {

@@ -66,9 +66,15 @@ JOIN supplier_materials sm ON sm.supplier_material_code = lot.supplier_material_
 ON CONFLICT (supplier_material_id, lot_number) DO UPDATE
 SET received_date = EXCLUDED.received_date, expiration_date = EXCLUDED.expiration_date, status = EXCLUDED.status;
 
-INSERT INTO machines (machine_code, machine_name)
-VALUES ('Machine-01', 'Machine-01'), ('Machine-02', 'Machine-02'), ('Machine-03', 'Machine-03')
-ON CONFLICT (machine_code) DO UPDATE SET machine_name = EXCLUDED.machine_name;
+INSERT INTO machines (machine_code, machine_name, location)
+VALUES
+  ('Machine-01', 'Machine-01', NULL),
+  ('Machine-02', 'Machine-02', NULL),
+  ('Machine-03', 'Machine-03', NULL),
+  ('BOY-125E',   'BOY 125E Injection Molding Machine', 'Production Floor')
+ON CONFLICT (machine_code) DO UPDATE
+  SET machine_name = EXCLUDED.machine_name,
+      location     = COALESCE(machines.location, EXCLUDED.location);
 
 INSERT INTO molds (mold_code, mold_name, mold_type)
 VALUES ('MOLD-A', 'MOLD-A', 'pickleball'), ('MOLD-B', 'MOLD-B', 'pickleball')

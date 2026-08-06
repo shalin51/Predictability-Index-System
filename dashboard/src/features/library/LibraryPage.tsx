@@ -7,7 +7,6 @@ import { DataTable, DataTableBody, DataTableCell, DataTableHead, DataTableHeader
 import { Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from '../../components/ui/Modal';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
 import {
-  archiveLibraryRecord,
   createLibraryRecord,
   listLibraryOptions,
   listLibraryRecords,
@@ -18,6 +17,7 @@ import {
   type LibraryRecord,
 } from '../../services/api';
 import { colors, font, radius, spacing } from '../../theme/tokens';
+import { MaterialDetailsModal } from '../materials/MaterialDetailsModal';
 
 const sections = [
   'materials',
@@ -25,7 +25,9 @@ const sections = [
   'supplier-materials',
   'material-lots',
   'machines',
+  'machine-parameters',
   'molds',
+  'mold-zones',
   'metrics',
   'test-methods',
   'test-conditions',
@@ -36,13 +38,15 @@ const sections = [
 
 const columns: Record<string, string[]> = {
   benchmarks: ['benchmarkCode', 'benchmarkName', 'profileVersion', 'ballBrand', 'ballModel', 'status'],
-  machines: ['machineCode', 'machineName', 'location', 'status', 'updatedAt'],
-  materials: ['materialCode', 'materialName', 'materialType', 'defaultUnit', 'status', 'updatedAt'],
+  machines: ['machineCode', 'machineName', 'manufacturer', 'machineType', 'modelNumber', 'location', 'status'],
+  'machine-parameters': ['machineCode', 'displayName', 'sectionKey', 'positionLabel', 'minimumValue', 'maximumValue', 'unit', 'status'],
+  materials: ['materialCode', 'materialName', 'materialType', 'chemistry', 'roleInBlend', 'status', 'updatedAt'],
   'material-lots': ['materialCode', 'supplierName', 'lotNumber', 'receivedDate', 'expirationDate', 'status'],
   metrics: ['metricKey', 'displayName', 'category', 'defaultUnit', 'dataType', 'benchmarkComparable', 'requiredForScoring', 'status'],
-  molds: ['moldCode', 'moldName', 'moldType', 'cavityCount', 'status'],
+  molds: ['moldCode', 'moldName', 'moldType', 'manufacturer', 'cavityCount', 'zoneCount', 'status'],
+  'mold-zones': ['moldCode', 'zoneNumber', 'zoneName', 'zoneType', 'minimumTemperature', 'maximumTemperature', 'temperatureUnit', 'status'],
   'scoring-rules': ['benchmarkCode', 'metricKey', 'targetMean', 'minAcceptable', 'maxAcceptable', 'targetStdDev', 'weight', 'criticality'],
-  suppliers: ['supplierName', 'supplierType', 'contactInfo', 'status', 'updatedAt'],
+  suppliers: ['supplierName', 'supplierType', 'contactName', 'contactEmail', 'contactPhone', 'status'],
   'supplier-materials': ['supplierName', 'materialCode', 'materialName', 'supplierMaterialCode', 'status'],
   'test-conditions': ['conditionCode', 'conditionName', 'description', 'status'],
   'test-methods': ['methodCode', 'methodName', 'metricKey', 'cureHours', 'status'],
@@ -59,7 +63,9 @@ const enumOptions: Record<string, string[]> = {
 const optionResourceByField: Record<string, string> = {
   benchmarkProfileId: 'benchmarks',
   materialId: 'materials',
+  machineId: 'machines',
   metricId: 'metrics',
+  moldId: 'molds',
   supplierId: 'suppliers',
   supplierMaterialId: 'supplier-materials',
 };
@@ -67,11 +73,19 @@ const optionResourceByField: Record<string, string> = {
 export function LibraryPage({
   activeSection,
   onSectionChange,
+  onImport,
+  sectionOptions,
+  standalone = false,
 }: {
   activeSection: string;
   onSectionChange: (section: string) => void;
+  onImport?: () => void;
+  sectionOptions?: readonly string[];
+  standalone?: boolean;
 }) {
   const section = sections.includes(activeSection as never) ? activeSection : 'materials';
+  const visibleSections = sectionOptions?.filter((item) => sections.includes(item as never)) ?? sections;
+  const showSectionNav = visibleSections.length > 1;
   const [records, setRecords] = useState<LibraryRecord[]>([]);
   const [fields, setFields] = useState<LibraryFieldDefinition[]>([]);
   const [options, setOptions] = useState<Record<string, LibraryRecord[]>>({});
@@ -83,6 +97,7 @@ export function LibraryPage({
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [materialDetailId, setMaterialDetailId] = useState<string | null>(null);
 
   const load = () => {
     setLoading(true);
@@ -107,7 +122,7 @@ export function LibraryPage({
   useEffect(load, [section, search, status]);
 
   useEffect(() => {
-    void Promise.all(['benchmarks', 'materials', 'metrics', 'suppliers', 'supplier-materials'].map((resource) =>
+    void Promise.all(['benchmarks', 'machines', 'materials', 'metrics', 'molds', 'suppliers', 'supplier-materials'].map((resource) =>
       listLibraryOptions(resource).then((items) => [resource, items] as const)
     )).then((entries) => setOptions(Object.fromEntries(entries))).catch(() => undefined);
   }, []);
@@ -139,9 +154,9 @@ export function LibraryPage({
 
   return (
     <DashboardPage maxWidth="100%">
-      <div style={styles.layout}>
-        <aside className="library-page__nav" style={styles.nav}>
-          {sections.map((item) => (
+      <div style={{ ...styles.layout, ...(!showSectionNav ? styles.layoutStandalone : {}) }}>
+        {showSectionNav && <aside className="library-page__nav" style={styles.nav}>
+          {visibleSections.map((item) => (
             <button
               aria-current={item === section ? 'page' : undefined}
               className={`library-page__nav-button${item === section ? ' library-page__nav-button--active' : ''}`}
@@ -152,12 +167,12 @@ export function LibraryPage({
               {labelize(item)}
             </button>
           ))}
-        </aside>
+        </aside>}
         <Card style={styles.card}>
           <CardHeader>
             <div>
               <CardTitle>{labelize(section)}</CardTitle>
-              <CardSubtitle>Controlled Library records for dropdowns, benchmarks, and scoring.</CardSubtitle>
+              <CardSubtitle>{standalone ? `Manage ${labelize(section).toLowerCase()} master data used by formulations and production.` : 'Controlled reference records for dropdowns, benchmarks, and scoring.'}</CardSubtitle>
             </div>
             <div style={styles.headerActions}>
               {section === 'scoring-rules' && (
@@ -171,6 +186,7 @@ export function LibraryPage({
                 </Button>
               )}
               {section !== 'process-setups' && <Button onClick={() => startEdit()} type="button" variant="primary">New</Button>}
+              {section === 'materials' && onImport && <Button onClick={onImport} type="button" variant="secondary">Import Materials</Button>}
             </div>
           </CardHeader>
           <Divider />
@@ -208,8 +224,8 @@ export function LibraryPage({
                         ))}
                         <DataTableCell>
                           <div style={styles.rowActions}>
+                            {section === 'materials' && <Button onClick={(event) => { event.stopPropagation(); setMaterialDetailId(record.id); }} size="sm" type="button" variant="subtle">Details</Button>}
                             {section !== 'process-setups' && <Button onClick={(event) => { event.stopPropagation(); startEdit(record); }} size="sm" type="button" variant="subtle">Edit</Button>}
-                            {section !== 'process-setups' && <Button onClick={(event) => { event.stopPropagation(); void archiveLibraryRecord(section, record.id).then(load); }} size="sm" type="button" variant="subtle">Archive</Button>}
                           </div>
                         </DataTableCell>
                       </DataTableRow>
@@ -243,6 +259,7 @@ export function LibraryPage({
           </ModalFooter>
         </Modal>
       )}
+      {materialDetailId && <MaterialDetailsModal id={materialDetailId} onClose={() => setMaterialDetailId(null)} />}
     </DashboardPage>
   );
 }
@@ -284,6 +301,7 @@ const styles: Record<string, CSSProperties> = {
   form: { display: 'grid', gap: spacing.space4, margin: `${spacing.space5}px 0` },
   headerActions: { display: 'flex', gap: spacing.space3 },
   layout: { display: 'grid', gap: spacing.space5, gridTemplateColumns: '220px minmax(0, 1fr)', height: '100%', minHeight: 0, overflow: 'hidden' },
+  layoutStandalone: { gridTemplateColumns: 'minmax(0, 1fr)' },
   muted: { color: colors.text.muted, fontSize: font.size.small },
   nav: { alignSelf: 'start', border: `1px solid ${colors.border}`, borderRadius: radius.md, display: 'grid', gap: 2, padding: spacing.space3 },
   rowActions: { display: 'flex', flexWrap: 'wrap', gap: spacing.space2 },

@@ -25,6 +25,7 @@ local.settings.json
 .vscode/
 .idea/
 .deploy/
+.local/
 # Temporary files
 tmp/
 temp/

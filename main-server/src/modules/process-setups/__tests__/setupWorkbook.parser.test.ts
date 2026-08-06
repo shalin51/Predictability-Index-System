@@ -65,6 +65,8 @@ describe('SetupWorkbookParser', () => {
     const result = parser.parse(workbookBuffer(true));
     expect(result.validation.errors).toEqual([]);
     expect(result.snapshot.hasActualReadings).toBe(true);
+    expect(result.snapshot.hotRunner.zones).toHaveLength(18);
+    expect(result.snapshot.hotRunner.zones?.[0]).toEqual({ zoneNumber: 1, zoneName: 'Nozzle' });
     expect(result.snapshot.parameters).toEqual(expect.arrayContaining([
       expect.objectContaining({ key: 'barrel.temperature', setpoint: 410, actual: 407 }),
       expect.objectContaining({ key: 'hot_runner.temperature', positionIndex: 1, actual: 419 }),

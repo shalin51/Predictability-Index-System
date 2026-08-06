@@ -46,7 +46,6 @@ interface AppShellProps<T extends string> {
   themeOptions: ShellThemeOption[];
   title: string;
   navItems: readonly ShellNavItem<T>[];
-  overviewView: T;
 }
 
 export function AppShell<T extends string>({
@@ -63,7 +62,6 @@ export function AppShell<T extends string>({
   themeOptions,
   title,
   navItems,
-  overviewView,
 }: AppShellProps<T>) {
   const [openMenu, setOpenMenu] = useState<'notifications' | 'profile' | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(() => (
@@ -98,7 +96,6 @@ export function AppShell<T extends string>({
         activeView={activeView}
         navItems={navItems}
         onNavigate={handleNavigate}
-        overviewView={overviewView}
         sidebarOpen={sidebarOpen}
       />
 

@@ -3,7 +3,6 @@ import { Card, Divider } from '../../components/ui/Card';
 import { controlStyles } from '../../components/ui/controls';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
 import {
-  archiveProductionRun,
   listApprovedFormulationOptions,
   listLibraryOptions,
   listProductionRuns,
@@ -82,7 +81,6 @@ export function ProductionRunListPage({ onCreate, onImport, onOpen }: { onCreate
         {!loading && records.length === 0 && <EmptyState>No production runs.</EmptyState>}
         {records.length > 0 && (
           <ProductionRunTable
-            onArchive={(id) => void archiveProductionRun(id).then(load).catch((err: Error) => setError(err.message))}
             onOpen={onOpen}
             records={records}
           />

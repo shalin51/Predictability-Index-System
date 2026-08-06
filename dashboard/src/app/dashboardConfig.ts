@@ -10,11 +10,32 @@ export const NAV: ReadonlyArray<ShellNavItem<DashboardView>> = [
     icon: 'grid',
   },
   {
-    id: 'library',
-    label: 'Library',
-    description: 'Reference assets and supporting datasets.',
+    id: 'materials',
+    label: 'Materials',
+    description: 'Material properties, processing guidance, and source data.',
     group: 'Operations',
     icon: 'upload',
+  },
+  {
+    id: 'suppliers',
+    label: 'Suppliers',
+    description: 'Supplier records and contact information.',
+    group: 'Operations',
+    icon: 'layers',
+  },
+  {
+    id: 'machines',
+    label: 'Machines',
+    description: 'Machine models, specifications, and capabilities.',
+    group: 'Operations',
+    icon: 'scan',
+  },
+  {
+    id: 'molds',
+    label: 'Molds',
+    description: 'Mold configuration and hot-runner zones.',
+    group: 'Operations',
+    icon: 'grid',
   },
   {
     id: 'formulations',
@@ -58,9 +79,21 @@ export const VIEW_META: Record<DashboardView, { title: string; subtitle: string 
     title: 'Dashboard',
     subtitle: 'Workspace overview.',
   },
-  library: {
-    title: 'Library',
-    subtitle: 'Reference assets and supporting materials.',
+  materials: {
+    title: 'Materials',
+    subtitle: 'Material properties, processing guidance, and source data.',
+  },
+  suppliers: {
+    title: 'Suppliers',
+    subtitle: 'Supplier relationships and contact information.',
+  },
+  machines: {
+    title: 'Machines',
+    subtitle: 'Machine identity, specifications, and parameter capabilities.',
+  },
+  molds: {
+    title: 'Molds',
+    subtitle: 'Mold identity, cavities, and hot-runner zone configuration.',
   },
   formulations: {
     title: 'Formulations',

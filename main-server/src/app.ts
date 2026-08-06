@@ -21,6 +21,8 @@ import {
   createProductionRunProcessSetupRouter,
   createSetupImportRouter,
 } from './modules/process-setups/processSetup.module';
+import { createMaterialImportRouter } from './modules/material-imports/materialImport.module';
+import { createMaterialCatalogRouter } from './modules/materials/materialCatalog.module';
 
 export function createApp() {
   const app = express();
@@ -38,7 +40,7 @@ function registerCommonMiddleware(app: Express): void {
       credentials: true,
     })
   );
-  app.use('/setup-sheet-imports/preview', (req, res, next) => {
+  app.use(['/setup-sheet-imports/preview', '/production-run-imports/preview', '/material-imports/preview'], (req, res, next) => {
     const contentType = req.headers['content-type']?.toLowerCase() ?? '';
     if (req.method === 'POST' && !contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') && !contentType.includes('application/octet-stream')) {
       res.status(415).json({ error: 'Unsupported workbook content type', code: 'UNSUPPORTED_MEDIA_TYPE' });
@@ -47,7 +49,7 @@ function registerCommonMiddleware(app: Express): void {
     next();
   });
   app.use(
-    '/setup-sheet-imports/preview',
+    ['/setup-sheet-imports/preview', '/production-run-imports/preview', '/material-imports/preview'],
     express.raw({
       type: [
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -71,6 +73,9 @@ function registerRoutes(app: Express): void {
   app.use('/library', createLibraryRouter());
   app.use('/formulations', createFormulationRouter());
   app.use('/setup-sheet-imports', createSetupImportRouter());
+  app.use('/production-run-imports', createSetupImportRouter());
+  app.use('/material-imports', createMaterialImportRouter());
+  app.use('/materials', createMaterialCatalogRouter());
   app.use('/process-setups', createProcessSetupRouter());
   app.use('/production-runs', createProductionRunProcessSetupRouter());
   app.use('/production-runs', createProductionRunRouter());

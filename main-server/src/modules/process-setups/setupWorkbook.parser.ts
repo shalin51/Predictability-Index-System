@@ -93,6 +93,10 @@ export class SetupWorkbookParser {
         controllerModel: this.optionalText(hotRunner, 'B3'),
         zoneCount: this.number(hotRunner, 'E3'),
         zoneNumbers: Array.from({ length: 18 }, (_, index) => this.number(hotRunner, `A${index + 7}`)).filter((value): value is number => value != null),
+        zones: Array.from({ length: 18 }, (_, index) => ({
+          zoneNumber: this.number(hotRunner, `A${index + 7}`) ?? index + 1,
+          zoneName: this.optionalText(hotRunner, `B${index + 7}`),
+        })),
       },
       parameters,
       notes: this.parseNotes(setup, hotRunner),

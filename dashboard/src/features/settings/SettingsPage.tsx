@@ -100,7 +100,7 @@ export function SettingsPage({
                 value={draftPreferences.defaultView}
               >
                 <option value="dashboard">Dashboard</option>
-                <option value="library">Library</option>
+                <option value="materials">Materials</option>
               </select>
             </label>
           </div>

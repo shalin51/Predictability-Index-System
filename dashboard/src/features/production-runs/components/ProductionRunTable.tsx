@@ -6,11 +6,9 @@ import { formatValue, runStyles } from '../productionRunUi';
 import { ProductionRunStatusBadge } from './ProductionRunStatusBadge';
 
 export function ProductionRunTable({
-  onArchive,
   onOpen,
   records,
 }: {
-  onArchive: (id: string) => void;
   onOpen: (id: string) => void;
   records: ProductionRunRecord[];
 }) {
@@ -40,7 +38,6 @@ export function ProductionRunTable({
                 <div style={styles.rowActions}>
                   <button onClick={() => onOpen(record.id)} style={controlStyles.subtleButton} type="button">View</button>
                   <button onClick={() => onOpen(record.id)} style={controlStyles.subtleButton} type="button">Edit</button>
-                  <button onClick={() => onArchive(record.id)} style={controlStyles.subtleButton} type="button">Archive</button>
                 </div>
               </td>
             </tr>

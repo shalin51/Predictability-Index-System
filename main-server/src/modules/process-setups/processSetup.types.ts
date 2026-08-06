@@ -84,6 +84,7 @@ export interface ParsedSetupWorkbook {
     controllerModel?: string | null;
     zoneCount?: number | null;
     zoneNumbers: number[];
+    zones?: Array<{ zoneNumber: number; zoneName?: string | null }>;
   };
   parameters: ParsedProcessParameter[];
   notes: Array<{ type: string; text: string }>;

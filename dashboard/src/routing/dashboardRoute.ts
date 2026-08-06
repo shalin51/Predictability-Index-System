@@ -1,7 +1,10 @@
 export type DashboardView =
   | 'dashboard'
   | 'formulations'
-  | 'library'
+  | 'materials'
+  | 'suppliers'
+  | 'machines'
+  | 'molds'
   | 'production-runs'
   | 'lab-testing'
   | 'reports'
@@ -10,7 +13,7 @@ export type DashboardView =
 export interface DashboardRouteState {
   formulationId?: string;
   formulationMode?: 'list' | 'new' | 'detail';
-  librarySection?: string;
+  materialMode?: 'list' | 'import';
   labRunId?: string;
   labTestingMode?: 'list' | 'detail';
   productionRunId?: string;
@@ -43,7 +46,19 @@ function parseRouteSegments(segments: string[]): DashboardRouteState | null {
   }
 
   if (segments[0] === 'library') {
-    return { librarySection: segments[1] || 'materials', view: 'library' };
+    const legacy = segments[1];
+    if (legacy === 'suppliers') return { view: 'suppliers' };
+    if (legacy === 'machines' || legacy === 'machine-parameters') return { view: 'machines' };
+    if (legacy === 'molds' || legacy === 'mold-zones') return { view: 'molds' };
+    return { materialMode: 'list', view: 'materials' };
+  }
+
+  if (segments[0] === 'materials') {
+    return { materialMode: segments[1] === 'import' ? 'import' : 'list', view: 'materials' };
+  }
+
+  if (segments[0] === 'suppliers' || segments[0] === 'machines' || segments[0] === 'molds') {
+    return { view: segments[0] };
   }
 
   if (segments[0] === 'formulations') {
@@ -112,9 +127,13 @@ export function parseDashboardLocation(
   return { view: defaultView };
 }
 
-export function buildDashboardPath({ formulationId, formulationMode, labRunId, labTestingMode, librarySection, productionRunId, productionRunMode, reportId, reportMode, reportRunId, view }: DashboardRouteState): string {
-  if (view === 'library') {
-    return `/library/${encodeURIComponent(librarySection || 'materials')}`;
+export function buildDashboardPath({ formulationId, formulationMode, labRunId, labTestingMode, materialMode, productionRunId, productionRunMode, reportId, reportMode, reportRunId, view }: DashboardRouteState): string {
+  if (view === 'materials') {
+    return materialMode === 'import' ? '/materials/import' : '/materials';
+  }
+
+  if (view === 'suppliers' || view === 'machines' || view === 'molds') {
+    return `/${view}`;
   }
 
   if (view === 'formulations') {

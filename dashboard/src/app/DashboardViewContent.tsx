@@ -2,7 +2,8 @@ import { DashboardLandingPage } from '../features/dashboard/DashboardLandingPage
 import { CreateFormulationWizard } from '../features/formulations/CreateFormulationWizard';
 import { FormulationDetailPage } from '../features/formulations/FormulationDetailPage';
 import { FormulationListPage } from '../features/formulations/FormulationListPage';
-import { LibraryPage } from '../features/library/LibraryPage';
+import { MasterDataPage } from '../features/library/MasterDataPage';
+import { MaterialImportPage } from '../features/materials/MaterialImportPage';
 import { CreateProductionRunWizard } from '../features/production-runs/CreateProductionRunWizard';
 import { ProductionRunDetailPage } from '../features/production-runs/ProductionRunDetailPage';
 import { ProductionRunListPage } from '../features/production-runs/ProductionRunListPage';
@@ -26,7 +27,7 @@ interface DashboardViewContentProps {
   formulationMode?: DashboardRouteState['formulationMode'];
   labRunId?: string;
   labTestingMode?: DashboardRouteState['labTestingMode'];
-  librarySection: string;
+  materialMode?: DashboardRouteState['materialMode'];
   productionRunId?: string;
   productionRunMode?: DashboardRouteState['productionRunMode'];
   reportId?: string;
@@ -44,7 +45,7 @@ export function DashboardViewContent({
   formulationMode,
   labRunId,
   labTestingMode,
-  librarySection,
+  materialMode,
   productionRunId,
   productionRunMode,
   reportId,
@@ -62,8 +63,23 @@ export function DashboardViewContent({
     );
   }
 
-  if (view === 'library') {
-    return <LibraryPage activeSection={librarySection} onSectionChange={(section) => navigate({ librarySection: section, view: 'library' })} />;
+  if (view === 'materials') {
+    if (materialMode === 'import') {
+      return <MaterialImportPage onCancel={() => navigate({ materialMode: 'list', view: 'materials' })} onCommitted={() => navigate({ materialMode: 'list', view: 'materials' })} />;
+    }
+    return <MasterDataPage initialSection="materials" onImport={() => navigate({ materialMode: 'import', view: 'materials' })} sections={['materials', 'supplier-materials', 'material-lots']} />;
+  }
+
+  if (view === 'suppliers') {
+    return <MasterDataPage initialSection="suppliers" sections={['suppliers']} />;
+  }
+
+  if (view === 'machines') {
+    return <MasterDataPage initialSection="machines" sections={['machines', 'machine-parameters']} />;
+  }
+
+  if (view === 'molds') {
+    return <MasterDataPage initialSection="molds" sections={['molds', 'mold-zones']} />;
   }
 
   if (view === 'formulations') {

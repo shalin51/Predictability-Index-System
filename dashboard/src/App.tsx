@@ -19,7 +19,7 @@ export default function App() {
     formulationMode,
     labRunId,
     labTestingMode,
-    librarySection,
+    materialMode,
     navigate,
     productionRunId,
     productionRunMode,
@@ -76,7 +76,6 @@ export default function App() {
             notification.id === id ? { ...notification, read: !notification.read } : notification
           )));
         }}
-        overviewView="dashboard"
         subtitle={VIEW_META[view].subtitle}
         theme={theme}
         themeOptions={themeOptions}
@@ -88,7 +87,7 @@ export default function App() {
           formulationMode={formulationMode}
           labRunId={labRunId}
           labTestingMode={labTestingMode}
-          librarySection={librarySection}
+          materialMode={materialMode}
           onSettingsSave={handleSettingsSave}
           preferences={preferences}
           productionRunId={productionRunId}
