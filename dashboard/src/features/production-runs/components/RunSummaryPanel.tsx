@@ -20,7 +20,7 @@ const statusLabels: Record<RunSummaryStatus, string> = {
   stale: 'Stale',
 };
 
-export function RunSummaryPanel({ runId }: { runId: string }) {
+export function RunSummaryPanel({ onContinueToScoring, runId }: { onContinueToScoring?: () => void; runId: string }) {
   const [detail, setDetail] = useState<RunSummaryDetail | null>(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -65,7 +65,7 @@ export function RunSummaryPanel({ runId }: { runId: string }) {
         <button disabled={!canGenerate} onClick={() => void generate(false)} style={{ ...controlStyles.primaryButton, ...(!canGenerate ? styles.disabled : {}) }} type="button">Generate Summary</button>
         <button disabled={!canGenerate || !generated} onClick={() => void generate(true)} style={{ ...controlStyles.secondaryButton, ...(!canGenerate || !generated ? styles.disabled : {}) }} type="button">Regenerate Summary</button>
         <button onClick={load} style={controlStyles.secondaryButton} type="button">View Missing Metrics</button>
-        <button disabled={!detail.canContinueToScoring} style={{ ...controlStyles.secondaryButton, ...(!detail.canContinueToScoring ? styles.disabled : {}) }} type="button">Continue to Benchmark Scoring</button>
+        <button disabled={!detail.canContinueToScoring || !onContinueToScoring} onClick={onContinueToScoring} style={{ ...controlStyles.secondaryButton, ...(!detail.canContinueToScoring || !onContinueToScoring ? styles.disabled : {}) }} type="button">Continue to Benchmark Scoring</button>
       </div>
       {detail.missingRequiredMetrics.length > 0 && (
         <div style={runStyles.tableWrap}>

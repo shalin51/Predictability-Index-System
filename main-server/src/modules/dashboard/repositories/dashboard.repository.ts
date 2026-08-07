@@ -30,7 +30,7 @@ export class DashboardRepository {
 
   async workflowStatus(): Promise<DashboardRecord[]> {
     const result = await getPool().query(
-      `SELECT *
+      `SELECT sort_order AS "sortOrder", stage, count
        FROM (
          SELECT 1 AS sort_order, 'Draft Formulation' AS stage, COUNT(*)::int AS count
          FROM formulations WHERE status = 'draft'
@@ -73,10 +73,13 @@ export class DashboardRepository {
        ),
        progress AS (
          SELECT s.production_run_id,
-                COUNT(s.id)::int AS sample_count,
-                COUNT(str.id)::int AS completed_results
+                COUNT(DISTINCT s.id)::int AS sample_count,
+                COUNT(str.id) FILTER (
+                  WHERE md.required_for_scoring = true AND md.status = 'active'
+                )::int AS completed_results
          FROM samples s
          LEFT JOIN sample_test_results str ON str.sample_id = s.id
+         LEFT JOIN metric_definitions md ON md.id = str.metric_id
          WHERE s.status <> 'archived'
          GROUP BY s.production_run_id
        ),

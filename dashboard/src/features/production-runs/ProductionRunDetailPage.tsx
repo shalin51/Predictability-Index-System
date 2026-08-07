@@ -21,6 +21,7 @@ import { ProductionRunTimeline } from './components/ProductionRunTimeline';
 import { RunSummaryPanel } from './components/RunSummaryPanel';
 import { SampleTable } from './components/SampleTable';
 import { ProcessSetupPanel } from './components/ProcessSetupPanel';
+import { ReadOnlyLabResultsPanel } from '../lab-testing/components/ReadOnlyLabResultsPanel';
 import { formatValue, runStyles, statusLabels } from './productionRunUi';
 
 type DetailTab = 'Overview' | 'Manufacturing Parameters' | 'Process Setup' | 'Samples' | 'Lab Results' | 'Run Summary' | 'Scores' | 'Audit History';
@@ -30,10 +31,9 @@ const nextActions: Partial<Record<ProductionRunStatus, { label: string; status: 
   molded: { label: 'Start Curing', status: 'curing' },
   planned: { label: 'Mark as Molded', status: 'molded' },
   ready_for_testing: { label: 'Start Testing', status: 'testing' },
-  testing: { label: 'Complete Run', status: 'completed' },
 };
 
-export function ProductionRunDetailPage({ id, onBack, onOpenReport }: { id: string; onBack: () => void; onOpenReport?: (runId: string) => void }) {
+export function ProductionRunDetailPage({ id, onBack, onOpenLabRun, onOpenReport }: { id: string; onBack: () => void; onOpenLabRun?: (runId: string) => void; onOpenReport?: (runId: string) => void }) {
   const [record, setRecord] = useState<ProductionRunRecord | null>(null);
   const [machines, setMachines] = useState<LibraryRecord[]>([]);
   const [molds, setMolds] = useState<LibraryRecord[]>([]);
@@ -93,6 +93,7 @@ export function ProductionRunDetailPage({ id, onBack, onOpenReport }: { id: stri
             <ProductionRunStatusBadge status={record.status} />
             <button disabled={locked} onClick={() => setEditing(true)} style={{ ...controlStyles.secondaryButton, ...(locked ? styles.disabled : {}) }} type="button">Edit</button>
             {nextAction && <button onClick={() => void updateProductionRunStatus(record.id, nextAction.status).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.primaryButton} type="button">{nextAction.label}</button>}
+            {record.status === 'testing' && onOpenLabRun && <button onClick={() => onOpenLabRun(record.id)} style={controlStyles.primaryButton} type="button">Continue Lab Testing</button>}
             {record.status === 'completed' && <button onClick={() => setTab('Run Summary')} style={controlStyles.secondaryButton} type="button">Run Summary</button>}
             {(record.status === 'completed' || record.status === 'scored') && <button onClick={() => setTab('Scores')} style={controlStyles.secondaryButton} type="button">Scores</button>}
             {(record.status === 'completed' || record.status === 'scored') && onOpenReport && <button onClick={() => onOpenReport(record.id)} style={controlStyles.secondaryButton} type="button">Report</button>}
@@ -134,8 +135,8 @@ export function ProductionRunDetailPage({ id, onBack, onOpenReport }: { id: stri
         )}
         {tab === 'Samples' && (record.samples?.length ? <SampleTable samples={record.samples} /> : <EmptyState>No samples.</EmptyState>)}
         {tab === 'Process Setup' && <ProcessSetupPanel runId={record.id} />}
-        {tab === 'Lab Results' && <EmptyState>No records yet.</EmptyState>}
-        {tab === 'Run Summary' && <RunSummaryPanel runId={record.id} />}
+        {tab === 'Lab Results' && <ReadOnlyLabResultsPanel onOpenLabRun={onOpenLabRun} runId={record.id} />}
+        {tab === 'Run Summary' && <RunSummaryPanel onContinueToScoring={() => setTab('Scores')} runId={record.id} />}
         {tab === 'Scores' && <BenchmarkScoringPanel runId={record.id} />}
         {tab === 'Audit History' && <pre style={styles.audit}>{JSON.stringify(record['auditHistory'] ?? [], null, 2)}</pre>}
       </Card>

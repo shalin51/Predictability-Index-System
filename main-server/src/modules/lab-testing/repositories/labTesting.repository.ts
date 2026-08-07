@@ -213,10 +213,13 @@ export class LabTestingRepository {
             ),
             progress AS (
               SELECT s.production_run_id,
-                     COUNT(s.id)::int AS sample_count,
-                     COUNT(str.id)::int AS completed_results
+                     COUNT(DISTINCT s.id)::int AS sample_count,
+                     COUNT(str.id) FILTER (
+                       WHERE md.required_for_scoring = true AND md.status = 'active'
+                     )::int AS completed_results
               FROM samples s
               LEFT JOIN sample_test_results str ON str.sample_id = s.id
+              LEFT JOIN metric_definitions md ON md.id = str.metric_id
               WHERE s.status <> 'archived'
               GROUP BY s.production_run_id
             ),

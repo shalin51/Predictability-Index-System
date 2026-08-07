@@ -58,26 +58,26 @@ export function LabTestingQueuePage({ onOpen }: { onOpen: (id: string) => void }
         </div>
         <Divider />
         <div style={labStyles.filters}>
-          <input onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} placeholder="Search" style={controlStyles.input} value={filters.search} />
-          <select onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))} style={controlStyles.input} value={filters.status}>
+          <input onChange={(event) => setFilters((current) => ({ ...current, search: event.target.value }))} placeholder="Search" style={{ ...controlStyles.input, ...labStyles.filterControl }} value={filters.search} />
+          <select onChange={(event) => setFilters((current) => ({ ...current, status: event.target.value }))} style={{ ...controlStyles.input, ...labStyles.filterControl }} value={filters.status}>
             <option value="all">All Statuses</option>
             <option value="ready_for_testing">Ready</option>
             <option value="testing">Testing</option>
           </select>
-          <select onChange={(event) => setFilters((current) => ({ ...current, targetBenchmarkId: event.target.value }))} style={controlStyles.input} value={filters.targetBenchmarkId}>
+          <select onChange={(event) => setFilters((current) => ({ ...current, targetBenchmarkId: event.target.value }))} style={{ ...controlStyles.input, ...labStyles.filterControl }} value={filters.targetBenchmarkId}>
             <option value="">Benchmark</option>
             {benchmarks.map((item) => <option key={item.id} value={item.id}>{String(item['benchmarkName'] ?? item['label'] ?? item.id)}</option>)}
           </select>
-          <input onChange={(event) => setFilters((current) => ({ ...current, dateProduced: event.target.value }))} style={controlStyles.input} type="date" value={filters.dateProduced} />
-          <select onChange={(event) => setFilters((current) => ({ ...current, machineId: event.target.value }))} style={controlStyles.input} value={filters.machineId}>
+          <input onChange={(event) => setFilters((current) => ({ ...current, dateProduced: event.target.value }))} style={{ ...controlStyles.input, ...labStyles.filterControl }} type="date" value={filters.dateProduced} />
+          <select onChange={(event) => setFilters((current) => ({ ...current, machineId: event.target.value }))} style={{ ...controlStyles.input, ...labStyles.filterControl }} value={filters.machineId}>
             <option value="">Machine</option>
             {machines.map((item) => <option key={item.id} value={item.id}>{String(item['machineCode'] ?? item['label'] ?? item.id)}</option>)}
           </select>
-          <select onChange={(event) => setFilters((current) => ({ ...current, moldId: event.target.value }))} style={controlStyles.input} value={filters.moldId}>
+          <select onChange={(event) => setFilters((current) => ({ ...current, moldId: event.target.value }))} style={{ ...controlStyles.input, ...labStyles.filterControl }} value={filters.moldId}>
             <option value="">Mold</option>
             {molds.map((item) => <option key={item.id} value={item.id}>{String(item['moldCode'] ?? item['label'] ?? item.id)}</option>)}
           </select>
-          <select onChange={(event) => setFilters((current) => ({ ...current, missingResults: event.target.value }))} style={controlStyles.input} value={filters.missingResults}>
+          <select onChange={(event) => setFilters((current) => ({ ...current, missingResults: event.target.value }))} style={{ ...controlStyles.input, ...labStyles.filterControl }} value={filters.missingResults}>
             <option value="">Missing Results</option>
             <option value="true">Missing</option>
             <option value="false">Complete</option>

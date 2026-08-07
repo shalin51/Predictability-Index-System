@@ -27,6 +27,7 @@ export function ShellNotificationsMenu({
       </div>
 
       <div style={shellStyles.notificationList}>
+        {notifications.length === 0 && <div style={shellStyles.popoverCaption}>No current operational alerts.</div>}
         {notifications.map((notification) => (
           <button
             key={notification.id}

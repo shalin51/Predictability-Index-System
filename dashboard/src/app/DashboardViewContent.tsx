@@ -133,7 +133,10 @@ export function DashboardViewContent({
         <FormulationDetailPage
           id={formulationId}
           onBack={() => navigate({ formulationMode: 'list', view: 'formulations' })}
+          onCreateProductionRun={() => navigate({ productionRunMode: 'new', view: 'production-runs' })}
           onOpen={(id) => navigate({ formulationId: id, formulationMode: 'detail', view: 'formulations' })}
+          onOpenLabRun={(id) => navigate({ labRunId: id, labTestingMode: 'detail', view: 'lab-testing' })}
+          onOpenProductionRun={(id) => navigate({ productionRunId: id, productionRunMode: 'detail', view: 'production-runs' })}
         />
       );
     }
@@ -162,6 +165,7 @@ export function DashboardViewContent({
         <ProductionRunDetailPage
           id={productionRunId}
           onBack={() => navigate({ productionRunMode: 'list', view: 'production-runs' })}
+          onOpenLabRun={(runId) => navigate({ labRunId: runId, labTestingMode: 'detail', view: 'lab-testing' })}
           onOpenReport={(runId) => navigate({ reportMode: 'run', reportRunId: runId, view: 'reports' })}
         />
       );

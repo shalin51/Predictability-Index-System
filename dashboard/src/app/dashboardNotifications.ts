@@ -1,56 +1,60 @@
 import type { ShellNotification } from '../components/shell/AppShell';
-import { themeOptions, type ThemeName } from '../theme/tokens';
-import type { SettingsLandingView } from './dashboardPreferences';
+import type { DashboardOverview } from '../services/api';
 
-export function createDefaultNotifications(): ShellNotification[] {
+export function createDashboardNotifications(data: DashboardOverview, now = new Date()): ShellNotification[] {
   return [
-    {
-      id: 'alert-workspace',
-      title: 'Workspace ready',
-      detail: 'The current workspace is ready for the next data model.',
-      timeLabel: '05m',
-      tone: 'success',
+    ...data.riskAlerts.map((alert) => ({
+      id: `risk-${alert.scoreReportId}-${alert.metricName}`,
+      title: `${alert.metricName} risk on ${alert.runCode}`,
+      detail: alert.risk,
+      timeLabel: formatRelativeTime(alert.generatedAt, now),
+      tone: 'warning' as const,
       read: false,
-    },
-    {
-      id: 'alert-shell',
-      title: 'Dashboard shell upgraded',
-      detail: 'The workspace has been trimmed for the next configuration.',
-      timeLabel: 'Now',
+    })),
+    ...data.labQueue.map((run) => ({
+      id: `lab-${run.id}`,
+      title: `${run.runCode} is ${run.status === 'testing' ? 'in testing' : 'ready for testing'}`,
+      detail: `${run.missingRequiredMetrics} required results remaining for ${run.formulation}.`,
+      timeLabel: 'Current',
+      tone: run.missingRequiredMetrics > 0 ? 'info' as const : 'success' as const,
+      read: false,
+    })),
+    ...workflowNotifications(data),
+  ];
+}
+
+function workflowNotifications(data: DashboardOverview): ShellNotification[] {
+  const notifications: ShellNotification[] = [];
+  if (data.summary.runsAwaitingSummary > 0) {
+    notifications.push({
+      id: 'runs-awaiting-summary',
+      title: 'Run summaries are ready',
+      detail: `${data.summary.runsAwaitingSummary} completed run${data.summary.runsAwaitingSummary === 1 ? '' : 's'} need metric summaries.`,
+      timeLabel: 'Current',
       tone: 'info',
       read: false,
-    },
-  ];
+    });
+  }
+  if (data.summary.runsAwaitingScoring > 0) {
+    notifications.push({
+      id: 'runs-awaiting-scoring',
+      title: 'Runs are ready for scoring',
+      detail: `${data.summary.runsAwaitingScoring} run${data.summary.runsAwaitingScoring === 1 ? '' : 's'} have summaries and need benchmark scoring.`,
+      timeLabel: 'Current',
+      tone: 'info',
+      read: false,
+    });
+  }
+  return notifications;
 }
 
-export function createThemeNotification(theme: ThemeName): ShellNotification {
-  return {
-    id: `theme-${theme}`,
-    title: `Theme switched to ${themeOptions.find((option) => option.id === theme)?.label ?? theme}`,
-    detail: 'Appearance was updated for the current workspace session.',
-    timeLabel: 'Now',
-    tone: 'info',
-    read: false,
-  };
-}
-
-export function createDefaultViewNotification(view: SettingsLandingView): ShellNotification {
-  return {
-    id: `default-view-${view}`,
-    title: 'Default landing view updated',
-    detail: `Future dashboard sessions will open on ${view}.`,
-    timeLabel: 'Now',
-    tone: 'info',
-    read: false,
-  };
-}
-
-export function prependUniqueNotification(
-  notifications: ShellNotification[],
-  notification: ShellNotification,
-): ShellNotification[] {
-  return [
-    notification,
-    ...notifications.filter((item) => item.id !== notification.id),
-  ];
+function formatRelativeTime(value: string, now: Date): string {
+  const timestamp = new Date(value).getTime();
+  if (!Number.isFinite(timestamp)) return 'Current';
+  const minutes = Math.max(0, Math.floor((now.getTime() - timestamp) / 60_000));
+  if (minutes < 1) return 'Now';
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h`;
+  return `${Math.floor(hours / 24)}d`;
 }

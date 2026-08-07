@@ -125,7 +125,13 @@ export function BenchmarkScoringPanel({ runId }: { runId: string }) {
               </div>
               <div style={runStyles.panel}>
                 <strong>Recommendations</strong>
-                <div style={runStyles.muted}>{selectedReport.recommendations?.[0] ?? 'Recommendations will be generated in the reporting workflow.'}</div>
+                {selectedReport.recommendations.length === 0 ? (
+                  <div style={runStyles.muted}>No recommendations generated.</div>
+                ) : (
+                  <ul>
+                    {selectedReport.recommendations.map((recommendation) => <li key={recommendation}>{recommendation}</li>)}
+                  </ul>
+                )}
               </div>
             </>
           )}

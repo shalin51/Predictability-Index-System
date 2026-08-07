@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { DashboardViewContent } from './app/DashboardViewContent';
 import { getActiveNavView, NAV, VIEW_META } from './app/dashboardConfig';
 import {
-  createDefaultNotifications,
+  createDashboardNotifications,
 } from './app/dashboardNotifications';
 import { AppShell, type ShellNotification } from './components/shell/AppShell';
 import { GlobalActivityOverlay } from './components/ui/GlobalActivityOverlay';
@@ -10,6 +10,7 @@ import { useDashboardPreferences } from './hooks/useDashboardPreferences';
 import { useDashboardRoute } from './hooks/useDashboardRoute';
 import { useDashboardTheme } from './hooks/useDashboardTheme';
 import { colors, themeOptions } from './theme/tokens';
+import { getDashboardOverview } from './services/api';
 
 export default function App() {
   const [preferences, setPreferences] = useDashboardPreferences();
@@ -32,7 +33,27 @@ export default function App() {
     setHasUnsavedChanges,
     view,
   } = useDashboardRoute(preferences.defaultView);
-  const [notifications, setNotifications] = useState<ShellNotification[]>(() => createDefaultNotifications());
+  const [notifications, setNotifications] = useState<ShellNotification[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    const loadNotifications = () => {
+      void getDashboardOverview().then((data) => {
+        if (!active) return;
+        setNotifications((current) => createDashboardNotifications(data).map((notification) => ({
+          ...notification,
+          read: current.find((item) => item.id === notification.id)?.read ?? false,
+        })));
+      }).catch(() => undefined);
+    };
+
+    loadNotifications();
+    const intervalId = window.setInterval(loadNotifications, 60_000);
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+    };
+  }, []);
 
   const handleThemeChange = (nextTheme: typeof theme) => {
     setTheme(nextTheme);

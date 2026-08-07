@@ -8,23 +8,43 @@ import {
   duplicateFormulation,
   getFormulation,
   listLibraryOptions,
+  listProductionRuns,
   updateFormulation,
   type FormulationComponentPayload,
   type FormulationRecord,
   type LibraryRecord,
+  type ProductionRunRecord,
 } from '../../services/api';
 import { colors, spacing } from '../../theme/tokens';
 import { FormulationComponentsEditor } from './FormulationComponentsEditor';
+import { ProductionRunTable } from '../production-runs/components/ProductionRunTable';
+import { BenchmarkScoringPanel } from '../production-runs/components/scores/BenchmarkScoringPanel';
+import { ReadOnlyLabResultsPanel } from '../lab-testing/components/ReadOnlyLabResultsPanel';
 import { formatValue, formulationStyles, labelize, totalTone } from './formulationUi';
 
 type DetailTab = 'Overview' | 'Recipe Components' | 'Production Runs' | 'Lab Results' | 'Scores' | 'Audit History';
 
-export function FormulationDetailPage({ id, onBack, onOpen }: { id: string; onBack: () => void; onOpen: (id: string) => void }) {
+export function FormulationDetailPage({
+  id,
+  onBack,
+  onCreateProductionRun,
+  onOpen,
+  onOpenLabRun,
+  onOpenProductionRun,
+}: {
+  id: string;
+  onBack: () => void;
+  onCreateProductionRun: () => void;
+  onOpen: (id: string) => void;
+  onOpenLabRun: (id: string) => void;
+  onOpenProductionRun: (id: string) => void;
+}) {
   const [record, setRecord] = useState<FormulationRecord | null>(null);
   const [components, setComponents] = useState<FormulationComponentPayload[]>([]);
   const [materials, setMaterials] = useState<LibraryRecord[]>([]);
   const [suppliers, setSuppliers] = useState<LibraryRecord[]>([]);
   const [lots, setLots] = useState<LibraryRecord[]>([]);
+  const [productionRuns, setProductionRuns] = useState<ProductionRunRecord[]>([]);
   const [tab, setTab] = useState<DetailTab>('Overview');
   const [editing, setEditing] = useState(false);
   const [message, setMessage] = useState('');
@@ -32,8 +52,9 @@ export function FormulationDetailPage({ id, onBack, onOpen }: { id: string; onBa
 
   const load = () => {
     setError('');
-    void getFormulation(id).then((next) => {
+    void Promise.all([getFormulation(id), listProductionRuns({ formulationId: id })]).then(([next, runs]) => {
       setRecord(next);
+      setProductionRuns(runs);
       setComponents((next.components ?? []).map((component) => ({
         basis: 'weight_percent',
         materialId: component.materialId,
@@ -101,7 +122,7 @@ export function FormulationDetailPage({ id, onBack, onOpen }: { id: string; onBa
             <button disabled={locked} onClick={() => setEditing(true)} style={{ ...controlStyles.secondaryButton, ...(locked ? styles.disabled : {}) }} type="button">Edit</button>
             <button onClick={() => void duplicateFormulation(record.id).then((next) => onOpen(next.id)).catch((err: Error) => setError(err.message))} style={controlStyles.secondaryButton} type="button">Duplicate New Version</button>
             <button disabled={!canApprove} onClick={() => void approveFormulation(record.id).then((next) => { setRecord(next); setMessage('Approved'); }).catch((err: Error) => setError(err.message))} style={{ ...controlStyles.primaryButton, ...(canApprove ? {} : styles.disabled) }} type="button">Approve</button>
-            <button disabled={record.status !== 'approved'} style={{ ...controlStyles.secondaryButton, ...(record.status === 'approved' ? {} : styles.disabled) }} type="button">Create Production Run</button>
+            <button disabled={record.status !== 'approved'} onClick={onCreateProductionRun} style={{ ...controlStyles.secondaryButton, ...(record.status === 'approved' ? {} : styles.disabled) }} type="button">Create Production Run</button>
           </div>
         </div>
         <Divider />
@@ -131,7 +152,15 @@ export function FormulationDetailPage({ id, onBack, onOpen }: { id: string; onBa
             )}
           </div>
         )}
-        {(tab === 'Production Runs' || tab === 'Lab Results' || tab === 'Scores') && <EmptyState>No records yet.</EmptyState>}
+        {tab === 'Production Runs' && (productionRuns.length > 0
+          ? <ProductionRunTable onOpen={onOpenProductionRun} records={productionRuns} />
+          : <EmptyState>No production runs.</EmptyState>)}
+        {tab === 'Lab Results' && (productionRuns.length > 0
+          ? <div style={formulationStyles.stack}>{productionRuns.map((run) => <ReadOnlyLabResultsPanel key={run.id} onOpenLabRun={onOpenLabRun} runId={run.id} title={run.runCode} />)}</div>
+          : <EmptyState>No production runs or lab results.</EmptyState>)}
+        {tab === 'Scores' && (productionRuns.length > 0
+          ? <div style={formulationStyles.stack}>{productionRuns.map((run) => <BenchmarkScoringPanel key={run.id} runId={run.id} />)}</div>
+          : <EmptyState>No production runs or scores.</EmptyState>)}
         {tab === 'Audit History' && (
           <pre style={styles.audit}>{JSON.stringify(record['auditHistory'] ?? [], null, 2)}</pre>
         )}

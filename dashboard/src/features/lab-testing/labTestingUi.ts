@@ -15,14 +15,25 @@ export const LAB_TABS: Array<{ id: LabMetricCategory | 'observations' | 'review'
 export const METRIC_ORDER: Record<LabMetricCategory, string[]> = {
   durability: ['air_cannon_cycles_to_failure', 'crack_initiation_cycles', 'deformation_measurement'],
   environmental: ['hot_temperature_performance', 'cold_temperature_performance', 'humidity_exposure_result'],
-  performance: ['bounce_height', 'hardness', 'compression', 'deflection', 'coefficient_of_restitution'],
+  performance: [
+    'bounce_height',
+    'hardness',
+    'compression',
+    'compression_force_025_in',
+    'stretch_force_025_in',
+    'full_stretch_max_force',
+    'drop_test_legacy',
+    'deflection',
+    'coefficient_of_restitution',
+  ],
   physical: ['weight', 'diameter', 'wall_thickness', 'roundness', 'balance_deviation'],
   subjective: ['feel_rating', 'sound_rating', 'perceived_speed', 'perceived_durability'],
 };
 
 export const labStyles: Record<string, CSSProperties> = {
   actions: { alignItems: 'center', display: 'flex', flexWrap: 'wrap', gap: spacing.space3 },
-  filters: { display: 'grid', gap: spacing.space3, gridTemplateColumns: '2fr repeat(6, minmax(120px, 1fr))', marginBottom: spacing.space4 },
+  filterControl: { boxSizing: 'border-box', minWidth: 0, width: '100%' },
+  filters: { display: 'grid', gap: spacing.space3, gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', marginBottom: spacing.space4, minWidth: 0, width: '100%' },
   header: { alignItems: 'flex-start', display: 'flex', gap: spacing.space4, justifyContent: 'space-between' },
   input: { minWidth: 96, width: '100%' },
   muted: { color: colors.text.muted, fontSize: font.size.small },

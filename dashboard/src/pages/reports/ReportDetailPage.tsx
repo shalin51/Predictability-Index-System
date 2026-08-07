@@ -128,8 +128,13 @@ function ReportSections({ record }: { record: GeneratedReportRecord }) {
       <Section title="Formulation Recipe">
         <ReportRecipePanel rows={snapshot.formulationRecipe} />
       </Section>
-      <Section title="Recommendations Placeholder">
-        <div style={reportStyles.panel}>{snapshot.recommendations[0] ?? snapshot.recommendationsPlaceholder}</div>
+      <Section title="Recommendations">
+        <div style={reportStyles.panel}>
+          <ul>
+            {(snapshot.recommendations.length > 0 ? snapshot.recommendations : [snapshot.recommendationsPlaceholder])
+              .map((recommendation) => <li key={recommendation}>{recommendation}</li>)}
+          </ul>
+        </div>
       </Section>
     </div>
   );
