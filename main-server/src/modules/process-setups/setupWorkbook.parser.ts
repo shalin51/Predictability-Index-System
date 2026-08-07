@@ -37,6 +37,47 @@ const COMPATIBLE_UNITS: Record<string, Set<string>> = {
 
 type Sheet = XLSX.WorkSheet;
 
+const INJECTION_SINGLE_KEYS: Record<string, string> = {
+  v_p_transfer_position: 'injection.vp_transfer_position',
+  shot_size_stroke: 'injection.shot_size',
+  cushion: 'injection.cushion',
+  fill_time: 'injection.fill_time',
+};
+
+const SCREW_PARAMETER_KEYS: Record<string, string> = {
+  screw_speed: 'screw.speed',
+  back_pressure: 'screw.back_pressure',
+  decompression_suck_back: 'screw.decompression',
+  recovery_time: 'screw.recovery_time',
+  screw_diameter: 'screw.diameter',
+  l_d_ratio: 'screw.ld_ratio',
+};
+
+const CYCLE_PARAMETER_KEYS: Record<string, string> = {
+  cooling_time: 'cycle.cooling_time',
+  total_cycle_time: 'cycle.total_time',
+  mold_open_time: 'cycle.mold_open_time',
+  mold_close_time: 'cycle.mold_close_time',
+  ejector_forward_time: 'cycle.ejector_forward_time',
+  ejector_return_time: 'cycle.ejector_return_time',
+  ejector_strokes: 'cycle.ejector_strokes',
+};
+
+const CLAMP_PARAMETER_KEYS: Record<string, string> = {
+  clamp_force: 'clamp.force',
+  mold_close_speed: 'clamp.mold_close_speed',
+  mold_close_speed_fast: 'clamp.mold_close_speed_fast',
+  mold_close_speed_slow: 'clamp.mold_close_speed_slow',
+  mold_close_pressure: 'clamp.mold_close_pressure',
+  mold_open_speed: 'clamp.mold_open_speed',
+  mold_open_speed_fast: 'clamp.mold_open_speed_fast',
+  mold_open_speed_slow: 'clamp.mold_open_speed_slow',
+  low_pressure_protection: 'clamp.low_pressure_protection',
+  ejector_forward_position: 'clamp.ejector_forward_position',
+  ejector_forward_speed: 'clamp.ejector_forward_speed',
+  ejector_retract_speed: 'clamp.ejector_retract_speed',
+};
+
 export class SetupWorkbookParser {
   parse(bytes: Buffer): { snapshot: ParsedSetupWorkbook; validation: ImportValidationResults } {
     if (bytes.subarray(0, 2).toString('hex') !== '504b') throw new ValidationError('The uploaded file is not a readable XLSX workbook');
@@ -137,33 +178,84 @@ export class SetupWorkbookParser {
       this.pushActual(values, sheet, 'mold.inlet_temperature', 'mold_temperature', 'circuit', row, 'A', 'B', 'F', '°F', row + 200);
       this.pushActual(values, sheet, 'mold.outlet_temperature', 'mold_temperature', 'circuit', row, 'A', 'B', 'G', '°F', row + 300);
     }
-    for (let row = 25; row <= 30; row += 1) {
-      const key = row <= 27 ? 'injection.speed' : 'injection.pressure';
-      this.pushPair(values, sheet, key, 'injection', 'stage', row, '', 'B', 'C', 'D', 'F', this.optionalText(sheet, `E${row}`), row);
-      const current = values[values.length - 1];
-      if (current?.sortOrder === row) current.positionIndex = this.positionNumber(current.positionLabel) ?? ((row - 25) % 3) + 1;
-    }
-    const injectionSingles: Array<[number, string]> = [[31, 'injection.vp_transfer_position'], [32, 'injection.shot_size'], [33, 'injection.cushion'], [34, 'injection.fill_time']];
-    for (const [row, key] of injectionSingles) this.pushPair(values, sheet, key, 'injection', 'single', row, '', 'A', 'C', 'D', 'F', this.optionalText(sheet, `E${row}`), row);
-    for (let row = 38; row <= 40; row += 1) {
-      const index = row - 37;
-      const label = this.optionalText(sheet, `A${row}`);
-      const positionIndex = this.positionNumber(label) ?? index;
-      this.push(values, { key: 'hold.pressure', section: 'hold_pack', positionType: 'stage', positionIndex, positionLabel: label, setpoint: this.number(sheet, `B${row}`), actual: this.number(sheet, `D${row}`), unit: 'bar', notes: this.optionalText(sheet, `E${row}`), sortOrder: row });
-      this.push(values, { key: 'hold.time', section: 'hold_pack', positionType: 'stage', positionIndex, positionLabel: label, setpoint: this.number(sheet, `C${row}`), unit: 'sec', sortOrder: row + 100 });
-    }
-    const blocks: Array<{ rows: [number, number]; section: string; keys: string[] }> = [
-      { rows: [44, 49], section: 'screw_recovery', keys: ['screw.speed', 'screw.back_pressure', 'screw.decompression', 'screw.recovery_time', 'screw.diameter', 'screw.ld_ratio'] },
-      { rows: [53, 59], section: 'cooling_cycle', keys: ['cycle.cooling_time', 'cycle.total_time', 'cycle.mold_open_time', 'cycle.mold_close_time', 'cycle.ejector_forward_time', 'cycle.ejector_return_time', 'cycle.ejector_strokes'] },
-      { rows: [63, 72], section: 'clamp_ejector', keys: ['clamp.force', 'clamp.mold_close_speed_fast', 'clamp.mold_close_speed_slow', 'clamp.mold_close_pressure', 'clamp.mold_open_speed_fast', 'clamp.mold_open_speed_slow', 'clamp.low_pressure_protection', 'clamp.ejector_forward_position', 'clamp.ejector_forward_speed', 'clamp.ejector_retract_speed'] },
-    ];
-    for (const block of blocks) {
-      for (let row = block.rows[0]; row <= block.rows[1]; row += 1) {
-        const key = block.keys[row - block.rows[0]];
-        if (key) this.pushPair(values, sheet, key, block.section, 'single', row, '', 'A', 'B', 'C', 'E', this.unit(sheet, `D${row}`), row);
-      }
-    }
+    this.parseInjectionParameters(values, sheet);
+    this.parseHoldParameters(values, sheet);
+    this.parseSingleParameterSection(values, sheet, 'SCREW & RECOVERY SETTINGS', 'COOLING & CYCLE TIME', 'screw_recovery', SCREW_PARAMETER_KEYS, [44, 49]);
+    this.parseSingleParameterSection(values, sheet, 'COOLING & CYCLE TIME', 'CLAMP SETTINGS', 'cooling_cycle', CYCLE_PARAMETER_KEYS, [53, 59]);
+    this.parseSingleParameterSection(values, sheet, 'CLAMP SETTINGS', 'OPERATOR NOTES & OBSERVATIONS', 'clamp_ejector', CLAMP_PARAMETER_KEYS, [63, 72]);
     return values;
+  }
+
+  private parseInjectionParameters(values: ParsedProcessParameter[], sheet: Sheet): void {
+    const [start, end] = this.sectionRows(sheet, 'INJECTION PARAMETERS', 'HOLD / PACK PARAMETERS', [25, 34]);
+    const fallbackStageIndex = new Map<string, number>();
+    for (let row = start; row <= end; row += 1) {
+      const displayName = this.optionalText(sheet, `A${row}`);
+      if (!displayName) continue;
+      const labelKey = this.slug(displayName);
+      const stageKey = labelKey === 'injection_speed' ? 'injection.speed'
+        : labelKey === 'injection_pressure' ? 'injection.pressure' : null;
+      if (stageKey) {
+        const positionLabel = this.optionalText(sheet, `B${row}`);
+        const fallback = fallbackStageIndex.get(stageKey) ?? 0;
+        const positionIndex = this.positionNumber(positionLabel) ?? fallback;
+        fallbackStageIndex.set(stageKey, fallback + 1);
+        this.push(values, {
+          key: stageKey,
+          section: 'injection',
+          positionType: 'stage',
+          positionIndex,
+          positionLabel,
+          setpoint: this.number(sheet, `C${row}`),
+          actual: this.number(sheet, `D${row}`),
+          unit: this.unit(sheet, `E${row}`),
+          notes: this.optionalText(sheet, `F${row}`),
+          sortOrder: row,
+        });
+        continue;
+      }
+      const key = INJECTION_SINGLE_KEYS[labelKey];
+      if (key) this.pushPair(values, sheet, key, 'injection', 'single', row, '', 'A', 'C', 'D', 'F', this.unit(sheet, `E${row}`), row);
+    }
+  }
+
+  private parseHoldParameters(values: ParsedProcessParameter[], sheet: Sheet): void {
+    const headingRow = this.findRow(sheet, 'HOLD / PACK PARAMETERS');
+    const [start, end] = this.sectionRows(sheet, 'HOLD / PACK PARAMETERS', 'SCREW & RECOVERY SETTINGS', [38, 40]);
+    const headerRow = headingRow ? headingRow + 1 : start - 1;
+    const pressureUnit = this.unitFromHeader(this.optionalText(sheet, `B${headerRow}`)) ?? 'bar';
+    const actualPressureUnit = this.unitFromHeader(this.optionalText(sheet, `D${headerRow}`)) ?? pressureUnit;
+    const timeUnit = this.unitFromHeader(this.optionalText(sheet, `C${headerRow}`)) ?? 'sec';
+    let fallbackIndex = 1;
+    for (let row = start; row <= end; row += 1) {
+      const label = this.optionalText(sheet, `A${row}`);
+      if (!label || !this.slug(label).startsWith('hold_stage')) continue;
+      const positionIndex = this.positionNumber(label) ?? fallbackIndex;
+      fallbackIndex += 1;
+      this.push(values, {
+        key: 'hold.pressure',
+        section: 'hold_pack',
+        positionType: 'stage',
+        positionIndex,
+        positionLabel: label,
+        setpoint: this.number(sheet, `B${row}`),
+        actual: this.convertPressure(this.number(sheet, `D${row}`), actualPressureUnit, pressureUnit),
+        unit: pressureUnit,
+        notes: this.optionalText(sheet, `E${row}`),
+        sortOrder: row,
+      });
+      this.push(values, { key: 'hold.time', section: 'hold_pack', positionType: 'stage', positionIndex, positionLabel: label, setpoint: this.number(sheet, `C${row}`), unit: timeUnit, sortOrder: row + 100 });
+    }
+  }
+
+  private parseSingleParameterSection(values: ParsedProcessParameter[], sheet: Sheet, heading: string, nextHeading: string, section: string, keys: Record<string, string>, fallback: [number, number]): void {
+    const [start, end] = this.sectionRows(sheet, heading, nextHeading, fallback);
+    for (let row = start; row <= end; row += 1) {
+      const displayName = this.optionalText(sheet, `A${row}`);
+      if (!displayName) continue;
+      const key = keys[this.slug(displayName)];
+      if (key) this.pushPair(values, sheet, key, section, 'single', row, '', 'A', 'B', 'C', 'E', this.unit(sheet, `D${row}`), row);
+    }
   }
 
   private parseHotRunnerParameters(sheet: Sheet): ParsedProcessParameter[] {
@@ -187,10 +279,10 @@ export class SetupWorkbookParser {
 
   private parseNotes(setup: Sheet, hotRunner: Sheet): Array<{ type: string; text: string }> {
     return [
-      ['startup', this.optionalText(setup, 'B75')],
-      ['quality_issue', this.optionalText(setup, 'B76')],
-      ['process_change', this.optionalText(setup, 'B77')],
-      ['signoff', this.optionalText(setup, 'B78')],
+      ['startup', this.textAfterLabel(setup, 'Startup Notes:', 'B75')],
+      ['quality_issue', this.textAfterLabel(setup, 'Quality Issues:', 'B76')],
+      ['process_change', this.textAfterLabel(setup, 'Process Changes:', 'B77')],
+      ['signoff', this.textAfterLabel(setup, 'Sign-off / Approval Notes:', 'B78')],
       ['hot_runner_startup', this.optionalText(hotRunner, 'B35')],
       ['hot_runner_purge', this.optionalText(hotRunner, 'B36')],
       ['hot_runner_issue', this.optionalText(hotRunner, 'B37')],
@@ -230,18 +322,21 @@ export class SetupWorkbookParser {
   private validate(snapshot: ParsedSetupWorkbook, parsingErrors: string[] = []): ImportValidationResults {
     const errors: string[] = [...parsingErrors];
     const warnings: string[] = [];
-    if (!snapshot.header.productionDate) errors.push('Production date is required');
-    if (!snapshot.header.operatorName) errors.push('Operator is required');
-    if (!snapshot.header.machineCode) errors.push('Machine number is required');
-    if (!snapshot.header.moldCode) errors.push('Mold number is required');
-    if (!snapshot.header.revisionNo) errors.push('Revision number is required');
-    if (!snapshot.header.approvedBy) errors.push('Approved By is required');
+    if (!snapshot.header.productionDate) warnings.push('Production date is blank; the import date will be used');
+    if (!snapshot.header.operatorName) warnings.push('Operator is blank; no operator will be recorded');
+    if (!snapshot.header.machineCode) warnings.push('Machine number is blank; select a machine during import');
+    if (!snapshot.header.moldCode) warnings.push('Mold number is blank; select a mold during import');
+    if (!snapshot.header.revisionNo) warnings.push('Revision number is blank; a generated import revision will be used');
+    if (!snapshot.header.approvedBy) warnings.push('Approved By is blank; the imported setup will remain a draft');
     if (snapshot.hotRunner.moldCode && snapshot.header.moldCode && snapshot.hotRunner.moldCode.toLowerCase() !== snapshot.header.moldCode.toLowerCase()) errors.push('Hot Runner mold number must match the Setup Sheet mold number');
     if (snapshot.hotRunner.operatorName && snapshot.header.operatorName && snapshot.hotRunner.operatorName.toLowerCase() !== snapshot.header.operatorName.toLowerCase()) errors.push('Hot Runner operator must match the Setup Sheet operator');
     if (snapshot.hotRunner.productionDate && snapshot.header.productionDate && snapshot.hotRunner.productionDate !== snapshot.header.productionDate) errors.push('Hot Runner date must match the Setup Sheet production date');
-    const matchingRevision = snapshot.revisions.find((entry) => entry.revisionNo.toLowerCase() === snapshot.header.revisionNo?.toLowerCase());
-    if (!matchingRevision) errors.push('Revision Log must contain the current revision number');
-    else if (!matchingRevision.approvedBy || matchingRevision.approvedBy.toLowerCase() !== snapshot.header.approvedBy?.toLowerCase()) errors.push('Revision Log approver must match Approved By');
+    const matchingRevision = snapshot.header.revisionNo
+      ? snapshot.revisions.find((entry) => entry.revisionNo.toLowerCase() === snapshot.header.revisionNo?.toLowerCase())
+      : undefined;
+    if (snapshot.header.revisionNo && !matchingRevision) warnings.push('Revision Log does not contain the current revision number; no matching revision history will be imported');
+    else if (matchingRevision && snapshot.header.approvedBy && !matchingRevision.approvedBy) warnings.push('Revision Log approver is blank; the imported setup will remain a draft');
+    else if (matchingRevision?.approvedBy && snapshot.header.approvedBy && matchingRevision.approvedBy.toLowerCase() !== snapshot.header.approvedBy.toLowerCase()) errors.push('Revision Log approver must match Approved By');
     const statuses = snapshot.parameters.filter((item) => item.key === 'hot_runner.status' && item.actual != null);
     for (const status of statuses) if (!['OK', 'FAULT'].includes(String(status.actual))) errors.push(`Invalid hot-runner status at zone ${status.positionIndex}: ${status.actual}`);
     const uniqueZones = new Set(snapshot.hotRunner.zoneNumbers);
@@ -331,6 +426,42 @@ export class SetupWorkbookParser {
     return match?.[1] ? Number(match[1]) : null;
   }
   private slug(value: string): string { return value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''); }
+  private findRow(sheet: Sheet, label: string): number | null {
+    const range = sheet['!ref'] ? XLSX.utils.decode_range(sheet['!ref']) : null;
+    if (!range) return null;
+    const target = this.slug(label);
+    for (let row = range.s.r; row <= range.e.r; row += 1) {
+      if (this.slug(this.text(sheet, `A${row + 1}`)) === target) return row + 1;
+    }
+    return null;
+  }
+  private sectionRows(sheet: Sheet, heading: string, nextHeading: string, fallback: [number, number]): [number, number] {
+    const headingRow = this.findRow(sheet, heading);
+    const nextHeadingRow = this.findRow(sheet, nextHeading);
+    return headingRow && nextHeadingRow && nextHeadingRow > headingRow
+      ? [headingRow + 2, nextHeadingRow - 1]
+      : fallback;
+  }
+  private textAfterLabel(sheet: Sheet, label: string, fallbackAddress: string): string | null {
+    const row = this.findRow(sheet, label);
+    return this.optionalText(sheet, row ? `B${row}` : fallbackAddress);
+  }
+  private unitFromHeader(value: string | null): string | null {
+    const match = value?.match(/\(([^)]+)\)/);
+    return match?.[1] ? this.unitValue(match[1]) : null;
+  }
+  private unitValue(value: string): string | null {
+    const trimmed = value.trim();
+    return trimmed && !['-', '—'].includes(trimmed) ? trimmed : null;
+  }
+  private convertPressure(value: number | null, fromUnit: string, toUnit: string): number | null {
+    if (value == null || this.normalizeUnit(fromUnit) === this.normalizeUnit(toUnit)) return value;
+    const from = this.normalizeUnit(fromUnit);
+    const to = this.normalizeUnit(toUnit);
+    if (from === 'bar' && to === 'psi') return value * 14.5037738;
+    if (from === 'psi' && to === 'bar') return value / 14.5037738;
+    return value;
+  }
   private positionNumber(value: string | null | undefined): number | null {
     const match = value?.match(/(\d+)/);
     return match?.[1] ? Number(match[1]) : null;
@@ -338,7 +469,7 @@ export class SetupWorkbookParser {
   private normalizeUnit(value: string): string { return value.trim().toLowerCase().replace(/^deg\s*/i, '°'); }
   private unit(sheet: Sheet, address: string): string | null {
     const value = this.optionalText(sheet, address);
-    return value && !['-', '—'].includes(value) ? value : null;
+    return value ? this.unitValue(value) : null;
   }
   private isCompatibleUnit(key: string, unit: string): boolean {
     const normalized = this.normalizeUnit(unit);
@@ -369,13 +500,18 @@ export class SetupWorkbookParser {
     const add = (sheet: string, columns: string[], start: number, end: number) => {
       for (let row = start; row <= end; row += 1) for (const column of columns) addresses.push([sheet, `${column}${row}`]);
     };
+    const setup = workbook.Sheets['Setup Sheet'];
+    const addSetupSection = (heading: string, nextHeading: string, columns: string[], fallback: [number, number]) => {
+      const [start, end] = setup ? this.sectionRows(setup, heading, nextHeading, fallback) : fallback;
+      add('Setup Sheet', columns, start, end);
+    };
     add('Setup Sheet', ['C', 'D'], 10, 14);
     add('Setup Sheet', ['C', 'D', 'E', 'F', 'G'], 18, 21);
-    add('Setup Sheet', ['C', 'D'], 25, 34);
-    add('Setup Sheet', ['B', 'C', 'D'], 38, 40);
-    add('Setup Sheet', ['B', 'C'], 44, 49);
-    add('Setup Sheet', ['B', 'C'], 53, 59);
-    add('Setup Sheet', ['B', 'C'], 63, 72);
+    addSetupSection('INJECTION PARAMETERS', 'HOLD / PACK PARAMETERS', ['C', 'D'], [25, 34]);
+    addSetupSection('HOLD / PACK PARAMETERS', 'SCREW & RECOVERY SETTINGS', ['B', 'C', 'D'], [38, 40]);
+    addSetupSection('SCREW & RECOVERY SETTINGS', 'COOLING & CYCLE TIME', ['B', 'C'], [44, 49]);
+    addSetupSection('COOLING & CYCLE TIME', 'CLAMP SETTINGS', ['B', 'C'], [53, 59]);
+    addSetupSection('CLAMP SETTINGS', 'OPERATOR NOTES & OBSERVATIONS', ['B', 'C'], [63, 72]);
     add('Hot Runner Zones', ['C', 'D', 'E', 'F', 'H', 'I'], 7, 24);
     addresses.push(['Hot Runner Zones', 'B34'], ['Hot Runner Zones', 'E34']);
     add('Material Reference', ['B', 'C', 'D'], 12, 19);

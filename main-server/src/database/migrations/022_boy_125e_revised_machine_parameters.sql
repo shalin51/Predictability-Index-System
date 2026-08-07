@@ -1,9 +1,22 @@
-UPDATE machines
-SET manufacturer = 'BOY Machines',
-    machine_type = 'Injection molding',
-    model_number = '125 E',
-    specifications = specifications || '{"template":"BOY 125E Production Run v1"}'::jsonb
-WHERE machine_code = 'BOY-125E';
+-- Align the BOY 125E definitions and active capabilities with the revised setup workbook.
+
+INSERT INTO process_parameter_definitions
+  (parameter_key, section_key, display_name, data_type, default_unit, sort_order)
+VALUES
+  ('injection.pressure', 'injection', 'Injection Pressure', 'number', 'psi', 31),
+  ('hold.pressure', 'hold_pack', 'Hold Pressure', 'number', 'psi', 40),
+  ('screw.back_pressure', 'screw_recovery', 'Back Pressure', 'number', 'psi', 51),
+  ('clamp.mold_close_speed', 'clamp_ejector', 'Mold Close Speed', 'number', 'mm/s', 71),
+  ('clamp.mold_close_pressure', 'clamp_ejector', 'Mold Close Pressure', 'number', 'psi', 73),
+  ('clamp.mold_open_speed', 'clamp_ejector', 'Mold Open Speed', 'number', 'mm/s', 74)
+ON CONFLICT (parameter_key) DO UPDATE SET
+  section_key = EXCLUDED.section_key,
+  display_name = EXCLUDED.display_name,
+  data_type = EXCLUDED.data_type,
+  default_unit = EXCLUDED.default_unit,
+  sort_order = EXCLUDED.sort_order,
+  status = 'active',
+  updated_at = now();
 
 UPDATE machine_parameter_capabilities AS capability
 SET status = 'inactive', updated_at = now()
@@ -26,46 +39,13 @@ WHERE capability.machine_id = machine.id
   );
 
 WITH capability(parameter_key, display_name, section_key, position_type, position_index, position_label, unit, sort_order) AS (
-  VALUES
-    ('barrel.temperature', 'Barrel Temperature', 'barrel_temperature', 'zone', 1, 'Feed Zone', '°F', 10),
-    ('barrel.temperature', 'Barrel Temperature', 'barrel_temperature', 'zone', 2, 'Compression Zone', '°F', 11),
-    ('barrel.temperature', 'Barrel Temperature', 'barrel_temperature', 'zone', 3, 'Metering Zone', '°F', 12),
-    ('barrel.temperature', 'Barrel Temperature', 'barrel_temperature', 'zone', 4, 'Front Zone', '°F', 13),
-    ('barrel.temperature', 'Barrel Temperature', 'barrel_temperature', 'zone', 5, 'Nozzle', '°F', 14),
-    ('mold.temperature', 'Mold Temperature', 'mold_temperature', 'circuit', 1, 'Cavity Side', '°F', 20),
-    ('mold.temperature', 'Mold Temperature', 'mold_temperature', 'circuit', 2, 'Core Side', '°F', 21),
-    ('mold.temperature', 'Mold Temperature', 'mold_temperature', 'circuit', 3, 'Slide 1', '°F', 22),
-    ('mold.temperature', 'Mold Temperature', 'mold_temperature', 'circuit', 4, 'Slide 2', '°F', 23),
-    ('mold.flow', 'Mold Circuit Flow', 'mold_temperature', 'circuit', 1, 'Cavity Side', 'GPM', 24),
-    ('mold.flow', 'Mold Circuit Flow', 'mold_temperature', 'circuit', 2, 'Core Side', 'GPM', 25),
-    ('mold.flow', 'Mold Circuit Flow', 'mold_temperature', 'circuit', 3, 'Slide 1', 'GPM', 26),
-    ('mold.flow', 'Mold Circuit Flow', 'mold_temperature', 'circuit', 4, 'Slide 2', 'GPM', 27),
-    ('mold.inlet_temperature', 'Mold Inlet Temperature', 'mold_temperature', 'circuit', 1, 'Cavity Side', '°F', 28),
-    ('mold.inlet_temperature', 'Mold Inlet Temperature', 'mold_temperature', 'circuit', 2, 'Core Side', '°F', 29),
-    ('mold.inlet_temperature', 'Mold Inlet Temperature', 'mold_temperature', 'circuit', 3, 'Slide 1', '°F', 30),
-    ('mold.inlet_temperature', 'Mold Inlet Temperature', 'mold_temperature', 'circuit', 4, 'Slide 2', '°F', 31),
-    ('mold.outlet_temperature', 'Mold Outlet Temperature', 'mold_temperature', 'circuit', 1, 'Cavity Side', '°F', 32),
-    ('mold.outlet_temperature', 'Mold Outlet Temperature', 'mold_temperature', 'circuit', 2, 'Core Side', '°F', 33),
-    ('mold.outlet_temperature', 'Mold Outlet Temperature', 'mold_temperature', 'circuit', 3, 'Slide 1', '°F', 34),
-    ('mold.outlet_temperature', 'Mold Outlet Temperature', 'mold_temperature', 'circuit', 4, 'Slide 2', '°F', 35),
-    ('injection.speed', 'Injection Speed', 'injection', 'stage', 0, 'Stage 0', 'mm/s', 40),
-    ('injection.speed', 'Injection Speed', 'injection', 'stage', 1, 'Stage 1', 'mm/s', 41),
-    ('injection.speed', 'Injection Speed', 'injection', 'stage', 2, 'Stage 2', 'mm/s', 42),
-    ('injection.speed', 'Injection Speed', 'injection', 'stage', 3, 'Stage 3', 'mm/s', 43),
-    ('injection.speed', 'Injection Speed', 'injection', 'stage', 4, 'Stage 4', 'mm/s', 44),
-    ('injection.speed', 'Injection Speed', 'injection', 'stage', 5, 'Stage 5', 'mm/s', 45),
-    ('injection.speed', 'Injection Speed', 'injection', 'stage', 6, 'Stage 6', 'mm/s', 46),
-    ('injection.speed', 'Injection Speed', 'injection', 'stage', 7, 'Stage 7', 'mm/s', 47),
-    ('injection.speed', 'Injection Speed', 'injection', 'stage', 8, 'Stage 8', 'mm/s', 48),
-    ('injection.pressure', 'Injection Pressure', 'injection', 'stage', 0, 'Stage 0', 'psi', 50),
-    ('injection.pressure', 'Injection Pressure', 'injection', 'stage', 1, 'Stage 1', 'psi', 51),
-    ('injection.pressure', 'Injection Pressure', 'injection', 'stage', 2, 'Stage 2', 'psi', 52),
-    ('injection.pressure', 'Injection Pressure', 'injection', 'stage', 3, 'Stage 3', 'psi', 53),
-    ('injection.pressure', 'Injection Pressure', 'injection', 'stage', 4, 'Stage 4', 'psi', 54),
-    ('injection.pressure', 'Injection Pressure', 'injection', 'stage', 5, 'Stage 5', 'psi', 55),
-    ('injection.pressure', 'Injection Pressure', 'injection', 'stage', 6, 'Stage 6', 'psi', 56),
-    ('injection.pressure', 'Injection Pressure', 'injection', 'stage', 7, 'Stage 7', 'psi', 57),
-    ('injection.pressure', 'Injection Pressure', 'injection', 'stage', 8, 'Stage 8', 'psi', 58),
+  SELECT 'injection.speed', 'Injection Speed', 'injection', 'stage', stage, 'Stage ' || stage, 'mm/s', 40 + stage
+  FROM generate_series(0, 8) AS stage
+  UNION ALL
+  SELECT 'injection.pressure', 'Injection Pressure', 'injection', 'stage', stage, 'Stage ' || stage, 'psi', 50 + stage
+  FROM generate_series(0, 8) AS stage
+  UNION ALL
+  SELECT * FROM (VALUES
     ('injection.vp_transfer_position', 'V/P Transfer Position', 'injection', 'single', 0, 'Single', 'mm', 60),
     ('injection.shot_size', 'Shot Size (Stroke)', 'injection', 'single', 0, 'Single', 'mm', 61),
     ('injection.cushion', 'Cushion', 'injection', 'single', 0, 'Single', 'mm', 62),
@@ -95,6 +75,7 @@ WITH capability(parameter_key, display_name, section_key, position_type, positio
     ('clamp.ejector_forward_position', 'Ejector Forward Position', 'clamp_ejector', 'single', 0, 'Single', 'mm', 105),
     ('clamp.ejector_forward_speed', 'Ejector Forward Speed', 'clamp_ejector', 'single', 0, 'Single', 'mm/s', 106),
     ('clamp.ejector_retract_speed', 'Ejector Retract Speed', 'clamp_ejector', 'single', 0, 'Single', 'mm/s', 107)
+  ) AS revised(parameter_key, display_name, section_key, position_type, position_index, position_label, unit, sort_order)
 )
 INSERT INTO machine_parameter_capabilities
   (machine_id, parameter_key, display_name, section_key, position_type, position_index, position_label, unit, sort_order)

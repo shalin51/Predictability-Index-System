@@ -23,8 +23,9 @@ export class ProcessSetupService {
     if (bytes.subarray(0, 2).toString('hex') !== '504b') throw new ValidationError('Uploaded content is not an XLSX package');
     const sha256 = createHash('sha256').update(bytes).digest('hex');
     const existing = await this.repo.findImportByHash(sha256);
-    if (existing) return this.withMatches(existing);
+    if (existing?.productionRunId) return this.withMatches(existing);
     const { snapshot, validation } = this.parser.parse(bytes);
+    if (existing) return this.withMatches(await this.repo.refreshImport(existing.id, snapshot, validation));
     const id = randomUUID();
     const safeName = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
     const objectKey = `uncommitted/${new Date().toISOString().slice(0, 7)}/${id}/${safeName}`;

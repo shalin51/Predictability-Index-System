@@ -43,6 +43,22 @@ export class ProcessSetupRepository {
     return (await this.findImport(input.id)) as ImportRow;
   }
 
+  async refreshImport(id: string, snapshot: ParsedSetupWorkbook, validation: { errors: string[]; warnings: string[] }): Promise<ImportRow> {
+    const status = validation.errors.length > 0 ? 'validation_failed' : 'ready';
+    await getPool().query(
+      `UPDATE setup_sheet_imports
+       SET status = $2::setup_sheet_import_status,
+           parsed_snapshot = $3::jsonb,
+           validation_results = $4::jsonb,
+           failure_message = NULL,
+           parsed_at = now(),
+           updated_at = now()
+       WHERE id = $1 AND production_run_id IS NULL`,
+      [id, status, JSON.stringify(snapshot), JSON.stringify(validation)]
+    );
+    return (await this.findImport(id)) as ImportRow;
+  }
+
   async markImportFailed(id: string, message: string): Promise<void> {
     await getPool().query(
       `UPDATE setup_sheet_imports SET status = 'failed', failure_message = $2, updated_at = now() WHERE id = $1 AND production_run_id IS NULL`,
@@ -244,20 +260,30 @@ export class ProcessSetupRepository {
   }
 
   private async resolveRevision(client: PoolClient, importId: string, snapshot: ParsedSetupWorkbook, input: SetupImportCommitInput, setupHash: string, actor: string): Promise<string> {
-    const existing = await client.query(`SELECT id, setup_hash FROM process_setup_revisions WHERE machine_id = $1 AND mold_id = $2 AND formulation_id = $3 AND revision_no = $4 FOR UPDATE`, [input.machineId, input.moldId, input.formulationId, snapshot.header.revisionNo]);
+    const revisionNo = snapshot.header.revisionNo?.trim() || `IMPORT-${importId.slice(0, 8).toUpperCase()}`;
+    const matchingLog = snapshot.header.revisionNo
+      ? snapshot.revisions.find((entry) => entry.revisionNo.toLowerCase() === snapshot.header.revisionNo?.toLowerCase())
+      : undefined;
+    const isApproved = Boolean(
+      snapshot.header.approvedBy
+      && matchingLog?.approvedBy
+      && matchingLog.approvedBy.toLowerCase() === snapshot.header.approvedBy.toLowerCase()
+    );
+    const revisionStatus = isApproved ? 'approved' : 'draft';
+    const existing = await client.query(`SELECT id, setup_hash FROM process_setup_revisions WHERE machine_id = $1 AND mold_id = $2 AND formulation_id = $3 AND revision_no = $4 FOR UPDATE`, [input.machineId, input.moldId, input.formulationId, revisionNo]);
     if (existing.rows[0]) {
       if (existing.rows[0].setup_hash !== setupHash) throw new Error('REVISION_CONTENT_CONFLICT');
       return String(existing.rows[0].id);
     }
-    await client.query(`UPDATE process_setup_revisions SET status = 'superseded', updated_at = now() WHERE machine_id = $1 AND mold_id = $2 AND formulation_id = $3 AND status = 'approved'`, [input.machineId, input.moldId, input.formulationId]);
-    const matchingLog = snapshot.revisions.find((entry) => entry.revisionNo.toLowerCase() === snapshot.header.revisionNo?.toLowerCase());
+    if (isApproved) await client.query(`UPDATE process_setup_revisions SET status = 'superseded', updated_at = now() WHERE machine_id = $1 AND mold_id = $2 AND formulation_id = $3 AND status = 'approved'`, [input.machineId, input.moldId, input.formulationId]);
     const inserted = await client.query<{ id: string }>(
       `INSERT INTO process_setup_revisions
         (machine_id, mold_id, formulation_id, revision_no, status, setup_hash,
          hot_runner_manufacturer, hot_runner_controller_model, hot_runner_zone_count,
          approved_by_display, approved_by_actor, document_approval_date, approved_at, source_import_id)
-       VALUES ($1, $2, $3, $4, 'approved', $5, $6, $7, $8, $9, $10, $11::date, now(), $12) RETURNING id`,
-      [input.machineId, input.moldId, input.formulationId, snapshot.header.revisionNo, setupHash, snapshot.hotRunner.manufacturer, snapshot.hotRunner.controllerModel, snapshot.hotRunner.zoneCount, snapshot.header.approvedBy, actor, matchingLog?.revisionDate ?? snapshot.header.productionDate, importId]
+       VALUES ($1, $2, $3, $4, $5::process_setup_revision_status, $6, $7, $8, $9, $10, $11, $12::date,
+               CASE WHEN $5 = 'approved' THEN now() ELSE NULL END, $13) RETURNING id`,
+      [input.machineId, input.moldId, input.formulationId, revisionNo, revisionStatus, setupHash, snapshot.hotRunner.manufacturer, snapshot.hotRunner.controllerModel, snapshot.hotRunner.zoneCount, snapshot.header.approvedBy, isApproved ? actor : null, matchingLog?.revisionDate ?? snapshot.header.productionDate, importId]
     );
     const revisionId = inserted.rows[0]?.id ?? '';
     const definitions = await this.definitionMap(client);
@@ -314,7 +340,7 @@ export class ProcessSetupRepository {
          job_name, part_number, operator_name, shift_code, injection_pressure, melt_temperature,
          cooling_time, cooling_time_unit, cycle_time, cycle_time_unit, cure_hours_before_test, status)
        VALUES ($1,$2,$3::date,$4,$5,$6,$7,$8,$9,$10,NULL,NULL,$11,$12,$13,$14,$15,$16::production_run_status) RETURNING id`,
-      [runCode, input.formulationId, snapshot.header.productionDate, input.machineId, input.moldId, revisionId, snapshot.header.jobName, snapshot.header.partNumber, snapshot.header.operatorName, snapshot.header.shiftCode, typeof cooling === 'number' ? cooling : null, coolingParameter?.unit ?? null, typeof cycle === 'number' ? cycle : null, cycleParameter?.unit ?? null, input.cureHoursBeforeTest ?? 72, input.initialStatus ?? (snapshot.hasActualReadings ? 'molded' : 'planned')]
+      [runCode, input.formulationId, snapshot.header.productionDate ?? new Date().toISOString().slice(0, 10), input.machineId, input.moldId, revisionId, snapshot.header.jobName, snapshot.header.partNumber, snapshot.header.operatorName, snapshot.header.shiftCode, typeof cooling === 'number' ? cooling : null, coolingParameter?.unit ?? 'sec', typeof cycle === 'number' ? cycle : null, cycleParameter?.unit ?? 'sec', input.cureHoursBeforeTest ?? 72, input.initialStatus ?? (snapshot.hasActualReadings ? 'molded' : 'planned')]
     );
     return inserted.rows[0]?.id ?? '';
   }
