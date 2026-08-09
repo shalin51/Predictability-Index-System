@@ -29,34 +29,6 @@ const THEME_PRESETS = {
     '--color-danger-bg': '#450A0A',
     '--color-shadow': 'rgba(0, 0, 0, 0.4)',
   },
-  light: {
-    '--color-bg': '#F7F9FC',
-    '--color-bg-sidebar': '#FFFFFF',
-    '--color-surface': '#FFFFFF',
-    '--color-surface-elevated': '#FFFFFF',
-    '--color-surface-muted': '#F1F5F9',
-    '--color-border': '#E2E8F0',
-    '--color-border-strong': '#CBD5E1',
-    '--color-text-primary': '#0F172A',
-    '--color-text-secondary': '#475569',
-    '--color-text-muted': '#64748B',
-    '--color-brand-primary': '#0F6CBD',
-    '--color-brand-secondary': '#7C3AED',
-    '--color-brand-foreground': '#FFFFFF',
-    '--color-brand-primary-hover': '#115EA3',
-    '--color-accent-soft': '#EAF3FF',
-    '--color-focus-ring': '#2899F5',
-    '--color-focus-ring-soft': 'rgba(15, 108, 189, 0.16)',
-    '--color-info': '#107C10',
-    '--color-info-bg': '#E7F6E7',
-    '--color-status-info': '#0F6CBD',
-    '--color-status-info-bg': '#EAF3FF',
-    '--color-warning': '#B7791F',
-    '--color-warning-bg': '#FFF4CE',
-    '--color-danger': '#D13438',
-    '--color-danger-bg': '#FDE7E9',
-    '--color-shadow': 'rgba(15, 23, 42, 0.08)',
-  },
   obsidian: {
     '--color-bg': '#10141A',
     '--color-bg-sidebar': '#10141A',
@@ -91,18 +63,13 @@ export type ThemeName = keyof typeof THEME_PRESETS;
 
 export const themeOptions: Array<{ id: ThemeName; label: string; description: string }> = [
   {
-    id: 'light',
-    label: 'Scientific Light',
-    description: 'Fluent-inspired clean laboratory theme.',
-  },
-  {
     id: 'dark',
     label: 'Lab Console',
     description: 'Dark navy monitor-grade monitoring theme.',
   },
   {
     id: 'obsidian',
-    label: 'Obsidian Laboratory',
+    label: 'Obsidian Lab',
     description: 'High-contrast dark laboratory interface with neon cyan actions.',
   },
 ];
@@ -113,7 +80,7 @@ export function isThemeName(value: string | null | undefined): value is ThemeNam
 
 export function getStoredTheme(): ThemeName {
   if (typeof window === 'undefined') {
-    return 'light';
+    return 'obsidian';
   }
 
   const stored = window.localStorage.getItem('dashboard-theme');
@@ -122,15 +89,15 @@ export function getStoredTheme(): ThemeName {
   if (stored === 'nightshift' || stored === 'graphite') {
     return 'dark';
   }
-  if (stored === 'daybreak') {
-    return 'light';
+  if (stored === 'daybreak' || stored === 'light') {
+    return 'obsidian';
   }
 
   if (isThemeName(stored)) {
     return stored;
   }
 
-  return 'light';
+  return 'obsidian';
 }
 
 export function applyTheme(themeName: ThemeName) {
@@ -146,7 +113,7 @@ export function applyTheme(themeName: ThemeName) {
   });
 
   root.dataset.theme = themeName;
-  root.style.colorScheme = themeName === 'light' ? 'light' : 'dark';
+  root.style.colorScheme = 'dark';
 }
 
 export const colors = {
