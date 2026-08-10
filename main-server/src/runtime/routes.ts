@@ -8,6 +8,7 @@ export interface RouteDefinition {
 }
 
 export const routes: RouteDefinition[] = [
+  { method: 'POST', path: '/auth/login', handler: (req, res) => controllers.auth.login(req, res) },
   { method: 'GET', path: '/health', handler: (req, res) => controllers.health.getHealth(req, res) },
   { method: 'GET', path: '/health/db', handler: (req, res) => controllers.health.getDbHealth(req, res) },
   { method: 'GET', path: '/dashboard', handler: (req, res) => controllers.dashboard.overview(req, res) },

@@ -56,6 +56,10 @@ const SECRET_NAMES = {
   dbPort: `${PROJECT_SECRET_PREFIX}-db-port`,
   dbName: `${PROJECT_SECRET_PREFIX}-db-name`,
   dbUser: `${PROJECT_SECRET_PREFIX}-db-user`,
+  userName: `${PROJECT_SECRET_PREFIX}-user-name`,
+  userPassword: `${PROJECT_SECRET_PREFIX}-user-password`,
+  jwtSecret: `${PROJECT_SECRET_PREFIX}-jwt-secret`,
+  appApiKey: `${PROJECT_SECRET_PREFIX}-app-api-key`,
 };
 
 function getEnvironmentConfig(envName) {

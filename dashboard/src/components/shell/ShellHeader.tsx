@@ -11,6 +11,7 @@ import type { ThemeName } from '../../theme/tokens';
 interface ShellHeaderProps {
   notifications: ShellNotification[];
   onMarkAllNotificationsRead: () => void;
+  onLogout: () => void;
   onOpenSettings: () => void;
   onThemeChange: (theme: ThemeName) => void;
   onToggleNotificationRead: (id: string) => void;
@@ -23,11 +24,13 @@ interface ShellHeaderProps {
   title: string;
   toggleSidebar: () => void;
   unreadCount: number;
+  userName: string;
 }
 
 export function ShellHeader({
   notifications,
   onMarkAllNotificationsRead,
+  onLogout,
   onOpenSettings,
   onThemeChange,
   onToggleNotificationRead,
@@ -40,6 +43,7 @@ export function ShellHeader({
   title,
   toggleSidebar,
   unreadCount,
+  userName,
 }: ShellHeaderProps) {
   return (
     <header className="dashboard-shell__header" style={shellStyles.header}>
@@ -84,7 +88,7 @@ export function ShellHeader({
         >
           <div style={shellStyles.profileAvatar}>PI</div>
           <div className="dashboard-shell__profile-meta" style={shellStyles.profileMeta}>
-            <span style={shellStyles.profileName}>Plant Ops</span>
+            <span style={shellStyles.profileName}>{userName}</span>
             <span style={shellStyles.profileRole}>System owner</span>
           </div>
           <ShellIcon name="user" />
@@ -103,10 +107,12 @@ export function ShellHeader({
       {openMenu === 'profile' && (
         <ShellProfileMenu
           onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+          onLogout={onLogout}
           onOpenSettings={onOpenSettings}
           onThemeChange={onThemeChange}
           theme={theme}
           themeOptions={themeOptions}
+          userName={userName}
         />
       )}
     </header>

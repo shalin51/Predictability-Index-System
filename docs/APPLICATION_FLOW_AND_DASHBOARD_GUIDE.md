@@ -393,7 +393,7 @@ Use **Save** to persist any setting. Profile-menu theme changes are applied to t
 | Cannot generate a summary | Lab testing is not completed or required metrics are missing. | Complete testing through the Lab Testing page, then resolve all gaps. |
 | Cannot generate a score | Required summaries are missing or stale. | Generate/regenerate the run summary and confirm Ready for Scoring. |
 | Cannot generate a report | There are no score reports. | Generate benchmark scoring first. |
-| API returns 401 | An API key is configured and the request does not provide the expected `x-api-key`. | Configure the dashboard/client request path consistently with the API security configuration. |
+| API returns 401 | The dashboard JWT is missing/expired, or an API client omitted a valid `x-api-key`. | Sign in again, or retrieve the API-client key through the approved Key Vault workflow. |
 
 ## Technical flow and data boundary
 
@@ -408,7 +408,7 @@ Browser dashboard
   → JSON response or report export
 ```
 
-The API applies versioning, request logging, error handling, and placeholder authentication. Health and version routes are public. When `APP_API_KEY` is configured, non-health routes require `x-api-key`; the backend records `x-user-id` for audit activity, defaulting to `anonymous` when it is absent.
+The API applies versioning, request logging, error handling, and authentication. Health, version, and login routes are public. Dashboard users exchange the configured username/password for a short-lived signed JWT and send it as a Bearer token. Non-browser clients can instead authenticate with `x-api-key`. The backend derives the audit identity from the validated credential and ignores caller-supplied identity headers.
 
 ### Important deployment note
 

@@ -3,6 +3,7 @@ import type {
   HealthResponse,
 } from '@amfpi/shared';
 import { env } from '../config/env';
+import { clearAuthSession, getAccessToken } from '../features/auth/authSession';
 
 export interface LibraryFieldDefinition {
   key: string;
@@ -554,7 +555,16 @@ export interface DashboardOverview {
 }
 
 async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${env.apiBaseUrl}${endpoint}`, options);
+  const headers = new Headers(options?.headers);
+  const accessToken = getAccessToken();
+  if (accessToken) {
+    headers.set('Authorization', `Bearer ${accessToken}`);
+  }
+
+  const response = await fetch(`${env.apiBaseUrl}${endpoint}`, { ...options, headers });
+  if (response.status === 401) {
+    clearAuthSession();
+  }
   if (!response.ok) {
     const body = (await response
       .json()

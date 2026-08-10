@@ -10,7 +10,10 @@ const BASE_REQUIRED_VARS = [
   'MAIN_SERVER_PORT',
   'LOG_LEVEL',
   'CORS_ORIGIN',
+  'USER_NAME',
+  'USER_PASSWORD',
 ];
+const LOCAL_AUTH_VARS = ['JWT_SECRET', 'APP_API_KEY'];
 
 const PLACEHOLDER_VALUES = ['CHANGE_ME', 'your-password', 'secret', 'placeholder'];
 const PASSWORD_MODE_VARS = ['DB_HOST', 'DB_PORT', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
@@ -66,7 +69,7 @@ const authMode = (vars.DB_AUTH_MODE || 'password').toLowerCase();
 const usesKeyVault = Boolean(vars.AZURE_KEY_VAULT_URL);
 const requiredVars = authMode === 'entra'
   ? [...BASE_REQUIRED_VARS, 'DB_SSL_MODE', ...(usesKeyVault ? ENTRA_MODE_VARS : ENTRA_DIRECT_VARS)]
-  : [...BASE_REQUIRED_VARS, ...PASSWORD_MODE_VARS];
+  : [...BASE_REQUIRED_VARS, ...PASSWORD_MODE_VARS, ...LOCAL_AUTH_VARS];
 let passed = 0;
 let failed = 0;
 

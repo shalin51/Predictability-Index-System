@@ -4,6 +4,8 @@
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
+const crypto = require('crypto');
+const os = require('os');
 const yazl = require('yazl');
 const {
   AZURE_POSTGRES_SCOPE,
@@ -236,6 +238,11 @@ function applyAppSettings() {
     `AZURE_POSTGRES_SCOPE=${AZURE_POSTGRES_SCOPE}`,
     'DB_SSL_MODE=require',
     `CORS_ORIGIN=https://${host}`,
+    `AZURE_KEY_VAULT_URL=${envFileVars.AZURE_KEY_VAULT_URL || config.keyVault.url}`,
+    `KV_SECRET_USER_NAME=${SECRET_NAMES.userName}`,
+    `KV_SECRET_USER_PASSWORD=${SECRET_NAMES.userPassword}`,
+    `KV_SECRET_JWT_SECRET=${SECRET_NAMES.jwtSecret}`,
+    `KV_SECRET_APP_API_KEY=${SECRET_NAMES.appApiKey}`,
     'SCM_DO_BUILD_DURING_DEPLOYMENT=false',
     'WEBSITE_RUN_FROM_PACKAGE=1',
   ];
@@ -246,7 +253,6 @@ function applyAppSettings() {
 
   if (useKeyVault) {
     settings.push(
-      `AZURE_KEY_VAULT_URL=${envFileVars.AZURE_KEY_VAULT_URL || config.keyVault.url}`,
       `KV_SECRET_DB_HOST=${envFileVars.KV_SECRET_DB_HOST || SECRET_NAMES.dbHost}`,
       `KV_SECRET_DB_PORT=${envFileVars.KV_SECRET_DB_PORT || SECRET_NAMES.dbPort}`,
       `KV_SECRET_DB_NAME=${envFileVars.KV_SECRET_DB_NAME || SECRET_NAMES.dbName}`,
@@ -275,10 +281,97 @@ function applyAppSettings() {
     '--output',
     'none',
   ]);
+
+  az([
+    'functionapp',
+    'config',
+    'appsettings',
+    'delete',
+    '--name',
+    config.functionApp.name,
+    '--resource-group',
+    config.functionApp.resourceGroup,
+    '--setting-names',
+    'USER_NAME',
+    'USER_PASSWORD',
+    'JWT_SECRET',
+    'APP_API_KEY',
+    '--output',
+    'none',
+  ]);
+}
+
+function getKeyVaultSecret(secretName) {
+  try {
+    return az([
+      'keyvault',
+      'secret',
+      'show',
+      '--vault-name',
+      config.keyVault.name,
+      '--name',
+      secretName,
+      '--query',
+      'value',
+      '--output',
+      'tsv',
+    ], { capture: true });
+  } catch {
+    return '';
+  }
+}
+
+function setKeyVaultSecret(secretName, value) {
+  const uploadDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'p3-auth-secret-'));
+  const uploadPath = path.join(uploadDirectory, 'value.txt');
+  try {
+    fs.writeFileSync(uploadPath, value, { encoding: 'utf8', mode: 0o600 });
+    az([
+      'keyvault',
+      'secret',
+      'set',
+      '--vault-name',
+      config.keyVault.name,
+      '--name',
+      secretName,
+      '--file',
+      uploadPath,
+      '--encoding',
+      'utf-8',
+      '--output',
+      'none',
+    ]);
+  } finally {
+    fs.rmSync(uploadDirectory, { force: true, recursive: true });
+  }
+}
+
+function ensureAuthSecrets() {
+  const envFileVars = readEnvFile(envFileByAppEnv[config.appEnv] ?? '');
+  for (const name of ['USER_NAME', 'USER_PASSWORD']) {
+    if (!envFileVars[name]) {
+      throw new Error(`${name} is required in ${envFileByAppEnv[config.appEnv]}`);
+    }
+  }
+
+  setKeyVaultSecret(SECRET_NAMES.userName, envFileVars.USER_NAME);
+  setKeyVaultSecret(SECRET_NAMES.userPassword, envFileVars.USER_PASSWORD);
+
+  for (const [envName, secretName] of [
+    ['JWT_SECRET', SECRET_NAMES.jwtSecret],
+    ['APP_API_KEY', SECRET_NAMES.appApiKey],
+  ]) {
+    const configuredValue = envFileVars[envName];
+    if (configuredValue) {
+      setKeyVaultSecret(secretName, configuredValue);
+    } else if (!getKeyVaultSecret(secretName)) {
+      setKeyVaultSecret(secretName, crypto.randomBytes(48).toString('base64url'));
+    }
+  }
 }
 
 function deployZip() {
-  az([
+  const args = [
     'functionapp',
     'deployment',
     'source',
@@ -289,15 +382,26 @@ function deployZip() {
     config.functionApp.resourceGroup,
     '--src',
     packageZip,
+    '--build-remote',
+    'false',
     '--timeout',
     '600',
     '--output',
     'none',
-  ]);
+  ];
+
+  try {
+    az(args);
+  } catch {
+    console.warn('[main-server:deploy] ZIP endpoint was not ready; retrying in 15 seconds.');
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 15_000);
+    az(args);
+  }
 }
 
 async function main() {
   ensureFunctionApp();
+  ensureAuthSecrets();
   applyAppSettings();
   await buildPackage();
   deployZip();

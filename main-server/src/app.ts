@@ -23,6 +23,7 @@ import {
 } from './modules/process-setups/processSetup.module';
 import { createMaterialImportRouter } from './modules/material-imports/materialImport.module';
 import { createMaterialCatalogRouter } from './modules/materials/materialCatalog.module';
+import { createAuthRouter } from './modules/auth/auth.module';
 
 export function createApp() {
   const app = express();
@@ -69,6 +70,7 @@ function registerCommonMiddleware(app: Express): void {
 function registerRoutes(app: Express): void {
   app.use('/health', createHealthRouter());
   app.use('/version', createVersionRouter());
+  app.use('/auth', createAuthRouter());
   app.use('/dashboard', createDashboardRouter());
   app.use('/library', createLibraryRouter());
   app.use('/formulations', createFormulationRouter());

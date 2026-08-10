@@ -3,6 +3,7 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { createApp } from '../../../app';
 import { handleApiRequest } from '../../../runtime/dispatcher';
+import { config } from '../../../config/env';
 
 const XLSX_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
@@ -20,6 +21,7 @@ describe('setup import HTTP body handling', () => {
     const response = await request(createApp())
       .post('/setup-sheet-imports/preview')
       .set('content-type', XLSX_TYPE)
+      .set('x-api-key', config.auth.apiKey)
       .set('x-file-name', 'setup.xlsm')
       .send(Buffer.from('PK'));
     expect(response.status).toBe(400);

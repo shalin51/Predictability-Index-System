@@ -7,7 +7,9 @@ The application is deployed as a static frontend plus a serverless API.
 - Backend: Azure Function App, Node.js runtime.
 - Database: Azure Database for PostgreSQL Flexible Server.
 - Auth to database: Microsoft Entra ID token auth.
-- Secrets/config: direct Function App settings for staging today; Key Vault support is implemented but not required.
+- Dashboard auth: fixed Key Vault credentials exchanged for an eight-hour server-signed JWT.
+- API-client auth: Key Vault-backed `x-api-key`.
+- Secrets/config: dashboard credentials, JWT signing secret, and API key are stored in Key Vault; non-secret database connection metadata may remain in Function App settings.
 
 ## Environments
 | Environment | Frontend | Backend | Database | Auth |

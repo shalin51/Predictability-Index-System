@@ -47,6 +47,8 @@ import { ReportService } from '../modules/reports/services/report.service';
 import { createProcessSetupController } from '../modules/process-setups/processSetup.module';
 import { createMaterialImportController } from '../modules/material-imports/materialImport.module';
 import { createMaterialCatalogController } from '../modules/materials/materialCatalog.module';
+import { AuthController } from '../modules/auth/auth.controller';
+import { AuthService } from '../modules/auth/auth.service';
 
 const auditService = new AuditService();
 const libraryRepo = new LibraryRepository();
@@ -56,6 +58,7 @@ const labTestingRepo = new LabTestingRepository();
 const reportRepo = new ReportRepository();
 
 export const controllers = {
+  auth: new AuthController(new AuthService()),
   health: new HealthController(new HealthService()),
   version: new VersionController(new VersionService()),
   library: new LibraryController(new LibraryService(libraryRepo, auditService)),

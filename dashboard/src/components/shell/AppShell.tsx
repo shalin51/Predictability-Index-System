@@ -37,6 +37,7 @@ interface AppShellProps<T extends string> {
   children: ReactNode;
   notifications: ShellNotification[];
   onMarkAllNotificationsRead: () => void;
+  onLogout: () => void;
   onNavigate: (view: T) => void;
   onOpenSettings: () => void;
   onThemeChange: (theme: ThemeName) => void;
@@ -45,6 +46,7 @@ interface AppShellProps<T extends string> {
   theme: ThemeName;
   themeOptions: ShellThemeOption[];
   title: string;
+  userName: string;
   navItems: readonly ShellNavItem<T>[];
 }
 
@@ -53,6 +55,7 @@ export function AppShell<T extends string>({
   children,
   notifications,
   onMarkAllNotificationsRead,
+  onLogout,
   onNavigate,
   onOpenSettings,
   onThemeChange,
@@ -61,6 +64,7 @@ export function AppShell<T extends string>({
   theme,
   themeOptions,
   title,
+  userName,
   navItems,
 }: AppShellProps<T>) {
   const [openMenu, setOpenMenu] = useState<'notifications' | 'profile' | null>(null);
@@ -106,6 +110,7 @@ export function AppShell<T extends string>({
         <ShellHeader
           notifications={notifications}
           onMarkAllNotificationsRead={onMarkAllNotificationsRead}
+          onLogout={onLogout}
           onOpenSettings={() => {
             onOpenSettings();
             closeSidebarOnSmallScreen();
@@ -119,6 +124,7 @@ export function AppShell<T extends string>({
           theme={theme}
           themeOptions={themeOptions}
           title={title}
+          userName={userName}
           toggleSidebar={() => setSidebarOpen((current) => !current)}
           unreadCount={unreadCount}
         />

@@ -11,8 +11,43 @@ import { useDashboardRoute } from './hooks/useDashboardRoute';
 import { useDashboardTheme } from './hooks/useDashboardTheme';
 import { colors, themeOptions } from './theme/tokens';
 import { getDashboardOverview } from './services/api';
+import { LoginPage } from './features/auth/LoginPage';
+import {
+  AUTH_CHANGED_EVENT,
+  clearAuthSession,
+  getAuthSession,
+  type AuthSession,
+} from './features/auth/authSession';
 
 export default function App() {
+  const [session, setSession] = useState<AuthSession | null>(() => getAuthSession());
+
+  useEffect(() => {
+    const refreshSession = () => setSession(getAuthSession());
+    window.addEventListener(AUTH_CHANGED_EVENT, refreshSession);
+    return () => window.removeEventListener(AUTH_CHANGED_EVENT, refreshSession);
+  }, []);
+
+  useEffect(() => {
+    if (!session) return undefined;
+    const remaining = Math.max(0, Date.parse(session.expiresAt) - Date.now());
+    const timeoutId = window.setTimeout(clearAuthSession, remaining);
+    return () => window.clearTimeout(timeoutId);
+  }, [session]);
+
+  if (!session) {
+    return <LoginPage onAuthenticated={setSession} />;
+  }
+
+  return <AuthenticatedApp onLogout={clearAuthSession} session={session} />;
+}
+
+interface AuthenticatedAppProps {
+  onLogout: () => void;
+  session: AuthSession;
+}
+
+function AuthenticatedApp({ onLogout, session }: AuthenticatedAppProps) {
   const [preferences, setPreferences] = useDashboardPreferences();
   const [theme, setTheme] = useDashboardTheme();
   const {
@@ -88,6 +123,7 @@ export default function App() {
         onMarkAllNotificationsRead={() => {
           setNotifications((current) => current.map((notification) => ({ ...notification, read: true })));
         }}
+        onLogout={onLogout}
         onNavigate={(nextView) => {
           void navigate({ view: nextView });
         }}
@@ -104,6 +140,7 @@ export default function App() {
         theme={theme}
         themeOptions={themeOptions}
         title={VIEW_META[view].title}
+        userName={session.userName}
         >
         <DashboardViewContent
           navigate={navigate}

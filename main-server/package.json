@@ -21,6 +21,7 @@
     "verify:env:dev": "node scripts/verify-env.cjs .env.development",
     "verify:env:staging": "node scripts/verify-env.cjs .env.staging",
     "verify:env:production": "node scripts/verify-env.cjs .env.production",
+    "auth:configure:dev": "node scripts/configure-local-auth.cjs .env.development",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"

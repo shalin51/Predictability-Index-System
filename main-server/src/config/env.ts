@@ -12,6 +12,10 @@ interface KeyVaultSecretRefs {
   dbPort: string;
   dbName: string;
   dbUser: string;
+  userName: string;
+  userPassword: string;
+  jwtSecret: string;
+  apiKey: string;
 }
 
 interface AppConfig {
@@ -20,6 +24,13 @@ interface AppConfig {
   port: number;
   corsOrigin: string;
   logLevel: string;
+  auth: {
+    userName: string;
+    userPassword: string;
+    jwtSecret: string;
+    jwtExpiresSeconds: number;
+    apiKey: string;
+  };
   setupImports: {
     storageAccountUrl: string;
     storageConnectionString: string;
@@ -115,6 +126,13 @@ function readProcessConfig(): AppConfig {
     port: parseIntegerEnv(process.env.MAIN_SERVER_PORT, 4000),
     corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:3000',
     logLevel: process.env.LOG_LEVEL ?? 'info',
+    auth: {
+      userName: process.env.USER_NAME ?? '',
+      userPassword: process.env.USER_PASSWORD ?? '',
+      jwtSecret: process.env.JWT_SECRET ?? '',
+      jwtExpiresSeconds: parseIntegerEnv(process.env.JWT_EXPIRES_SECONDS, 28_800),
+      apiKey: process.env.APP_API_KEY ?? '',
+    },
     setupImports: {
       storageAccountUrl: process.env.SETUP_IMPORT_STORAGE_ACCOUNT_URL ?? '',
       storageConnectionString: process.env.SETUP_IMPORT_STORAGE_CONNECTION_STRING ?? process.env.AzureWebJobsStorage ?? '',
@@ -136,6 +154,10 @@ function readProcessConfig(): AppConfig {
         dbPort: process.env.KV_SECRET_DB_PORT ?? '',
         dbName: process.env.KV_SECRET_DB_NAME ?? '',
         dbUser: process.env.KV_SECRET_DB_USER ?? '',
+        userName: process.env.KV_SECRET_USER_NAME ?? '',
+        userPassword: process.env.KV_SECRET_USER_PASSWORD ?? '',
+        jwtSecret: process.env.KV_SECRET_JWT_SECRET ?? '',
+        apiKey: process.env.KV_SECRET_APP_API_KEY ?? '',
       },
       poolMax: parseIntegerEnv(process.env.DB_POOL_MAX, 10),
       idleTimeoutMillis: parseIntegerEnv(process.env.DB_POOL_IDLE_TIMEOUT_MS, 30_000),
@@ -150,6 +172,7 @@ function assignConfig(target: AppConfig, source: AppConfig): void {
   target.port = source.port;
   target.corsOrigin = source.corsOrigin;
   target.logLevel = source.logLevel;
+  Object.assign(target.auth, source.auth);
   Object.assign(target.setupImports, source.setupImports);
   Object.assign(target.db, source.db);
 }
@@ -161,12 +184,22 @@ function requireEnvValue(name: string, value: string): string {
   return value;
 }
 
+function validateAuthConfig(snapshot: AppConfig): void {
+  requireEnvValue('USER_NAME', snapshot.auth.userName);
+  requireEnvValue('USER_PASSWORD', snapshot.auth.userPassword);
+  requireEnvValue('JWT_SECRET', snapshot.auth.jwtSecret);
+  requireEnvValue('APP_API_KEY', snapshot.auth.apiKey);
+
+  if (snapshot.auth.jwtSecret.length < 32) {
+    throw new Error('[config] JWT_SECRET must contain at least 32 characters');
+  }
+  if (snapshot.auth.apiKey.length < 32) {
+    throw new Error('[config] APP_API_KEY must contain at least 32 characters');
+  }
+}
+
 async function loadKeyVaultSecrets(): Promise<void> {
   const snapshot = readProcessConfig();
-
-  if (snapshot.db.authMode !== 'entra') {
-    return;
-  }
 
   if (!snapshot.db.keyVaultUrl) {
     return;
@@ -174,12 +207,23 @@ async function loadKeyVaultSecrets(): Promise<void> {
 
   const keyVaultUrl = snapshot.db.keyVaultUrl;
   const secretRefs = snapshot.db.keyVaultSecretRefs;
-  const secretNames = {
-    DB_HOST: requireEnvValue('KV_SECRET_DB_HOST', secretRefs.dbHost),
-    DB_PORT: requireEnvValue('KV_SECRET_DB_PORT', secretRefs.dbPort),
-    DB_NAME: requireEnvValue('KV_SECRET_DB_NAME', secretRefs.dbName),
-    DB_USER: requireEnvValue('KV_SECRET_DB_USER', secretRefs.dbUser),
+  const secretNames: Record<string, string> = {
+    USER_NAME: requireEnvValue('KV_SECRET_USER_NAME', secretRefs.userName),
+    USER_PASSWORD: requireEnvValue('KV_SECRET_USER_PASSWORD', secretRefs.userPassword),
+    JWT_SECRET: requireEnvValue('KV_SECRET_JWT_SECRET', secretRefs.jwtSecret),
+    APP_API_KEY: requireEnvValue('KV_SECRET_APP_API_KEY', secretRefs.apiKey),
   };
+
+  const hasDatabaseSecretRefs = [secretRefs.dbHost, secretRefs.dbPort, secretRefs.dbName, secretRefs.dbUser]
+    .some(Boolean);
+  if (snapshot.db.authMode === 'entra' && hasDatabaseSecretRefs) {
+    Object.assign(secretNames, {
+      DB_HOST: requireEnvValue('KV_SECRET_DB_HOST', secretRefs.dbHost),
+      DB_PORT: requireEnvValue('KV_SECRET_DB_PORT', secretRefs.dbPort),
+      DB_NAME: requireEnvValue('KV_SECRET_DB_NAME', secretRefs.dbName),
+      DB_USER: requireEnvValue('KV_SECRET_DB_USER', secretRefs.dbUser),
+    });
+  }
 
   const credential = new DefaultAzureCredential();
   const client = new SecretClient(keyVaultUrl, credential);
@@ -212,6 +256,7 @@ export async function initializeConfig(): Promise<void> {
     initPromise = (async () => {
       await loadKeyVaultSecrets();
       assignConfig(config, readProcessConfig());
+      validateAuthConfig(config);
       initialized = true;
       console.log(`[config] Initialised for APP_ENV=${config.appEnv} using DB auth mode=${config.db.authMode}`);
     })().catch((error: unknown) => {

@@ -5,18 +5,22 @@ import type { ThemeName } from '../../theme/tokens';
 
 interface ShellProfileMenuProps {
   onMarkAllNotificationsRead: () => void;
+  onLogout: () => void;
   onOpenSettings: () => void;
   onThemeChange: (theme: ThemeName) => void;
   theme: ThemeName;
   themeOptions: ShellThemeOption[];
+  userName: string;
 }
 
 export function ShellProfileMenu({
   onMarkAllNotificationsRead,
+  onLogout,
   onOpenSettings,
   onThemeChange,
   theme,
   themeOptions,
+  userName,
 }: ShellProfileMenuProps) {
   return (
     <div className="dashboard-shell__popover" style={shellStyles.profilePopover}>
@@ -24,7 +28,7 @@ export function ShellProfileMenu({
         <div style={shellStyles.profileAvatarLarge}>PI</div>
         <div>
           <div style={shellStyles.popoverTitle}>Predictability Index</div>
-          <div style={shellStyles.popoverCaption}>Local workspace profile</div>
+          <div style={shellStyles.popoverCaption}>{userName}</div>
         </div>
       </div>
 
@@ -36,6 +40,11 @@ export function ShellProfileMenu({
       <button onClick={onMarkAllNotificationsRead} style={shellStyles.menuButton} type="button">
         <ShellIcon name="bell" />
         Clear alert badge
+      </button>
+
+      <button onClick={onLogout} style={shellStyles.menuButton} type="button">
+        <ShellIcon name="user" />
+        Sign out
       </button>
 
       <div style={shellStyles.profileThemeBlock}>

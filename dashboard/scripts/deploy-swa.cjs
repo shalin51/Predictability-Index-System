@@ -6,12 +6,25 @@ const {
   SECRET_NAMES,
   az,
   getEnvironmentConfig,
+  getFunctionAppHost,
   run,
 } = require('../../scripts/azure-deploy-config.cjs');
 
 const envName = process.argv[2];
 const config = getEnvironmentConfig(envName);
 const dashboardRoot = path.resolve(__dirname, '..');
+
+function getApiBaseUrl() {
+  if (process.env.VITE_API_BASE_URL) {
+    return process.env.VITE_API_BASE_URL;
+  }
+
+  if (config.staticWebApp.useLinkedFunctionBackend) {
+    return '/api';
+  }
+
+  return `https://${getFunctionAppHost(config)}/api`;
+}
 
 function getDeploymentToken() {
   try {
@@ -47,11 +60,12 @@ function getDeploymentToken() {
 }
 
 const token = getDeploymentToken();
+const apiBaseUrl = getApiBaseUrl();
 
 run('npm', ['run', 'build'], {
   cwd: dashboardRoot,
   env: {
-    VITE_API_BASE_URL: process.env.VITE_API_BASE_URL || '/api',
+    VITE_API_BASE_URL: apiBaseUrl,
     VITE_APP_ENV: config.appEnv,
   },
 });
