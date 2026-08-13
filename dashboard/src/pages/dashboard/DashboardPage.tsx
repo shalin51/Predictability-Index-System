@@ -3,7 +3,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Button } from '../../components/ui/Button';
 import { DashboardPage as PageFrame, MessageBanner } from '../../components/ui/Page';
 import { BenchmarkOverviewWidget } from '../../features/dashboard/components/BenchmarkOverviewWidget';
-import { DashboardEmptyState } from '../../features/dashboard/components/DashboardEmptyState';
 import { DashboardKpiCards } from '../../features/dashboard/components/DashboardKpiCards';
 import { dashboardStyles } from '../../features/dashboard/components/dashboardFormat';
 import { LabQueueWidget } from '../../features/dashboard/components/LabQueueWidget';
@@ -12,6 +11,7 @@ import { NeedsAttentionPanel } from '../../features/dashboard/components/NeedsAt
 import { RecentReportsWidget } from '../../features/dashboard/components/RecentReportsWidget';
 import { RiskAlertsWidget } from '../../features/dashboard/components/RiskAlertsWidget';
 import { WorkflowStatusPanel } from '../../features/dashboard/components/WorkflowStatusPanel';
+import { PredictiveIndexPanel } from '../../features/dashboard/components/PredictiveIndexPanel';
 import { getDashboardOverview, type DashboardOverview } from '../../services/api';
 
 export function DashboardHomePage({
@@ -76,7 +76,7 @@ export function DashboardHomePage({
           </MessageBanner>
         )}
         {loading && !data && <div className="dashboard-loading" aria-label="Loading dashboard" />}
-        {data && !hasOperationalData && <DashboardEmptyState />}
+        <PredictiveIndexPanel />
         {data && hasOperationalData && (
           <div style={dashboardStyles.stack}>
             <Section title="Needs Attention">
