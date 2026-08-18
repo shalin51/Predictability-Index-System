@@ -19,6 +19,7 @@
     "db:migrate:reset:dev": "yarn workspace @amfpi/main-server db:migrate:reset:dev",
     "db:seed:dev": "yarn workspace @amfpi/main-server db:seed:dev",
     "db:fresh:dev": "yarn workspace @amfpi/main-server db:fresh:dev",
+    "import:pickleball:dev": "yarn workspace @amfpi/main-server import:pickleball:dev",
     "dev:server": "yarn workspace @amfpi/main-server dev",
     "dev:dash": "yarn workspace @amfpi/dashboard dev",
     "deploy:stage": "node scripts/deploy-env.cjs stage",

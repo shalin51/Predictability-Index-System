@@ -4,6 +4,7 @@ import { labelize } from './LibrarySectionNav';
 
 const enumOptions: Record<string, string[]> = {
   category: ['physical', 'performance', 'durability', 'environmental', 'subjective'],
+  comparisonMode: ['target_range', 'max_cap', 'min_floor'],
   criticality: ['low', 'medium', 'high', 'critical'],
   dataType: ['numeric', 'text', 'boolean', 'rating'],
   status: ['active', 'inactive', 'archived'],

@@ -42,8 +42,8 @@ export class BenchmarkScoringRepository {
     const result = await getPool().query(
       `SELECT id, benchmark_code AS "benchmarkCode", benchmark_name AS "benchmarkName"
        FROM benchmark_profiles
-       WHERE status = 'active' AND benchmark_code IN ('LIFETIME', 'X40')
-       ORDER BY CASE benchmark_code WHEN 'X40' THEN 1 WHEN 'LIFETIME' THEN 2 ELSE 3 END`
+       WHERE status = 'active'
+       ORDER BY CASE benchmark_code WHEN 'X40' THEN 1 WHEN 'LIFETIME' THEN 2 ELSE 3 END, benchmark_name`
     );
     return result.rows as BenchmarkScoringRecord[];
   }
@@ -52,6 +52,7 @@ export class BenchmarkScoringRepository {
     const result = await getPool().query(
       `SELECT bmt.metric_id AS "metricId", md.display_name AS "metricName",
               bp.benchmark_name AS "benchmarkName",
+              bmt.comparison_mode AS "comparisonMode",
               rms.id AS "runSummaryId", rms.mean_value::float AS "runMeanValue",
               COALESCE(bmt.target_mean, bmt.target_value)::float AS "targetMean",
               bmt.min_acceptable::float AS "minAcceptable",
@@ -126,6 +127,7 @@ export class BenchmarkScoringRepository {
               srm.benchmark_target_mean::float AS "benchmarkTargetMean",
               srm.min_acceptable::float AS "minAcceptable",
               srm.max_acceptable::float AS "maxAcceptable",
+              srm.comparison_mode AS "comparisonMode",
               srm.weight::float AS weight,
               srm.distance::float AS distance,
               srm.normalized_distance::float AS "normalizedDistance",
@@ -177,10 +179,10 @@ export class BenchmarkScoringRepository {
           await client.query(
             `INSERT INTO score_report_metrics
               (score_report_id, metric_id, run_metric_summary_id, run_mean_value,
-               benchmark_target_mean, min_acceptable, max_acceptable, weight,
+                benchmark_target_mean, min_acceptable, max_acceptable, comparison_mode, weight,
                distance, normalized_distance, metric_score, weighted_contribution,
-               traffic_light, risk_level, risk_note)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::traffic_light_status, $14, $15)`,
+                traffic_light, risk_level, risk_note)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::traffic_light_status, $15, $16)`,
             [
               reportId,
               metric.metricId,
@@ -189,6 +191,7 @@ export class BenchmarkScoringRepository {
               metric.targetMean,
               metric.minAcceptable,
               metric.maxAcceptable,
+              metric.comparisonMode,
               metric.weight,
               metric.distance,
               metric.normalizedDistance,

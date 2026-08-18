@@ -10,7 +10,8 @@ import {
   type SampleRecord,
 } from '../../../services/api';
 import { colors, font, radius, spacing } from '../../../theme/tokens';
-import { formatLabValue, labStyles } from '../labTestingUi';
+import { formatLabValue, LAB_RESULT_CATEGORIES, labStyles } from '../labTestingUi';
+import { LabResultCategoryAccordion } from './LabResultCategoryAccordion';
 
 interface ReadOnlyLabResultsPanelProps {
   onOpenLabRun?: (runId: string) => void;
@@ -40,6 +41,12 @@ export function ReadOnlyLabResultsPanel({ onOpenLabRun, runId, title }: ReadOnly
   }, [runId]);
 
   const rows = useMemo(() => data ? buildRows(data) : [], [data]);
+  const categorySections = useMemo(() => groupRowsByCategory(rows).map(([category, categoryRows]) => ({
+    content: <ResultTable rows={categoryRows} />,
+    count: categoryRows.length,
+    id: category,
+    label: categoryLabel(category),
+  })), [rows]);
 
   if (error) return <MessageBanner tone="danger">{error}</MessageBanner>;
   if (!data) return <div style={labStyles.muted}>Loading lab results...</div>;
@@ -62,32 +69,7 @@ export function ReadOnlyLabResultsPanel({ onOpenLabRun, runId, title }: ReadOnly
         )}
       </div>
 
-      {rows.length === 0 ? <EmptyState>No lab results.</EmptyState> : (
-        <div style={labStyles.tableWrap}>
-          <table style={labStyles.table}>
-            <thead>
-              <tr>
-                {['Sample', 'Category', 'Metric', 'Value', 'Unit', 'Method', 'Tested At'].map((column) => (
-                  <th key={column} style={labStyles.th}>{column}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => (
-                <tr key={row.id}>
-                  <td style={labStyles.td}>{row.sample}</td>
-                  <td style={labStyles.td}>{row.category}</td>
-                  <td style={labStyles.td}>{row.metric}</td>
-                  <td style={labStyles.td}>{formatLabValue(row.value)}</td>
-                  <td style={labStyles.td}>{row.unit || '-'}</td>
-                  <td style={labStyles.td}>{row.method || '-'}</td>
-                  <td style={labStyles.td}>{formatLabValue(row.testedAt)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {rows.length === 0 ? <EmptyState>No lab results.</EmptyState> : <LabResultCategoryAccordion sections={categorySections} />}
 
       {data.observations.length > 0 && (
         <div style={styles.observations}>
@@ -101,6 +83,49 @@ export function ReadOnlyLabResultsPanel({ onOpenLabRun, runId, title }: ReadOnly
       )}
     </section>
   );
+}
+
+function ResultTable({ rows }: { rows: DisplayResult[] }) {
+  return (
+    <div style={labStyles.tableWrap}>
+      <table style={labStyles.table}>
+        <thead>
+          <tr>
+            {['Sample', 'Metric', 'Value', 'Unit', 'Method', 'Tested At'].map((column) => (
+              <th key={column} style={labStyles.th}>{column}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.id}>
+              <td style={labStyles.td}>{row.sample}</td>
+              <td style={labStyles.td}>{row.metric}</td>
+              <td style={labStyles.td}>{formatLabValue(row.value)}</td>
+              <td style={labStyles.td}>{row.unit || '-'}</td>
+              <td style={labStyles.td}>{row.method || '-'}</td>
+              <td style={labStyles.td}>{formatLabValue(row.testedAt)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function groupRowsByCategory(rows: DisplayResult[]): Array<[string, DisplayResult[]]> {
+  const groups = new Map<string, DisplayResult[]>();
+  rows.forEach((row) => groups.set(row.category, [...(groups.get(row.category) ?? []), row]));
+  const order = new Map<string, number>(LAB_RESULT_CATEGORIES.map((category, index) => [category.id, index]));
+  return Array.from(groups.entries()).sort(([left], [right]) => (
+    (order.get(left) ?? Number.MAX_SAFE_INTEGER) - (order.get(right) ?? Number.MAX_SAFE_INTEGER)
+      || left.localeCompare(right)
+  ));
+}
+
+function categoryLabel(category: string): string {
+  return LAB_RESULT_CATEGORIES.find((item) => item.id === category)?.label
+    ?? category.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function buildRows(data: LabTestingResultsResponse): DisplayResult[] {

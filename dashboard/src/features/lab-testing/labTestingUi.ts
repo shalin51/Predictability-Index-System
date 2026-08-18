@@ -12,6 +12,14 @@ export const LAB_TABS: Array<{ id: LabMetricCategory | 'observations' | 'review'
   { id: 'review', label: 'Review' },
 ];
 
+export const LAB_RESULT_CATEGORIES: Array<{ id: LabMetricCategory; label: string }> = [
+  { id: 'physical', label: 'Physical' },
+  { id: 'performance', label: 'Performance' },
+  { id: 'durability', label: 'Durability' },
+  { id: 'environmental', label: 'Environmental' },
+  { id: 'subjective', label: 'Subjective' },
+];
+
 export const METRIC_ORDER: Record<LabMetricCategory, string[]> = {
   durability: ['air_cannon_cycles_to_failure', 'crack_initiation_cycles', 'deformation_measurement'],
   environmental: ['hot_temperature_performance', 'cold_temperature_performance', 'humidity_exposure_result'],

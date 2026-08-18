@@ -5,6 +5,7 @@ import { controlStyles, getTabButtonStyle } from '../../components/ui/controls';
 import { DashboardPage, MessageBanner } from '../../components/ui/Page';
 import {
   createProductionRun,
+  getProductionRun,
   listApprovedFormulationOptions,
   listLibraryOptions,
   type LibraryRecord,
@@ -15,38 +16,39 @@ import { spacing } from '../../theme/tokens';
 import { ManufacturingParametersForm } from './components/ManufacturingParametersForm';
 import { SampleGenerationForm } from './components/SampleGenerationForm';
 import { formatValue, runStyles } from './productionRunUi';
+import { createProductionRunDraft, duplicateProductionRunDraft } from './duplicateProductionRun';
 
 const today = new Date().toISOString().slice(0, 10);
 
-export function CreateProductionRunWizard({ onCancel, onSaved }: { onCancel: () => void; onSaved: (id: string) => void }) {
+export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved }: { duplicateSourceId?: string; onCancel: () => void; onSaved: (id: string) => void }) {
   const [step, setStep] = useState(0);
   const [formulations, setFormulations] = useState<LibraryRecord[]>([]);
   const [machines, setMachines] = useState<LibraryRecord[]>([]);
   const [molds, setMolds] = useState<LibraryRecord[]>([]);
   const [error, setError] = useState('');
-  const [payload, setPayload] = useState<ProductionRunPayload>({
-    coolingTimeUnit: 'sec',
-    cureHoursBeforeTest: 72,
-    cycleTimeUnit: 'sec',
-    dateProduced: today,
-    formulationId: '',
-    injectionPressureUnit: 'psi',
-    machineId: '',
-    meltTemperatureUnit: 'C',
-    moldId: '',
-    sampleGeneration: { count: 5, startingSampleCode: '' },
-    status: 'planned',
-  });
+  const [loading, setLoading] = useState(Boolean(duplicateSourceId));
+  const [sourceRunCode, setSourceRunCode] = useState('');
+  const [payload, setPayload] = useState<ProductionRunPayload>(() => createProductionRunDraft(today));
 
   useEffect(() => {
-    void Promise.all([listApprovedFormulationOptions(), listLibraryOptions('machines'), listLibraryOptions('molds')])
-      .then(([formulationOptions, machineOptions, moldOptions]) => {
+    setError('');
+    setLoading(Boolean(duplicateSourceId));
+    setPayload(createProductionRunDraft(today));
+    setSourceRunCode('');
+    const sourceRequest = duplicateSourceId ? getProductionRun(duplicateSourceId) : Promise.resolve(null);
+    void Promise.all([listApprovedFormulationOptions(), listLibraryOptions('machines'), listLibraryOptions('molds'), sourceRequest])
+      .then(([formulationOptions, machineOptions, moldOptions, source]) => {
         setFormulations(formulationOptions);
         setMachines(machineOptions);
         setMolds(moldOptions);
+        if (source) {
+          setPayload(duplicateProductionRunDraft(source, today));
+          setSourceRunCode(source.runCode);
+        }
       })
-      .catch((err: Error) => setError(err.message));
-  }, []);
+      .catch((err: Error) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, [duplicateSourceId]);
 
   const selectedFormulation = formulations.find((item) => item.id === payload.formulationId);
   const selectedMold = molds.find((item) => item.id === payload.moldId);
@@ -70,8 +72,8 @@ export function CreateProductionRunWizard({ onCancel, onSaved }: { onCancel: () 
       <Card>
         <div style={runStyles.header}>
           <div>
-            <h1 style={runStyles.title}>New Production Run</h1>
-            <p style={runStyles.subtitle}>Create a molded batch from an approved formulation and generate samples.</p>
+            <h1 style={runStyles.title}>{duplicateSourceId ? 'Duplicate Production Run' : 'New Production Run'}</h1>
+            <p style={runStyles.subtitle}>{duplicateSourceId ? `Create a new run from ${sourceRunCode || 'the selected run'}.` : 'Create a molded batch from an approved formulation and generate samples.'}</p>
           </div>
           <button onClick={onCancel} style={controlStyles.secondaryButton} type="button">Cancel</button>
         </div>
@@ -82,6 +84,9 @@ export function CreateProductionRunWizard({ onCancel, onSaved }: { onCancel: () 
         </div>
         <Divider />
         {error && <MessageBanner tone="danger">{error}</MessageBanner>}
+        {loading && <div style={runStyles.muted}>Loading source run...</div>}
+        {!loading && (
+          <>
         {step === 0 && (
           <div style={runStyles.formGrid}>
             <label style={controlStyles.field}>
@@ -140,6 +145,8 @@ export function CreateProductionRunWizard({ onCancel, onSaved }: { onCancel: () 
           {step === 3 && <button onClick={() => void save('planned')} style={controlStyles.primaryButton} type="button">Save Planned Run</button>}
           {step === 3 && <button onClick={() => void save('molded')} style={controlStyles.primaryButton} type="button">Save as Molded</button>}
         </div>
+          </>
+        )}
       </Card>
     </DashboardPage>
   );

@@ -19,6 +19,7 @@ import { themeOptions, type ThemeName } from '../theme/tokens';
 
 interface DashboardViewContentProps {
   onSettingsSave: (next: { preferences: DashboardPreferences; theme: ThemeName }) => Promise<void> | void;
+  onThemeChange: (theme: ThemeName) => void;
   preferences: DashboardPreferences;
   setHasUnsavedChanges: (dirty: boolean) => void;
   theme: ThemeName;
@@ -41,6 +42,7 @@ interface DashboardViewContentProps {
 
 export function DashboardViewContent({
   onSettingsSave,
+  onThemeChange,
   preferences,
   theme,
   view,
@@ -160,11 +162,22 @@ export function DashboardViewContent({
         />
       );
     }
+    if (productionRunMode === 'duplicate' && productionRunId) {
+      return (
+        <CreateProductionRunWizard
+          duplicateSourceId={productionRunId}
+          onCancel={() => navigate({ productionRunId, productionRunMode: 'detail', view: 'production-runs' })}
+          onSaved={(id) => navigate({ productionRunId: id, productionRunMode: 'detail', view: 'production-runs' })}
+        />
+      );
+    }
     if (productionRunMode === 'detail' && productionRunId) {
       return (
         <ProductionRunDetailPage
           id={productionRunId}
           onBack={() => navigate({ productionRunMode: 'list', view: 'production-runs' })}
+          onDuplicate={(id) => navigate({ productionRunId: id, productionRunMode: 'duplicate', view: 'production-runs' })}
+          onOpenFormulation={(id) => navigate({ formulationId: id, formulationMode: 'detail', view: 'formulations' })}
           onOpenLabRun={(runId) => navigate({ labRunId: runId, labTestingMode: 'detail', view: 'lab-testing' })}
           onOpenReport={(runId) => navigate({ reportMode: 'run', reportRunId: runId, view: 'reports' })}
         />
@@ -173,6 +186,7 @@ export function DashboardViewContent({
     return (
       <ProductionRunListPage
         onCreate={() => navigate({ productionRunMode: 'new', view: 'production-runs' })}
+        onDuplicate={(id) => navigate({ productionRunId: id, productionRunMode: 'duplicate', view: 'production-runs' })}
         onImport={() => navigate({ productionRunMode: 'import', view: 'production-runs' })}
         onOpen={(id) => navigate({ productionRunId: id, productionRunMode: 'detail', view: 'production-runs' })}
       />
@@ -185,6 +199,8 @@ export function DashboardViewContent({
         <LabTestingRunPage
           id={labRunId}
           onBack={() => navigate({ labTestingMode: 'list', view: 'lab-testing' })}
+          onOpenFormulation={(id) => navigate({ formulationId: id, formulationMode: 'detail', view: 'formulations' })}
+          onOpenProductionRun={(id) => navigate({ productionRunId: id, productionRunMode: 'detail', view: 'production-runs' })}
         />
       );
     }
@@ -204,6 +220,7 @@ export function DashboardViewContent({
   return (
     <SettingsPage
       onSave={onSettingsSave}
+      onThemeChange={onThemeChange}
       preferences={preferences}
       theme={theme}
       themeOptions={themeOptions}

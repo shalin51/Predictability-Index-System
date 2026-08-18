@@ -11,6 +11,8 @@ import { ReportRecipePanel } from '../../features/reports/components/ReportRecip
 import { ReportRiskPanel } from '../../features/reports/components/ReportRiskPanel';
 import { formatReportValue, reportStyles } from '../../features/reports/components/reportFormat';
 import { ReportSummaryCards } from '../../features/reports/components/ReportSummaryCards';
+import { LabResultCategoryAccordion } from '../../features/lab-testing/components/LabResultCategoryAccordion';
+import { LAB_RESULT_CATEGORIES } from '../../features/lab-testing/labTestingUi';
 import {
   generateRunReport,
   getReport,
@@ -154,12 +156,34 @@ function ProcessSetupReport({ data }: { data: Record<string, unknown> }) {
 }
 
 function LabResults({ rows }: { rows: Record<string, unknown>[] }) {
+  const groups = new Map<string, Record<string, unknown>[]>();
+  rows.forEach((row) => {
+    const category = String(row['category'] ?? 'uncategorized');
+    groups.set(category, [...(groups.get(category) ?? []), row]);
+  });
+  const categoryOrder = new Map<string, number>(LAB_RESULT_CATEGORIES.map((category, index) => [category.id, index]));
+  const sections = Array.from(groups.entries())
+    .sort(([left], [right]) => (
+      (categoryOrder.get(left) ?? Number.MAX_SAFE_INTEGER) - (categoryOrder.get(right) ?? Number.MAX_SAFE_INTEGER)
+        || left.localeCompare(right)
+    ))
+    .map(([category, categoryRows]) => ({
+      content: <LabResultTable rows={categoryRows} />,
+      count: categoryRows.length,
+      id: category,
+      label: LAB_RESULT_CATEGORIES.find((item) => item.id === category)?.label
+        ?? category.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()),
+    }));
+  return <LabResultCategoryAccordion sections={sections} />;
+}
+
+function LabResultTable({ rows }: { rows: Record<string, unknown>[] }) {
   return (
     <div style={reportStyles.tableWrap}>
       <table style={reportStyles.table}>
         <thead>
           <tr>
-            {['Sample', 'Metric', 'Category', 'Value', 'Unit', 'Condition'].map((column) => <th key={column} style={reportStyles.th}>{column}</th>)}
+            {['Sample', 'Metric', 'Value', 'Unit', 'Condition'].map((column) => <th key={column} style={reportStyles.th}>{column}</th>)}
           </tr>
         </thead>
         <tbody>
@@ -167,7 +191,6 @@ function LabResults({ rows }: { rows: Record<string, unknown>[] }) {
             <tr key={`${String(row['sampleCode'] ?? row['metricName'])}-${index}`}>
               <td style={reportStyles.td}>{formatReportValue(row['sampleCode'])}</td>
               <td style={reportStyles.td}>{formatReportValue(row['metricName'])}</td>
-              <td style={reportStyles.td}>{formatReportValue(row['category'])}</td>
               <td style={reportStyles.td}>{formatReportValue(row['value'] ?? row['meanValue'])}</td>
               <td style={reportStyles.td}>{formatReportValue(row['unit'])}</td>
               <td style={reportStyles.td}>{formatReportValue(row['conditionName'])}</td>

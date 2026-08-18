@@ -2,6 +2,38 @@ import { getPool } from '../../infrastructure/database/pg-pool';
 import type { LibraryEntityConfig, LibraryListQuery, LibraryRecord } from './library.types';
 
 const columnMap: Record<string, Record<string, string>> = {
+  benchmark_metric_targets: {
+    benchmarkProfileId: 'benchmark_profile_id',
+    comparisonMode: 'comparison_mode',
+    criticality: 'criticality',
+    maxAcceptable: 'max_acceptable',
+    metricId: 'metric_id',
+    minAcceptable: 'min_acceptable',
+    requiredForPass: 'required_for_pass',
+    targetMean: 'target_mean',
+    targetStdDev: 'target_std_dev',
+    weight: 'weight',
+  },
+  benchmark_profiles: {
+    ballBrand: 'ball_brand',
+    ballModel: 'ball_model',
+    benchmarkCode: 'benchmark_code',
+    benchmarkName: 'benchmark_name',
+    notes: 'notes',
+    profileVersion: 'profile_version',
+    status: 'status',
+  },
+  metric_definitions: {
+    benchmarkComparable: 'benchmark_comparable',
+    category: 'category',
+    dataType: 'data_type',
+    defaultUnit: 'default_unit',
+    displayName: 'display_name',
+    higherIsBetter: 'higher_is_better',
+    metricKey: 'metric_key',
+    requiredForScoring: 'required_for_scoring',
+    status: 'status',
+  },
   materials: {
     defaultUnit: 'default_unit',
     materialCode: 'material_code',

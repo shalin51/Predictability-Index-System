@@ -6,6 +6,7 @@ import { LibraryRepository } from './library.repository';
 import type { LibraryCollectionResponse, LibraryEntityConfig, LibraryListQuery, LibraryRecord } from './library.types';
 
 const statuses = new Set(['active', 'inactive', 'archived']);
+const comparisonModes = new Set(['target_range', 'max_cap', 'min_floor']);
 
 export class LibraryService {
   constructor(
@@ -133,6 +134,9 @@ export class LibraryService {
   private validateEnums(payload: Record<string, unknown>): void {
     if (payload['status'] != null && !statuses.has(String(payload['status']))) {
       throw new ValidationError('status must be active, inactive, or archived');
+    }
+    if (payload['comparisonMode'] != null && !comparisonModes.has(String(payload['comparisonMode']))) {
+      throw new ValidationError('comparisonMode must be target_range, max_cap, or min_floor');
     }
   }
 

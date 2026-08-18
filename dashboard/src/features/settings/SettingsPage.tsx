@@ -11,6 +11,7 @@ import type {
 
 interface SettingsPageProps {
   onSave: (next: { preferences: DashboardPreferences; theme: ThemeName }) => Promise<void> | void;
+  onThemeChange: (theme: ThemeName) => void;
   preferences: DashboardPreferences;
   theme: ThemeName;
   themeOptions: Array<{ id: ThemeName; label: string; description: string }>;
@@ -18,6 +19,7 @@ interface SettingsPageProps {
 
 export function SettingsPage({
   onSave,
+  onThemeChange,
   preferences,
   theme,
   themeOptions,
@@ -72,7 +74,10 @@ export function SettingsPage({
             {themeOptions.map((option) => (
               <button
                 key={option.id}
-                onClick={() => setDraftTheme(option.id)}
+                onClick={() => {
+                  setDraftTheme(option.id);
+                  onThemeChange(option.id);
+                }}
                 style={{
                   ...styles.themeCard,
                   ...(draftTheme === option.id ? styles.themeCardActive : {}),

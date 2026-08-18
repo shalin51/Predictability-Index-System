@@ -22,6 +22,7 @@
     "verify:env:staging": "node scripts/verify-env.cjs .env.staging",
     "verify:env:production": "node scripts/verify-env.cjs .env.production",
     "auth:configure:dev": "node scripts/configure-local-auth.cjs .env.development",
+    "import:pickleball:dev": "node scripts/import-pickleball-test-results.cjs",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"

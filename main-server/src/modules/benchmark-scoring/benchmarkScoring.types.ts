@@ -1,4 +1,5 @@
 export type TrafficLight = 'green' | 'yellow' | 'red' | 'gray';
+export type ComparisonMode = 'target_range' | 'max_cap' | 'min_floor';
 
 export interface BenchmarkScoringRecord {
   [key: string]: unknown;
@@ -18,6 +19,7 @@ export interface AlgorithmConfig {
 
 export interface ScoringMetricInput {
   benchmarkName: string;
+  comparisonMode: ComparisonMode;
   criticality?: string | null;
   maxAcceptable: number | null;
   metricId: string;
@@ -31,6 +33,7 @@ export interface ScoringMetricInput {
 }
 
 export interface MetricScoreResult {
+  comparisonMode: ComparisonMode;
   criticality?: string | null;
   distance: number | null;
   maxAcceptable: number | null;

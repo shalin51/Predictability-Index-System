@@ -6,9 +6,11 @@ import { formatValue, runStyles } from '../productionRunUi';
 import { ProductionRunStatusBadge } from './ProductionRunStatusBadge';
 
 export function ProductionRunTable({
+  onDuplicate,
   onOpen,
   records,
 }: {
+  onDuplicate?: (id: string) => void;
   onOpen: (id: string) => void;
   records: ProductionRunRecord[];
 }) {
@@ -38,6 +40,7 @@ export function ProductionRunTable({
                 <div style={styles.rowActions}>
                   <button onClick={() => onOpen(record.id)} style={controlStyles.subtleButton} type="button">View</button>
                   <button onClick={() => onOpen(record.id)} style={controlStyles.subtleButton} type="button">Edit</button>
+                  {onDuplicate && <button onClick={() => onDuplicate(record.id)} style={controlStyles.subtleButton} type="button">Duplicate</button>}
                 </div>
               </td>
             </tr>

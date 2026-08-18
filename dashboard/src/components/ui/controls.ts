@@ -30,7 +30,7 @@ export const controlStyles = {
   secondaryButton: {
     ...createInteractiveButtonStyle({
       backgroundColor: colors.surface,
-      backgroundHoverColor: colors.surfaceMuted,
+      backgroundHoverColor: colors.interactiveHover,
       borderColor: colors.border,
       borderHoverColor: colors.borderStrong,
       color: colors.text.primary,

@@ -33,7 +33,7 @@ const nextActions: Partial<Record<ProductionRunStatus, { label: string; status: 
   ready_for_testing: { label: 'Start Testing', status: 'testing' },
 };
 
-export function ProductionRunDetailPage({ id, onBack, onOpenLabRun, onOpenReport }: { id: string; onBack: () => void; onOpenLabRun?: (runId: string) => void; onOpenReport?: (runId: string) => void }) {
+export function ProductionRunDetailPage({ id, onBack, onDuplicate, onOpenFormulation, onOpenLabRun, onOpenReport }: { id: string; onBack: () => void; onDuplicate: (id: string) => void; onOpenFormulation: (formulationId: string) => void; onOpenLabRun?: (runId: string) => void; onOpenReport?: (runId: string) => void }) {
   const [record, setRecord] = useState<ProductionRunRecord | null>(null);
   const [machines, setMachines] = useState<LibraryRecord[]>([]);
   const [molds, setMolds] = useState<LibraryRecord[]>([]);
@@ -91,6 +91,8 @@ export function ProductionRunDetailPage({ id, onBack, onOpenLabRun, onOpenReport
           </div>
           <div style={runStyles.actions}>
             <ProductionRunStatusBadge status={record.status} />
+            <button onClick={() => onOpenFormulation(record.formulationId)} style={controlStyles.secondaryButton} type="button">View Formulation</button>
+            <button onClick={() => onDuplicate(record.id)} style={controlStyles.secondaryButton} type="button">Duplicate</button>
             <button disabled={locked} onClick={() => setEditing(true)} style={{ ...controlStyles.secondaryButton, ...(locked ? styles.disabled : {}) }} type="button">Edit</button>
             {nextAction && <button onClick={() => void updateProductionRunStatus(record.id, nextAction.status).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.primaryButton} type="button">{nextAction.label}</button>}
             {record.status === 'testing' && onOpenLabRun && <button onClick={() => onOpenLabRun(record.id)} style={controlStyles.primaryButton} type="button">Continue Lab Testing</button>}

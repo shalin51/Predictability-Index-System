@@ -59,8 +59,9 @@ export class PerformanceDistanceService {
   }
 
   private scoreMetric(input: ScoringMetricInput, config: AlgorithmConfig): MetricScoreResult {
-    if (input.runMeanValue == null || input.targetMean == null || input.maxAcceptable == null || input.minAcceptable == null) {
+    if (!hasRequiredScoringValues(input)) {
       return {
+        comparisonMode: input.comparisonMode,
         criticality: input.criticality,
         distance: null,
         maxAcceptable: input.maxAcceptable,
@@ -80,14 +81,12 @@ export class PerformanceDistanceService {
       };
     }
 
-    const rangeWidth = Math.max(0.00001, input.maxAcceptable - input.minAcceptable);
-    const distance = Math.abs(input.runMeanValue - input.targetMean);
-    const normalizedDistance = distance / rangeWidth;
-    const metricScore = Math.max(0, 100 - normalizedDistance * 100);
+    const { distance, metricScore, normalizedDistance } = calculateMetricScore(input);
     const trafficLight = this.trafficLight(metricScore, config);
     const { riskLevel, riskNote } = this.risk(input, metricScore);
 
     return {
+      comparisonMode: input.comparisonMode,
       criticality: input.criticality,
       distance: round(distance),
       maxAcceptable: input.maxAcceptable,
@@ -116,6 +115,13 @@ export class PerformanceDistanceService {
 
   private risk(input: ScoringMetricInput, metricScore: number): { riskLevel?: string | null; riskNote?: string | null } {
     if (input.runMeanValue == null) return {};
+    if (input.comparisonMode === 'max_cap' && input.runMeanValue > (input.maxAcceptable ?? Infinity)) {
+      return { riskLevel: 'critical', riskNote: `${input.metricName} exceeds ${input.benchmarkName} maximum allowed` };
+    }
+    if (input.comparisonMode === 'min_floor' && input.runMeanValue < (input.minAcceptable ?? -Infinity)) {
+      return { riskLevel: 'critical', riskNote: `${input.metricName} is below ${input.benchmarkName} minimum allowed` };
+    }
+    if (input.comparisonMode !== 'target_range') return {};
     if (input.requiredForPass && (input.runMeanValue < (input.minAcceptable ?? -Infinity) || input.runMeanValue > (input.maxAcceptable ?? Infinity))) {
       return { riskLevel: 'critical', riskNote: `${input.metricName} is outside ${input.benchmarkName} acceptable range` };
     }
@@ -135,6 +141,35 @@ export class PerformanceDistanceService {
     if (score >= config.trafficLightThresholds.yellow) return 'yellow';
     return 'red';
   }
+}
+
+function hasRequiredScoringValues(input: ScoringMetricInput): boolean {
+  if (input.runMeanValue == null) return false;
+  if (input.comparisonMode === 'max_cap') return input.maxAcceptable != null;
+  if (input.comparisonMode === 'min_floor') return input.minAcceptable != null;
+  return input.targetMean != null && input.maxAcceptable != null && input.minAcceptable != null;
+}
+
+function calculateMetricScore(input: ScoringMetricInput): {
+  distance: number;
+  metricScore: number;
+  normalizedDistance: number;
+} {
+  const runValue = input.runMeanValue as number;
+  if (input.comparisonMode === 'max_cap') {
+    const cap = input.maxAcceptable as number;
+    const distance = Math.max(0, runValue - cap);
+    return { distance, metricScore: distance === 0 ? 100 : 0, normalizedDistance: distance / Math.max(0.00001, Math.abs(cap)) };
+  }
+  if (input.comparisonMode === 'min_floor') {
+    const floor = input.minAcceptable as number;
+    const distance = Math.max(0, floor - runValue);
+    return { distance, metricScore: distance === 0 ? 100 : 0, normalizedDistance: distance / Math.max(0.00001, Math.abs(floor)) };
+  }
+  const rangeWidth = Math.max(0.00001, (input.maxAcceptable as number) - (input.minAcceptable as number));
+  const distance = Math.abs(runValue - (input.targetMean as number));
+  const normalizedDistance = distance / rangeWidth;
+  return { distance, metricScore: Math.max(0, 100 - normalizedDistance * 100), normalizedDistance };
 }
 
 function normalizeConfig(input: unknown): AlgorithmConfig {

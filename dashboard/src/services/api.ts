@@ -262,6 +262,7 @@ export interface LabTestingQueueRecord {
   cureHoursBeforeTest: number;
   dateProduced: string;
   formulation: string;
+  formulationId: string;
   machine: string;
   machineId: string;
   missingRequiredMetrics: number;

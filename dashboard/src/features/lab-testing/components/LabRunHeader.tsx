@@ -7,11 +7,15 @@ import { labStyles } from '../labTestingUi';
 export function LabRunHeader({
   onBack,
   onComplete,
+  onOpenFormulation,
+  onOpenProductionRun,
   onStart,
   run,
 }: {
   onBack: () => void;
   onComplete: () => void;
+  onOpenFormulation: (formulationId: string) => void;
+  onOpenProductionRun: (productionRunId: string) => void;
   onStart: () => void;
   run: LabTestingQueueRecord;
 }) {
@@ -24,6 +28,8 @@ export function LabRunHeader({
       </div>
       <div style={labStyles.actions}>
         <LabTestingProgressBar completed={run.completedResults} total={run.requiredResultCount} />
+        <button onClick={() => onOpenFormulation(run.formulationId)} style={controlStyles.secondaryButton} type="button">View Formulation</button>
+        <button onClick={() => onOpenProductionRun(run.id)} style={controlStyles.secondaryButton} type="button">View Production Run</button>
         {run.status === 'ready_for_testing' && <button onClick={onStart} style={controlStyles.primaryButton} type="button">Start Testing</button>}
         <button disabled={run.status !== 'testing'} onClick={onComplete} style={controlStyles.primaryButton} type="button">Complete Testing</button>
       </div>

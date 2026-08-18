@@ -152,6 +152,7 @@ function AuthenticatedApp({ onLogout, session }: AuthenticatedAppProps) {
           libraryRecordMode={libraryRecordMode}
           librarySection={librarySection}
           materialMode={materialMode}
+          onThemeChange={handleThemeChange}
           onSettingsSave={handleSettingsSave}
           preferences={preferences}
           productionRunId={productionRunId}

@@ -46,7 +46,7 @@ const columns: Record<string, string[]> = {
   metrics: ['metricKey', 'displayName', 'category', 'defaultUnit', 'dataType', 'benchmarkComparable', 'requiredForScoring', 'status'],
   molds: ['moldCode', 'moldName', 'moldType', 'manufacturer', 'cavityCount', 'zoneCount', 'status'],
   'mold-zones': ['moldCode', 'zoneNumber', 'zoneName', 'zoneType', 'minimumTemperature', 'maximumTemperature', 'temperatureUnit', 'status'],
-  'scoring-rules': ['benchmarkCode', 'metricKey', 'targetMean', 'minAcceptable', 'maxAcceptable', 'targetStdDev', 'weight', 'criticality'],
+  'scoring-rules': ['benchmarkCode', 'metricKey', 'comparisonMode', 'targetMean', 'minAcceptable', 'maxAcceptable', 'targetStdDev', 'weight', 'criticality'],
   suppliers: ['supplierName', 'supplierType', 'contactName', 'contactEmail', 'contactPhone', 'status'],
   'test-conditions': ['conditionCode', 'conditionName', 'description', 'status'],
   'test-methods': ['methodCode', 'methodName', 'metricKey', 'cureHours', 'status'],
