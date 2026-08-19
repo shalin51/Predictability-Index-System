@@ -266,7 +266,7 @@ export class DashboardRepository {
                 ELSE 'Project data'
               END AS domain
        FROM pg_stat_user_tables
-       WHERE relname <> '_migrations'
+       WHERE relname NOT IN ('_migrations', 'audit_log', 'audit_logs', 'audit_events', 'request_logs')
        ORDER BY domain, relname`
     );
     return result.rows as DashboardRecord[];

@@ -13,7 +13,7 @@ import {
   type ProductionRunRecord,
   type ProductionRunStatus,
 } from '../../services/api';
-import { colors, spacing } from '../../theme/tokens';
+import { spacing } from '../../theme/tokens';
 import { ManufacturingParametersForm } from './components/ManufacturingParametersForm';
 import { BenchmarkScoringPanel } from './components/scores/BenchmarkScoringPanel';
 import { ProductionRunStatusBadge } from './components/ProductionRunStatusBadge';
@@ -24,7 +24,7 @@ import { ProcessSetupPanel } from './components/ProcessSetupPanel';
 import { ReadOnlyLabResultsPanel } from '../lab-testing/components/ReadOnlyLabResultsPanel';
 import { formatValue, runStyles, statusLabels } from './productionRunUi';
 
-type DetailTab = 'Overview' | 'Manufacturing Parameters' | 'Process Setup' | 'Samples' | 'Lab Results' | 'Run Summary' | 'Scores' | 'Audit History';
+type DetailTab = 'Overview' | 'Manufacturing Parameters' | 'Process Setup' | 'Samples' | 'Lab Results' | 'Run Summary' | 'Scores';
 
 const nextActions: Partial<Record<ProductionRunStatus, { label: string; status: ProductionRunStatus }>> = {
   curing: { label: 'Mark Ready for Testing', status: 'ready_for_testing' },
@@ -106,7 +106,7 @@ export function ProductionRunDetailPage({ id, onBack, onDuplicate, onOpenFormula
         {message && <MessageBanner tone="success">{message}</MessageBanner>}
         <ProductionRunTimeline status={record.status} />
         <div style={styles.tabs}>
-          {(['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples', 'Lab Results', 'Run Summary', 'Scores', 'Audit History'] as DetailTab[]).map((item) => (
+          {(['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples', 'Lab Results', 'Run Summary', 'Scores'] as DetailTab[]).map((item) => (
             <button key={item} onClick={() => setTab(item)} style={getTabButtonStyle(tab === item)} type="button">{item}</button>
           ))}
         </div>
@@ -140,7 +140,6 @@ export function ProductionRunDetailPage({ id, onBack, onDuplicate, onOpenFormula
         {tab === 'Lab Results' && <ReadOnlyLabResultsPanel onOpenLabRun={onOpenLabRun} runId={record.id} />}
         {tab === 'Run Summary' && <RunSummaryPanel onContinueToScoring={() => setTab('Scores')} runId={record.id} />}
         {tab === 'Scores' && <BenchmarkScoringPanel runId={record.id} />}
-        {tab === 'Audit History' && <pre style={styles.audit}>{JSON.stringify(record['auditHistory'] ?? [], null, 2)}</pre>}
       </Card>
     </DashboardPage>
   );
@@ -166,7 +165,6 @@ function toPayload(record: ProductionRunRecord): ProductionRunPayload {
 }
 
 const styles: Record<string, CSSProperties> = {
-  audit: { backgroundColor: colors.surfaceMuted, color: colors.text.secondary, overflow: 'auto', padding: spacing.space4 },
   disabled: { opacity: 0.5, cursor: 'not-allowed' },
   overviewGrid: { display: 'grid', gap: spacing.space4, gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' },
   tabs: { display: 'flex', flexWrap: 'wrap', gap: spacing.space3 },

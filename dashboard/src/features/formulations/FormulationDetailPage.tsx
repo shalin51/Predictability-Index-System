@@ -15,14 +15,14 @@ import {
   type LibraryRecord,
   type ProductionRunRecord,
 } from '../../services/api';
-import { colors, spacing } from '../../theme/tokens';
+import { spacing } from '../../theme/tokens';
 import { FormulationComponentsEditor } from './FormulationComponentsEditor';
 import { ProductionRunTable } from '../production-runs/components/ProductionRunTable';
 import { BenchmarkScoringPanel } from '../production-runs/components/scores/BenchmarkScoringPanel';
 import { ReadOnlyLabResultsPanel } from '../lab-testing/components/ReadOnlyLabResultsPanel';
 import { formatValue, formulationStyles, labelize, totalTone } from './formulationUi';
 
-type DetailTab = 'Overview' | 'Recipe Components' | 'Production Runs' | 'Lab Results' | 'Scores' | 'Audit History';
+type DetailTab = 'Overview' | 'Recipe Components' | 'Production Runs' | 'Lab Results' | 'Scores';
 
 export function FormulationDetailPage({
   id,
@@ -129,7 +129,7 @@ export function FormulationDetailPage({
         {error && <MessageBanner tone="danger">{error}</MessageBanner>}
         {message && <MessageBanner tone="success">{message}</MessageBanner>}
         <div style={styles.tabs}>
-          {(['Overview', 'Recipe Components', 'Production Runs', 'Lab Results', 'Scores', 'Audit History'] as DetailTab[]).map((item) => (
+          {(['Overview', 'Recipe Components', 'Production Runs', 'Lab Results', 'Scores'] as DetailTab[]).map((item) => (
             <button key={item} onClick={() => setTab(item)} style={getTabButtonStyle(tab === item)} type="button">{item}</button>
           ))}
         </div>
@@ -161,16 +161,12 @@ export function FormulationDetailPage({
         {tab === 'Scores' && (productionRuns.length > 0
           ? <div style={formulationStyles.stack}>{productionRuns.map((run) => <BenchmarkScoringPanel key={run.id} runId={run.id} />)}</div>
           : <EmptyState>No production runs or scores.</EmptyState>)}
-        {tab === 'Audit History' && (
-          <pre style={styles.audit}>{JSON.stringify(record['auditHistory'] ?? [], null, 2)}</pre>
-        )}
       </Card>
     </DashboardPage>
   );
 }
 
 const styles: Record<string, CSSProperties> = {
-  audit: { backgroundColor: colors.surfaceMuted, color: colors.text.secondary, overflow: 'auto', padding: spacing.space4 },
   disabled: { opacity: 0.5, cursor: 'not-allowed' },
   overviewGrid: { display: 'grid', gap: spacing.space4, gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' },
   tabs: { display: 'flex', flexWrap: 'wrap', gap: spacing.space3 },
