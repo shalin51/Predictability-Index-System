@@ -32,8 +32,16 @@ export class DashboardService {
     return this.repo.benchmarkOverview();
   }
 
+  dataInventory() {
+    return this.repo.dataInventory();
+  }
+
+  similarityAnalysis() {
+    return this.repo.similarityAnalysis();
+  }
+
   async overview(): Promise<DashboardOverview> {
-    const [summary, workflowStatus, labQueue, latestScores, riskAlerts, recentReports, benchmarkOverview] = await Promise.all([
+    const [summary, workflowStatus, labQueue, latestScores, riskAlerts, recentReports, benchmarkOverview, dataInventory, similarityAnalysis] = await Promise.all([
       this.summary(),
       this.workflowStatus(),
       this.labQueue(),
@@ -41,15 +49,19 @@ export class DashboardService {
       this.riskAlerts(),
       this.recentReports(),
       this.benchmarkOverview(),
+      this.dataInventory(),
+      this.similarityAnalysis(),
     ]);
 
     return {
       benchmarkOverview,
+      dataInventory,
       labQueue,
       latestScores,
       recentReports,
       riskAlerts,
       summary,
+      similarityAnalysis,
       workflowStatus,
     };
   }

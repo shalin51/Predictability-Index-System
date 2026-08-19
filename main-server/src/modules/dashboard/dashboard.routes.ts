@@ -12,6 +12,8 @@ export function createDashboardRoutes(controller: DashboardController) {
   router.get('/risk-alerts', (req, res) => controller.riskAlerts(req, res));
   router.get('/recent-reports', (req, res) => controller.recentReports(req, res));
   router.get('/benchmark-overview', (req, res) => controller.benchmarkOverview(req, res));
+  router.get('/data-inventory', (req, res) => controller.dataInventory(req, res));
+  router.get('/similarity-analysis', (req, res) => controller.similarityAnalysis(req, res));
 
   return router;
 }

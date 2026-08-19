@@ -17,6 +17,13 @@ export const NAV: ReadonlyArray<ShellNavItem<DashboardView>> = [
     icon: 'upload',
   },
   {
+    id: 'benchmarks',
+    label: 'Benchmarks',
+    description: 'Benchmark profiles and scoring targets.',
+    group: 'Operations',
+    icon: 'layers',
+  },
+  {
     id: 'machines',
     label: 'Machines',
     description: 'Machine models, specifications, and capabilities.',
@@ -75,6 +82,10 @@ export const VIEW_META: Record<DashboardView, { title: string; subtitle: string 
   materials: {
     title: 'Materials',
     subtitle: 'Material properties, processing guidance, and source data.',
+  },
+  benchmarks: {
+    title: 'Benchmarks',
+    subtitle: 'Benchmark profiles used to evaluate production runs.',
   },
   machines: {
     title: 'Machines',

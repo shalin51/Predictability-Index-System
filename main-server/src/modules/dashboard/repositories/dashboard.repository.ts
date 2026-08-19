@@ -253,6 +253,61 @@ export class DashboardRepository {
     };
   }
 
+  async dataInventory(): Promise<DashboardRecord[]> {
+    const result = await getPool().query(
+      `SELECT relname AS "tableName", n_live_tup::int AS "rowCount",
+              CASE
+                WHEN relname IN ('materials', 'suppliers', 'supplier_materials', 'material_lots', 'material_catalog_imports', 'material_external_identifiers', 'material_source_documents', 'material_property_definitions', 'material_property_facts', 'material_processing_profiles', 'material_processing_ranges') THEN 'Materials'
+                WHEN relname IN ('machines', 'molds', 'mold_zones', 'machine_parameter_capabilities', 'process_parameter_definitions', 'setup_sheet_imports', 'process_setup_revisions', 'process_setup_revision_parameters', 'production_run_process_values', 'production_run_notes', 'production_run_material_lots', 'material_drying_events', 'process_setup_revision_log_entries') THEN 'Manufacturing'
+                WHEN relname IN ('experiments', 'formulation_families', 'formulations', 'formulation_components', 'production_runs', 'samples') THEN 'Workflow'
+                WHEN relname IN ('metric_definitions', 'test_method_definitions', 'test_condition_definitions', 'sample_test_results', 'environmental_test_results', 'sample_observations', 'sample_subjective_ratings', 'run_metric_summaries') THEN 'Testing'
+                WHEN relname IN ('benchmark_profiles', 'benchmark_metric_targets', 'algorithm_versions', 'score_reports', 'score_report_metrics', 'generated_reports', 'comparison_analyses', 'comparison_analysis_candidates', 'comparison_analysis_metrics') THEN 'Analysis'
+                WHEN relname IN ('roles', 'app_users', 'user_roles', 'audit_log', 'audit_logs', 'request_logs', 'api_versions', 'users') THEN 'System'
+                ELSE 'Project data'
+              END AS domain
+       FROM pg_stat_user_tables
+       WHERE relname <> '_migrations'
+       ORDER BY domain, relname`
+    );
+    return result.rows as DashboardRecord[];
+  }
+
+  async similarityAnalysis(): Promise<DashboardRecord | null> {
+    const analysis = await getPool().query(
+      `SELECT id, analysis_code AS "analysisCode", analysis_name AS "analysisName", target_name AS "targetName",
+              candidate_count AS "candidateCount", methodology, notes
+       FROM comparison_analyses
+       ORDER BY updated_at DESC
+       LIMIT 1`
+    );
+    const row = analysis.rows[0] as DashboardRecord | undefined;
+    if (!row) return null;
+
+    const [candidates, metrics] = await Promise.all([
+      getPool().query(
+        `SELECT candidate_name AS "candidateName", rank, weighted_deviation_percent::float AS "weightedDeviationPercent", confidence_note AS "confidenceNote"
+         FROM comparison_analysis_candidates
+         WHERE analysis_id = $1
+         ORDER BY rank NULLS LAST, weighted_deviation_percent
+         LIMIT 10`,
+        [row['id']]
+      ),
+      getPool().query(
+        `SELECT md.display_name AS "metricName", cam.target_mean::float AS "targetMean", cam.candidate_mean::float AS "candidateMean",
+                cam.signed_deviation_percent::float AS "signedDeviationPercent", cam.weight::float AS weight,
+                cam.weighted_deviation_points::float AS "weightedDeviationPoints", cam.source_detail_level AS "sourceDetailLevel"
+         FROM comparison_analysis_metrics cam
+         JOIN comparison_analysis_candidates cac ON cac.id = cam.candidate_id
+         JOIN metric_definitions md ON md.id = cam.metric_id
+         WHERE cac.analysis_id = $1 AND cac.rank = 1
+         ORDER BY cam.weighted_deviation_points DESC`,
+        [row['id']]
+      ),
+    ]);
+
+    return { ...row, candidates: candidates.rows, metrics: metrics.rows };
+  }
+
   private bestScoresSql(): string {
     return `SELECT DISTINCT ON (sr.production_run_id)
               sr.id, sr.production_run_id, sr.benchmark_profile_id,

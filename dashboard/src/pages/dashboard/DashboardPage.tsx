@@ -11,7 +11,8 @@ import { NeedsAttentionPanel } from '../../features/dashboard/components/NeedsAt
 import { RecentReportsWidget } from '../../features/dashboard/components/RecentReportsWidget';
 import { RiskAlertsWidget } from '../../features/dashboard/components/RiskAlertsWidget';
 import { WorkflowStatusPanel } from '../../features/dashboard/components/WorkflowStatusPanel';
-import { PredictiveIndexPanel } from '../../features/dashboard/components/PredictiveIndexPanel';
+import { DataInventoryPanel } from '../../features/dashboard/components/DataInventoryPanel';
+import { SimilarityAnalysisPanel } from '../../features/dashboard/components/SimilarityAnalysisPanel';
 import { getDashboardOverview, type DashboardOverview } from '../../services/api';
 
 export function DashboardHomePage({
@@ -76,9 +77,16 @@ export function DashboardHomePage({
           </MessageBanner>
         )}
         {loading && !data && <div className="dashboard-loading" aria-label="Loading dashboard" />}
-        <PredictiveIndexPanel />
         {data && hasOperationalData && (
           <div style={dashboardStyles.stack}>
+            <Section title="Available Data">
+              <DataInventoryPanel rows={data.dataInventory} />
+            </Section>
+            {data.similarityAnalysis && (
+              <Section title="Similarity Analysis">
+                <SimilarityAnalysisPanel analysis={data.similarityAnalysis} />
+              </Section>
+            )}
             <Section title="Needs Attention">
               <NeedsAttentionPanel riskAlertCount={data.riskAlerts.length} summary={data.summary} />
             </Section>
@@ -126,7 +134,9 @@ function hasDashboardData(data: DashboardOverview) {
     || data.labQueue.length > 0
     || data.latestScores.length > 0
     || data.recentReports.length > 0
-    || data.riskAlerts.length > 0;
+    || data.riskAlerts.length > 0
+    || data.dataInventory.some((item) => item.rowCount > 0)
+    || data.similarityAnalysis !== null;
 }
 
 function Section({ children, title }: { children: ReactNode; title: string }) {

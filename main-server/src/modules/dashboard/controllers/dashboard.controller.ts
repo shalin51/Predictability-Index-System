@@ -36,4 +36,12 @@ export class DashboardController {
   benchmarkOverview(_req: Request, res: Response): void {
     respondJson(res, () => this.service.benchmarkOverview());
   }
+
+  dataInventory(_req: Request, res: Response): void {
+    respondJson(res, () => this.service.dataInventory());
+  }
+
+  similarityAnalysis(_req: Request, res: Response): void {
+    respondJson(res, () => this.service.similarityAnalysis());
+  }
 }

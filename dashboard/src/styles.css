@@ -697,6 +697,26 @@ tr[style*="cursor: pointer"]:hover,
   grid-template-columns: 64px minmax(0, 1fr);
 }
 
+.dashboard-data-inventory {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dashboard-data-inventory__tables {
+  display: grid;
+  gap: 6px;
+}
+
+.dashboard-data-inventory__row {
+  align-items: baseline;
+  display: flex;
+  font-size: 13px;
+  gap: 12px;
+  justify-content: space-between;
+  text-transform: capitalize;
+}
+
 .dashboard-shell__backdrop {
   display: none;
 }
@@ -879,6 +899,10 @@ tr[style*="cursor: pointer"]:hover,
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .dashboard-data-inventory {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .dashboard-two-column-grid {
     grid-template-columns: 1fr;
   }
@@ -929,7 +953,8 @@ tr[style*="cursor: pointer"]:hover,
 @media (max-width: 720px) {
   .dashboard-summary-grid,
   .dashboard-secondary-metrics,
-  .dashboard-workflow-grid {
+  .dashboard-workflow-grid,
+  .dashboard-data-inventory {
     grid-template-columns: 1fr;
   }
 

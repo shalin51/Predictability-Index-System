@@ -2,6 +2,7 @@ export type DashboardView =
   | 'dashboard'
   | 'formulations'
   | 'materials'
+  | 'benchmarks'
   | 'machines'
   | 'molds'
   | 'production-runs'
@@ -13,6 +14,7 @@ export type LibrarySection =
   | 'materials'
   | 'material-properties'
   | 'material-suppliers'
+  | 'benchmarks'
   | 'machines'
   | 'machine-parameters'
   | 'molds'
@@ -36,6 +38,7 @@ export interface DashboardRouteState {
 }
 
 const libraryViewBySection: Record<LibrarySection, DashboardView> = {
+  benchmarks: 'benchmarks',
   machines: 'machines',
   'machine-parameters': 'machines',
   materials: 'materials',
@@ -175,6 +178,10 @@ export function buildDashboardPath({ formulationId, formulationMode, labRunId, l
     if (materialMode === 'import') return '/materials/import';
     const section = librarySection ?? 'materials';
     return `/${section}${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
+  }
+
+  if (view === 'benchmarks') {
+    return `/benchmarks${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
   }
 
   if (view === 'machines') {

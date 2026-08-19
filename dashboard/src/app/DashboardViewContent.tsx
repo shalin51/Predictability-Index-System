@@ -91,6 +91,21 @@ export function DashboardViewContent({
     );
   }
 
+  if (view === 'benchmarks') {
+    const section = 'benchmarks';
+    return (
+      <MasterDataPage
+        activeSection={section}
+        editRecordId={libraryRecordMode === 'edit' ? libraryRecordId : undefined}
+        onEditRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'edit', librarySection: section, view: 'benchmarks' })}
+        onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'benchmarks' })}
+        onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'benchmarks' })}
+        recordId={libraryRecordId}
+        sections={['benchmarks']}
+      />
+    );
+  }
+
   if (view === 'machines') {
     const section = 'machines';
     return (

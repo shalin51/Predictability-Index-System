@@ -545,13 +545,49 @@ export interface DashboardBenchmarkOverview {
   trafficCounts: Array<Record<string, unknown>>;
 }
 
+export interface DashboardDataInventoryItem {
+  domain: string;
+  rowCount: number;
+  tableName: string;
+}
+
+export interface DashboardSimilarityCandidate {
+  candidateName: string;
+  confidenceNote?: string | null;
+  rank?: number | null;
+  weightedDeviationPercent: number;
+}
+
+export interface DashboardSimilarityMetric {
+  candidateMean?: number | null;
+  metricName: string;
+  signedDeviationPercent: number;
+  sourceDetailLevel: string;
+  targetMean: number;
+  weight: number;
+  weightedDeviationPoints: number;
+}
+
+export interface DashboardSimilarityAnalysis {
+  analysisCode: string;
+  analysisName: string;
+  candidateCount: number;
+  candidates: DashboardSimilarityCandidate[];
+  methodology: string;
+  metrics: DashboardSimilarityMetric[];
+  notes?: string | null;
+  targetName: string;
+}
+
 export interface DashboardOverview {
   benchmarkOverview: DashboardBenchmarkOverview;
+  dataInventory: DashboardDataInventoryItem[];
   labQueue: DashboardLabQueueItem[];
   latestScores: DashboardLatestScore[];
   recentReports: DashboardRecentReport[];
   riskAlerts: DashboardRiskAlert[];
   summary: DashboardSummary;
+  similarityAnalysis: DashboardSimilarityAnalysis | null;
   workflowStatus: DashboardWorkflowStage[];
 }
 
@@ -950,4 +986,12 @@ export async function getDashboardRecentReports(): Promise<DashboardRecentReport
 
 export async function getDashboardBenchmarkOverview(): Promise<DashboardBenchmarkOverview> {
   return fetchJSON<DashboardBenchmarkOverview>('/dashboard/benchmark-overview');
+}
+
+export async function getDashboardDataInventory(): Promise<DashboardDataInventoryItem[]> {
+  return fetchJSON<DashboardDataInventoryItem[]>('/dashboard/data-inventory');
+}
+
+export async function getDashboardSimilarityAnalysis(): Promise<DashboardSimilarityAnalysis | null> {
+  return fetchJSON<DashboardSimilarityAnalysis | null>('/dashboard/similarity-analysis');
 }

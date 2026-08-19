@@ -15,6 +15,8 @@ export interface DashboardSummary {
 
 export interface DashboardOverview {
   benchmarkOverview: DashboardRecord;
+  dataInventory: DashboardRecord[];
+  similarityAnalysis: DashboardRecord | null;
   labQueue: DashboardRecord[];
   latestScores: DashboardRecord[];
   recentReports: DashboardRecord[];
