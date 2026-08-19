@@ -79,13 +79,8 @@ export function DashboardHomePage({
         {loading && !data && <div className="dashboard-loading" aria-label="Loading dashboard" />}
         {data && hasOperationalData && (
           <div style={dashboardStyles.stack}>
-            <Section title="Available Data">
-              <DataInventoryPanel rows={data.dataInventory} />
-            </Section>
             {data.similarityAnalysis && (
-              <Section title="Similarity Analysis">
-                <SimilarityAnalysisPanel analysis={data.similarityAnalysis} />
-              </Section>
+              <SimilarityAnalysisPanel analysis={data.similarityAnalysis} />
             )}
             <Section title="Needs Attention">
               <NeedsAttentionPanel riskAlertCount={data.riskAlerts.length} summary={data.summary} />
@@ -95,6 +90,9 @@ export function DashboardHomePage({
             </Section>
             <Section title="Workflow Inventory">
               <WorkflowStatusPanel rows={data.workflowStatus} />
+            </Section>
+            <Section title="Available Data">
+              <DataInventoryPanel rows={data.dataInventory} />
             </Section>
             <div className="dashboard-two-column-grid">
               <Section title="Lab Testing Queue">

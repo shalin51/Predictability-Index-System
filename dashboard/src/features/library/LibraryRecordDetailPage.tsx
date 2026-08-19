@@ -47,9 +47,11 @@ export function LibraryRecordDetailPage({
   const [search, setSearch] = useState('');
   const [machineParameters, setMachineParameters] = useState<LibraryRecord[]>([]);
   const [moldZones, setMoldZones] = useState<LibraryRecord[]>([]);
+  const [benchmarkProperties, setBenchmarkProperties] = useState<LibraryRecord[]>([]);
   const [relatedMaterials, setRelatedMaterials] = useState<LibraryRecord[]>([]);
   const [relatedError, setRelatedError] = useState('');
   const [moldZonesError, setMoldZonesError] = useState('');
+  const [benchmarkPropertiesError, setBenchmarkPropertiesError] = useState('');
 
   useEffect(() => {
     let active = true;
@@ -58,9 +60,11 @@ export function LibraryRecordDetailPage({
     setMessage('');
     setMachineParameters([]);
     setMoldZones([]);
+    setBenchmarkProperties([]);
     setRelatedMaterials([]);
     setRelatedError('');
     setMoldZonesError('');
+    setBenchmarkPropertiesError('');
 
     const detailRequest = getLibraryRecord(resource, id);
     const recordRequest = resource === 'materials'
@@ -113,6 +117,16 @@ export function LibraryRecordDetailPage({
         })
         .catch((reason: unknown) => {
           if (active) setMoldZonesError(getErrorMessage(reason, 'Unable to load mold zones'));
+        });
+    }
+
+    if (resource === 'benchmarks') {
+      void listLibraryRecords('scoring-rules', { category: id })
+        .then((response) => {
+          if (active) setBenchmarkProperties(response.data);
+        })
+        .catch((reason: unknown) => {
+          if (active) setBenchmarkPropertiesError(getErrorMessage(reason, 'Unable to load benchmark properties'));
         });
     }
 
@@ -206,6 +220,9 @@ export function LibraryRecordDetailPage({
               {resource === 'material-suppliers' && (
                 <RelatedMaterialsTable error={relatedError} materials={relatedMaterials} />
               )}
+              {resource === 'benchmarks' && (
+                <BenchmarkPropertiesTable error={benchmarkPropertiesError} properties={benchmarkProperties} />
+              )}
               {resource === 'materials' && (
                 <div style={styles.properties}>
                   <h2 style={styles.sectionTitle}>Material Properties</h2>
@@ -253,9 +270,54 @@ export function LibraryRecordDetailPage({
 }
 
 function getRecordTitle(record: LibraryRecord, resource: string) {
-  const titleKeys = ['materialName', 'propertyName', 'supplierName', 'machineName', 'displayName', 'moldName', 'zoneName', 'name', 'code'];
+  const titleKeys = ['benchmarkName', 'materialName', 'propertyName', 'supplierName', 'machineName', 'displayName', 'moldName', 'zoneName', 'name', 'code'];
   const value = titleKeys.map((key) => record[key]).find((item) => item !== null && item !== undefined && item !== '');
   return value ? String(value) : `${labelize(resource)} ${record.id}`;
+}
+
+function BenchmarkPropertiesTable({ error, properties }: { error: string; properties: LibraryRecord[] }) {
+  const groups = properties.reduce<Record<string, LibraryRecord[]>>((result, property) => {
+    const category = String(property['metricCategory'] ?? 'Other');
+    (result[category] ??= []).push(property);
+    return result;
+  }, {});
+
+  return (
+    <section style={styles.properties}>
+      <h2 style={styles.sectionTitle}>Benchmark Properties</h2>
+      {error && <MessageBanner tone="danger">{error}</MessageBanner>}
+      {Object.entries(groups).map(([category, items]) => (
+        <div key={category} style={styles.properties}>
+          <h3 style={styles.propertyGroupTitle}>{labelize(category)}</h3>
+          <DataTable compact minWidth={920}>
+            <DataTableHeader>
+              <tr>
+                <DataTableHead>Property</DataTableHead>
+                <DataTableHead>Target Mean</DataTableHead>
+                <DataTableHead>Min</DataTableHead>
+                <DataTableHead>Max</DataTableHead>
+                <DataTableHead>Weight</DataTableHead>
+                <DataTableHead>Comparison</DataTableHead>
+              </tr>
+            </DataTableHeader>
+            <DataTableBody>
+              {items.map((property) => (
+                <DataTableRow key={String(property['id'])}>
+                  <DataTableCell>{String(property['metricName'] ?? property['metricKey'] ?? '-')}</DataTableCell>
+                  <DataTableCell>{formatValue(property['targetMean'])}</DataTableCell>
+                  <DataTableCell>{formatValue(property['minAcceptable'])}</DataTableCell>
+                  <DataTableCell>{formatValue(property['maxAcceptable'])}</DataTableCell>
+                  <DataTableCell>{typeof property['weight'] === 'number' ? `${(property['weight'] * 100).toFixed(0)}%` : formatValue(property['weight'])}</DataTableCell>
+                  <DataTableCell>{formatValue(property['comparisonMode'])}</DataTableCell>
+                </DataTableRow>
+              ))}
+            </DataTableBody>
+          </DataTable>
+        </div>
+      ))}
+      {properties.length === 0 && !error && <div style={styles.muted}>No benchmark properties found.</div>}
+    </section>
+  );
 }
 
 function formatValue(value: unknown) {
@@ -278,6 +340,7 @@ const styles: Record<string, CSSProperties> = {
   muted: { color: colors.text.muted },
   page: { display: 'flex', flexDirection: 'column', gap: spacing.space5, minHeight: '100%' },
   properties: { display: 'grid', gap: spacing.space4, minWidth: 0, overflow: 'auto' },
+  propertyGroupTitle: { color: colors.text.secondary, fontSize: font.size.h3, margin: 0 },
   machineParameters: { display: 'grid', gap: spacing.space3, marginTop: spacing.space5, minWidth: 0 },
   sectionTitle: { color: colors.text.primary, fontSize: font.size.h2, margin: 0 },
   summary: { display: 'grid', gap: spacing.space5, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' },
