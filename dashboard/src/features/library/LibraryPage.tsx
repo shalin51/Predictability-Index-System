@@ -86,6 +86,10 @@ export function LibraryPage({
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    setStatus(section === 'benchmarks' ? 'all' : 'active');
+  }, [section]);
+
   const load = () => {
     setLoading(true);
     setError('');
