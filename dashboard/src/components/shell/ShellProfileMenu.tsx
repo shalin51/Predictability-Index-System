@@ -4,7 +4,6 @@ import type { ShellThemeOption } from './AppShell';
 import type { ThemeName } from '../../theme/tokens';
 
 interface ShellProfileMenuProps {
-  onMarkAllNotificationsRead: () => void;
   onLogout: () => void;
   onOpenSettings: () => void;
   onThemeChange: (theme: ThemeName) => void;
@@ -14,7 +13,6 @@ interface ShellProfileMenuProps {
 }
 
 export function ShellProfileMenu({
-  onMarkAllNotificationsRead,
   onLogout,
   onOpenSettings,
   onThemeChange,
@@ -35,11 +33,6 @@ export function ShellProfileMenu({
       <button onClick={onOpenSettings} style={shellStyles.menuButton} type="button">
         <ShellIcon name="settings" />
         Open settings
-      </button>
-
-      <button onClick={onMarkAllNotificationsRead} style={shellStyles.menuButton} type="button">
-        <ShellIcon name="bell" />
-        Clear alert badge
       </button>
 
       <button onClick={onLogout} style={shellStyles.menuButton} type="button">

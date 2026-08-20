@@ -5,14 +5,13 @@ interface MasterDataPageProps {
   activeSection: string;
   editRecordId?: string;
   onImport?: () => void;
-  onEditRecord: (id: string) => void;
   onOpenRecord: (id: string) => void;
   onSectionChange: (section: string) => void;
   recordId?: string;
   sections: readonly string[];
 }
 
-export function MasterDataPage({ activeSection, editRecordId, onEditRecord, onImport, onOpenRecord, onSectionChange, recordId, sections }: MasterDataPageProps) {
+export function MasterDataPage({ activeSection, editRecordId, onImport, onOpenRecord, onSectionChange, recordId, sections }: MasterDataPageProps) {
   if (recordId) {
     return (
       <LibraryRecordDetailPage
@@ -30,7 +29,6 @@ export function MasterDataPage({ activeSection, editRecordId, onEditRecord, onIm
     <LibraryPage
       activeSection={activeSection}
       onImport={onImport}
-      onEditRecord={onEditRecord}
       onOpenRecord={onOpenRecord}
       onSectionChange={onSectionChange}
       sectionOptions={sections}

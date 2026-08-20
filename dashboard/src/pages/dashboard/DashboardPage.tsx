@@ -5,21 +5,13 @@ import { DashboardPage as PageFrame, MessageBanner } from '../../components/ui/P
 import { BenchmarkOverviewWidget } from '../../features/dashboard/components/BenchmarkOverviewWidget';
 import { DashboardKpiCards } from '../../features/dashboard/components/DashboardKpiCards';
 import { dashboardStyles } from '../../features/dashboard/components/dashboardFormat';
-import { LabQueueWidget } from '../../features/dashboard/components/LabQueueWidget';
-import { LatestScoresWidget } from '../../features/dashboard/components/LatestScoresWidget';
 import { NeedsAttentionPanel } from '../../features/dashboard/components/NeedsAttentionPanel';
-import { RecentReportsWidget } from '../../features/dashboard/components/RecentReportsWidget';
-import { RiskAlertsWidget } from '../../features/dashboard/components/RiskAlertsWidget';
 import { WorkflowStatusPanel } from '../../features/dashboard/components/WorkflowStatusPanel';
-import { DataInventoryPanel } from '../../features/dashboard/components/DataInventoryPanel';
 import { SimilarityAnalysisPanel } from '../../features/dashboard/components/SimilarityAnalysisPanel';
 import { getDashboardOverview, type DashboardOverview } from '../../services/api';
 
 export function DashboardHomePage({
   autoRefresh = false,
-  onOpenLabRun,
-  onOpenProductionRun,
-  onOpenReport,
 }: {
   autoRefresh?: boolean;
   onOpenLabRun: (id: string) => void;
@@ -91,30 +83,11 @@ export function DashboardHomePage({
             <Section title="Workflow Inventory">
               <WorkflowStatusPanel rows={data.workflowStatus} />
             </Section>
-            <Section title="Available Data">
-              <DataInventoryPanel rows={data.dataInventory} />
-            </Section>
-            <div className="dashboard-two-column-grid">
-              <Section title="Lab Testing Queue">
-                <LabQueueWidget onOpen={onOpenLabRun} rows={data.labQueue} />
-              </Section>
-              <Section title="Latest Scored Runs">
-                <LatestScoresWidget onOpenReport={onOpenReport} onOpenRun={onOpenProductionRun} rows={data.latestScores} />
-              </Section>
-            </div>
             {data.benchmarkOverview.bestMatchCounts.length > 0 && (
               <Section title="Best Match Distribution">
                 <BenchmarkOverviewWidget overview={data.benchmarkOverview} />
               </Section>
             )}
-            <div className="dashboard-two-column-grid">
-              <Section title="Risk Alerts">
-                <RiskAlertsWidget onOpenRun={onOpenProductionRun} rows={data.riskAlerts} />
-              </Section>
-              <Section title="Recent Reports">
-                <RecentReportsWidget onOpen={onOpenReport} rows={data.recentReports} />
-              </Section>
-            </div>
           </div>
         )}
       </div>

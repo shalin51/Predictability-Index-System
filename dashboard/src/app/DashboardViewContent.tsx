@@ -82,7 +82,6 @@ export function DashboardViewContent({
         activeSection={section}
         editRecordId={libraryRecordMode === 'edit' ? libraryRecordId : undefined}
         onImport={() => navigate({ librarySection: 'materials', materialMode: 'import', view: 'materials' })}
-        onEditRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'edit', librarySection: section, view: 'materials' })}
         onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'materials' })}
         onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'materials' })}
         recordId={libraryRecordId}
@@ -97,7 +96,6 @@ export function DashboardViewContent({
       <MasterDataPage
         activeSection={section}
         editRecordId={libraryRecordMode === 'edit' ? libraryRecordId : undefined}
-        onEditRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'edit', librarySection: section, view: 'benchmarks' })}
         onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'benchmarks' })}
         onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'benchmarks' })}
         recordId={libraryRecordId}
@@ -112,7 +110,6 @@ export function DashboardViewContent({
       <MasterDataPage
         activeSection={section}
         editRecordId={libraryRecordMode === 'edit' ? libraryRecordId : undefined}
-        onEditRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'edit', librarySection: section, view: 'machines' })}
         onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'machines' })}
         onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'machines' })}
         recordId={libraryRecordId}
@@ -127,7 +124,6 @@ export function DashboardViewContent({
       <MasterDataPage
         activeSection={section}
         editRecordId={libraryRecordMode === 'edit' ? libraryRecordId : undefined}
-        onEditRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'edit', librarySection: section, view: 'molds' })}
         onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'molds' })}
         onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'molds' })}
         recordId={libraryRecordId}
@@ -201,7 +197,6 @@ export function DashboardViewContent({
     return (
       <ProductionRunListPage
         onCreate={() => navigate({ productionRunMode: 'new', view: 'production-runs' })}
-        onDuplicate={(id) => navigate({ productionRunId: id, productionRunMode: 'duplicate', view: 'production-runs' })}
         onImport={() => navigate({ productionRunMode: 'import', view: 'production-runs' })}
         onOpen={(id) => navigate({ productionRunId: id, productionRunMode: 'detail', view: 'production-runs' })}
       />

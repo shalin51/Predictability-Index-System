@@ -115,7 +115,7 @@ export function FormulationDetailPage({
             <button onClick={onBack} style={controlStyles.subtleButton} type="button">Back</button>
             <h1 style={{ ...formulationStyles.title, marginTop: spacing.space4 }}>{record.formulationCode} / Version {record.versionNo}</h1>
             <p style={formulationStyles.subtitle}>
-              Status: {labelize(record.status)} | Target Benchmark: {record.targetBenchmark ?? '-'} | Component Total: {formatValue(total)}%
+              Status: {labelize(record.status)} | Component Total: {formatValue(total)}%
             </p>
           </div>
           <div style={formulationStyles.actions}>
@@ -136,7 +136,6 @@ export function FormulationDetailPage({
         {tab === 'Overview' && (
           <div style={styles.overviewGrid}>
             <div style={formulationStyles.panel}>Family<br /><strong>{record.family ?? '-'}</strong></div>
-            <div style={formulationStyles.panel}>Target Benchmark<br /><strong>{record.targetBenchmark ?? '-'}</strong></div>
             <div style={formulationStyles.panel}>Component Total<br /><span style={{ ...formulationStyles.badge, ...totalTone(total) }}>{formatValue(total)}%</span></div>
             <div style={formulationStyles.panel}>Last Updated<br /><strong>{formatValue(record.updatedAt)}</strong></div>
           </div>

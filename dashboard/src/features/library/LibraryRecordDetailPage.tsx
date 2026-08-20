@@ -1,8 +1,7 @@
 import type { CSSProperties } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardHeader, CardSubtitle, CardTitle, Divider } from '../../components/ui/Card';
-import { controlStyles } from '../../components/ui/controls';
 import { DataTable, DataTableBody, DataTableCell, DataTableHead, DataTableHeader, DataTableRow } from '../../components/ui/DataTable';
 import { DashboardPage, MessageBanner } from '../../components/ui/Page';
 import {
@@ -10,6 +9,7 @@ import {
   getMaterialCatalog,
   listLibraryOptions,
   listLibraryRecords,
+  regenerateBenchmarkGlobally,
   updateLibraryRecord,
   type LibraryFieldDefinition,
   type LibraryRecord,
@@ -21,6 +21,8 @@ import { labelize, LibrarySectionNav } from './LibrarySectionNav';
 import { MachineParametersAccordion } from './MachineParametersAccordion';
 import { MoldZonesTable } from './MoldZonesTable';
 import { RelatedMaterialsTable } from './RelatedMaterialsTable';
+import { BenchmarkPropertiesEditor } from './BenchmarkPropertiesEditor';
+import { MaterialPropertiesEditor } from './MaterialPropertiesEditor';
 
 export function LibraryRecordDetailPage({
   id,
@@ -44,10 +46,11 @@ export function LibraryRecordDetailPage({
   const [editing, setEditing] = useState(initialEditing);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-  const [search, setSearch] = useState('');
   const [machineParameters, setMachineParameters] = useState<LibraryRecord[]>([]);
   const [moldZones, setMoldZones] = useState<LibraryRecord[]>([]);
   const [benchmarkProperties, setBenchmarkProperties] = useState<LibraryRecord[]>([]);
+  const [benchmarkPropertyFields, setBenchmarkPropertyFields] = useState<LibraryFieldDefinition[]>([]);
+  const [rerunningBenchmark, setRerunningBenchmark] = useState(false);
   const [relatedMaterials, setRelatedMaterials] = useState<LibraryRecord[]>([]);
   const [relatedError, setRelatedError] = useState('');
   const [moldZonesError, setMoldZonesError] = useState('');
@@ -61,6 +64,7 @@ export function LibraryRecordDetailPage({
     setMachineParameters([]);
     setMoldZones([]);
     setBenchmarkProperties([]);
+    setBenchmarkPropertyFields([]);
     setRelatedMaterials([]);
     setRelatedError('');
     setMoldZonesError('');
@@ -123,7 +127,10 @@ export function LibraryRecordDetailPage({
     if (resource === 'benchmarks') {
       void listLibraryRecords('scoring-rules', { category: id })
         .then((response) => {
-          if (active) setBenchmarkProperties(response.data);
+          if (active) {
+            setBenchmarkProperties(response.data);
+            setBenchmarkPropertyFields(response.fields);
+          }
         })
         .catch((reason: unknown) => {
           if (active) setBenchmarkPropertiesError(getErrorMessage(reason, 'Unable to load benchmark properties'));
@@ -149,16 +156,19 @@ export function LibraryRecordDetailPage({
     }
   };
 
-  const properties = useMemo(() => {
-    if (resource !== 'materials' || !record) return [];
-    const query = search.trim().toLowerCase();
-    const items = (record as MaterialCatalogDetail).properties ?? [];
-    if (!query) return items;
-    return items.filter((item) =>
-      [item.category, item.propertyName, item.testMethod, item.testCondition, item.sourceFilename]
-        .some((value) => value?.toLowerCase().includes(query))
-    );
-  }, [record, resource, search]);
+  const rerunBenchmark = async () => {
+    if (resource !== 'benchmarks') return;
+    setRerunningBenchmark(true);
+    setError('');
+    try {
+      const result = await regenerateBenchmarkGlobally(id);
+      setMessage(`Regenerated ${result.benchmarkName} for ${result.runsScored} runs; ${result.runsSkipped} skipped.`);
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : 'Global benchmark regeneration failed');
+    } finally {
+      setRerunningBenchmark(false);
+    }
+  };
 
   const title = record ? getRecordTitle(record, resource) : labelize(resource);
   const details = record ? Object.entries(record).filter(([key]) => key !== 'id' && key !== 'properties') : [];
@@ -174,6 +184,11 @@ export function LibraryRecordDetailPage({
               <CardSubtitle>{labelize(resource)} record</CardSubtitle>
             </div>
             <div style={styles.actions}>
+              {resource === 'benchmarks' && record && (
+                <Button disabled={rerunningBenchmark} onClick={() => void rerunBenchmark()} type="button" variant="secondary">
+                  {rerunningBenchmark ? 'Rerunning…' : 'Rerun Benchmark Globally'}
+                </Button>
+              )}
               {record && fields.length > 0 && !editing && <Button onClick={() => setEditing(true)} type="button" variant="primary">Edit</Button>}
               <Button onClick={onBack} type="button" variant="secondary">Back to {labelize(resource)}</Button>
             </div>
@@ -190,6 +205,14 @@ export function LibraryRecordDetailPage({
                 onChange={(key, value) => setForm((current) => ({ ...current, [key]: value }))}
                 options={options}
               />
+              {resource === 'benchmarks' && (
+                <BenchmarkPropertiesEditor
+                  fields={benchmarkPropertyFields}
+                  onSaved={(property) => setBenchmarkProperties((current) => current.map((item) => item.id === property.id ? property : item))}
+                  options={options}
+                  properties={benchmarkProperties}
+                />
+              )}
               <div style={styles.actions}>
                 <Button onClick={() => { setForm(record); setEditing(false); }} type="button" variant="secondary">Cancel</Button>
                 <Button onClick={() => void save()} type="button" variant="primary">Save</Button>
@@ -224,42 +247,11 @@ export function LibraryRecordDetailPage({
                 <BenchmarkPropertiesTable error={benchmarkPropertiesError} properties={benchmarkProperties} />
               )}
               {resource === 'materials' && (
-                <div style={styles.properties}>
-                  <h2 style={styles.sectionTitle}>Material Properties</h2>
-                  <input
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search properties, methods, conditions, or source files"
-                    style={controlStyles.input}
-                    value={search}
-                  />
-                  <DataTable compact minWidth={1000}>
-                    <DataTableHeader>
-                      <tr>
-                        <DataTableHead>Category</DataTableHead>
-                        <DataTableHead>Property</DataTableHead>
-                        <DataTableHead>Value</DataTableHead>
-                        <DataTableHead>Unit</DataTableHead>
-                        <DataTableHead>Method</DataTableHead>
-                        <DataTableHead>Condition</DataTableHead>
-                        <DataTableHead>Source</DataTableHead>
-                      </tr>
-                    </DataTableHeader>
-                    <DataTableBody>
-                      {properties.map((item) => (
-                        <DataTableRow key={item.id}>
-                          <DataTableCell>{item.category}</DataTableCell>
-                          <DataTableCell>{item.propertyName}</DataTableCell>
-                          <DataTableCell>{item.qualifier ? `${item.qualifier} ${item.valueNumeric ?? item.valueText ?? '-'}` : String(item.valueNumeric ?? item.valueText ?? '-')}</DataTableCell>
-                          <DataTableCell>{item.unit || '-'}</DataTableCell>
-                          <DataTableCell>{item.testMethod || '-'}</DataTableCell>
-                          <DataTableCell>{item.testCondition || '-'}</DataTableCell>
-                          <DataTableCell>{item.sourceFilename || '-'}</DataTableCell>
-                        </DataTableRow>
-                      ))}
-                    </DataTableBody>
-                  </DataTable>
-                  {properties.length === 0 && <div style={styles.muted}>No material properties found.</div>}
-                </div>
+                <MaterialPropertiesEditor
+                  materialId={id}
+                  onChanged={async () => setRecord(await getMaterialCatalog(id))}
+                  properties={(record as MaterialCatalogDetail).properties ?? []}
+                />
               )}
             </>
           )}

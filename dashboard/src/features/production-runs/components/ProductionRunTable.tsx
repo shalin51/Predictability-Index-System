@@ -1,56 +1,41 @@
-import type { CSSProperties } from 'react';
 import { controlStyles } from '../../../components/ui/controls';
+import { SortButton, TablePagination, useTableState } from '../../../components/ui/useTableState';
 import type { ProductionRunRecord } from '../../../services/api';
-import { spacing } from '../../../theme/tokens';
 import { formatValue, runStyles } from '../productionRunUi';
 import { ProductionRunStatusBadge } from './ProductionRunStatusBadge';
 
 export function ProductionRunTable({
-  onDuplicate,
   onOpen,
   records,
 }: {
-  onDuplicate?: (id: string) => void;
   onOpen: (id: string) => void;
   records: ProductionRunRecord[];
 }) {
+  const table = useTableState(records, (record, key) => record[key as keyof ProductionRunRecord], { key: 'dateProduced', direction: 'desc' });
   return (
     <div style={runStyles.tableWrap}>
       <table style={runStyles.table}>
         <thead>
           <tr>
-            {['Run Code', 'Formulation', 'Target Benchmark', 'Date Produced', 'Machine', 'Mold', 'Cure Hours', 'Status', 'Sample Count', 'Actions'].map((column) => (
-              <th key={column} style={runStyles.th}>{column}</th>
+            {[
+              ['runCode', 'Run Code'], ['formulation', 'Formulation'], ['dateProduced', 'Date Produced'], ['status', 'Status'],
+            ].map(([key, label]) => (
+              <th key={key} style={runStyles.th}><SortButton column={key} onSort={table.toggleSort} sort={table.sort}>{label}</SortButton></th>
             ))}
           </tr>
         </thead>
         <tbody>
-          {records.map((record) => (
+          {table.pagedRecords.map((record) => (
             <tr key={record.id}>
-              <td style={runStyles.td}>{record.runCode}</td>
+              <td style={runStyles.td}><button onClick={() => onOpen(record.id)} style={controlStyles.linkButton} type="button">{record.runCode}</button></td>
               <td style={runStyles.td}>{record.formulation}</td>
-              <td style={runStyles.td}>{record.targetBenchmark ?? '-'}</td>
               <td style={runStyles.td}>{formatValue(record.dateProduced)}</td>
-              <td style={runStyles.td}>{record.machine}</td>
-              <td style={runStyles.td}>{record.mold}</td>
-              <td style={runStyles.td}>{formatValue(record.cureHoursBeforeTest)}</td>
               <td style={runStyles.td}><ProductionRunStatusBadge status={record.status} /></td>
-              <td style={runStyles.td}>{record.sampleCount}</td>
-              <td style={runStyles.td}>
-                <div style={styles.rowActions}>
-                  <button onClick={() => onOpen(record.id)} style={controlStyles.subtleButton} type="button">View</button>
-                  <button onClick={() => onOpen(record.id)} style={controlStyles.subtleButton} type="button">Edit</button>
-                  {onDuplicate && <button onClick={() => onDuplicate(record.id)} style={controlStyles.subtleButton} type="button">Duplicate</button>}
-                </div>
-              </td>
             </tr>
           ))}
         </tbody>
       </table>
+      <TablePagination currentPage={table.currentPage} onPageChange={table.setPage} pageCount={table.pageCount} />
     </div>
   );
 }
-
-const styles: Record<string, CSSProperties> = {
-  rowActions: { display: 'flex', flexWrap: 'wrap', gap: spacing.space2 },
-};

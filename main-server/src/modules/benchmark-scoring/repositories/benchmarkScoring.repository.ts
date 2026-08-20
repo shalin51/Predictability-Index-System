@@ -48,6 +48,26 @@ export class BenchmarkScoringRepository {
     return result.rows as BenchmarkScoringRecord[];
   }
 
+  async benchmark(benchmarkId: string): Promise<BenchmarkScoringRecord | null> {
+    const result = await getPool().query(
+      `SELECT id, benchmark_code AS "benchmarkCode", benchmark_name AS "benchmarkName"
+       FROM benchmark_profiles
+       WHERE id = $1 AND status = 'active'`,
+      [benchmarkId]
+    );
+    return (result.rows[0] as BenchmarkScoringRecord | undefined) ?? null;
+  }
+
+  async scorableRuns(): Promise<BenchmarkScoringRecord[]> {
+    const result = await getPool().query(
+      `SELECT id
+       FROM production_runs
+       WHERE status IN ('completed', 'scored')
+       ORDER BY created_at, id`
+    );
+    return result.rows as BenchmarkScoringRecord[];
+  }
+
   async scoringInputs(runId: string, benchmarkId: string): Promise<ScoringMetricInput[]> {
     const result = await getPool().query(
       `SELECT bmt.metric_id AS "metricId", md.display_name AS "metricName",
@@ -204,8 +224,101 @@ export class BenchmarkScoringRepository {
           );
         }
       }
+      await client.query(
+        `UPDATE production_runs
+         SET status = 'scored', updated_at = now()
+         WHERE id = $1 AND status IN ('completed', 'scored')`,
+        [runId]
+      );
     });
     return this.reportsForRun(runId);
+  }
+
+  async saveBenchmarkReport(
+    runId: string,
+    algorithmVersionId: string,
+    score: BenchmarkScoreResult
+  ): Promise<BenchmarkScoringRecord[]> {
+    await this.withTransaction(async (client) => {
+      await client.query(
+        'DELETE FROM score_reports WHERE production_run_id = $1 AND benchmark_profile_id = $2',
+        [runId, score.benchmarkId]
+      );
+      const inserted = await client.query<{ id: string }>(
+        `INSERT INTO score_reports
+          (production_run_id, benchmark_profile_id, algorithm_version_id,
+           overall_similarity_score, predictability_index, production_readiness_score,
+           required_metric_completion_score, traffic_light, key_risks, recommendations, is_best_match)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8::traffic_light_status, $9, $10, false)
+         RETURNING id`,
+        [
+          runId,
+          score.benchmarkId,
+          algorithmVersionId,
+          score.overallSimilarityScore,
+          score.predictabilityIndex,
+          score.productionReadinessScore,
+          score.requiredMetricCompletionScore,
+          score.trafficLight,
+          JSON.stringify(score.keyRisks),
+          JSON.stringify(score.recommendations),
+        ]
+      );
+      await this.insertReportMetrics(client, inserted.rows[0]?.id ?? '', score);
+      await client.query('UPDATE score_reports SET is_best_match = false WHERE production_run_id = $1', [runId]);
+      await client.query(
+        `UPDATE score_reports
+         SET is_best_match = true
+         WHERE id = (
+           SELECT id FROM score_reports
+           WHERE production_run_id = $1
+           ORDER BY predictability_index DESC, generated_at DESC, id
+           LIMIT 1
+         )`,
+        [runId]
+      );
+      await client.query(
+        `UPDATE production_runs SET status = 'scored', updated_at = now()
+         WHERE id = $1 AND status IN ('completed', 'scored')`,
+        [runId]
+      );
+    });
+    return this.reportsForRun(runId);
+  }
+
+  private async insertReportMetrics(
+    client: PoolClient,
+    reportId: string,
+    score: BenchmarkScoreResult
+  ): Promise<void> {
+    for (const metric of score.metrics) {
+      await client.query(
+        `INSERT INTO score_report_metrics
+          (score_report_id, metric_id, run_metric_summary_id, run_mean_value,
+           benchmark_target_mean, min_acceptable, max_acceptable, comparison_mode, weight,
+           distance, normalized_distance, metric_score, weighted_contribution,
+           traffic_light, risk_level, risk_note)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14::traffic_light_status, $15, $16)`,
+        [
+          reportId,
+          metric.metricId,
+          metric.runSummaryId ?? null,
+          metric.runMeanValue,
+          metric.targetMean,
+          metric.minAcceptable,
+          metric.maxAcceptable,
+          metric.comparisonMode,
+          metric.weight,
+          metric.distance,
+          metric.normalizedDistance,
+          metric.metricScore,
+          metric.weightedContribution,
+          metric.trafficLight,
+          metric.riskLevel,
+          metric.riskNote,
+        ]
+      );
+    }
   }
 
   private reportsSql(whereClause: string): string {

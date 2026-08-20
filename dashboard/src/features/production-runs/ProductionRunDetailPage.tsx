@@ -87,7 +87,7 @@ export function ProductionRunDetailPage({ id, onBack, onDuplicate, onOpenFormula
           <div>
             <button onClick={onBack} style={controlStyles.subtleButton} type="button">Back</button>
             <h1 style={{ ...runStyles.title, marginTop: spacing.space4 }}>{record.runCode}</h1>
-            <p style={runStyles.subtitle}>{record.formulation} | {record.targetBenchmark ?? '-'} | Samples: {record.sampleCount}</p>
+            <p style={runStyles.subtitle}>{record.formulation} | Samples: {record.sampleCount}</p>
           </div>
           <div style={runStyles.actions}>
             <ProductionRunStatusBadge status={record.status} />
@@ -113,7 +113,6 @@ export function ProductionRunDetailPage({ id, onBack, onDuplicate, onOpenFormula
         {tab === 'Overview' && (
           <div style={styles.overviewGrid}>
             <div style={runStyles.panel}>Formulation<br /><strong>{record.formulation}</strong></div>
-            <div style={runStyles.panel}>Target Benchmark<br /><strong>{record.targetBenchmark ?? '-'}</strong></div>
             <div style={runStyles.panel}>Date Produced<br /><strong>{formatValue(record.dateProduced)}</strong></div>
             <div style={runStyles.panel}>Status<br /><strong>{statusLabels[record.status]}</strong></div>
           </div>

@@ -2,10 +2,9 @@ import { useEffect, useState } from 'react';
 import { Card, Divider } from '../../components/ui/Card';
 import { controlStyles } from '../../components/ui/controls';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
+import { SortButton, TablePagination, useTableState } from '../../components/ui/useTableState';
 import {
   listReports,
-  regenerateRunReport,
-  reportExportUrl,
   type GeneratedReportRecord,
 } from '../../services/api';
 import { formatReportValue, formatScore, reportStyles, TrafficBadge } from '../../features/reports/components/reportFormat';
@@ -15,6 +14,7 @@ export function ReportListPage({ onOpen }: { onOpen: (id: string) => void }) {
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const table = useTableState(records, (record, key) => record[key as keyof GeneratedReportRecord], { key: 'generatedAt', direction: 'desc' });
 
   const load = () => {
     setLoading(true);
@@ -23,15 +23,6 @@ export function ReportListPage({ onOpen }: { onOpen: (id: string) => void }) {
   };
 
   useEffect(load, [search]);
-
-  const regenerate = async (runId: string) => {
-    try {
-      const report = await regenerateRunReport(runId);
-      onOpen(report.id);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Regenerate failed');
-    }
-  };
 
   return (
     <DashboardPage maxWidth="100%">
@@ -57,33 +48,28 @@ export function ReportListPage({ onOpen }: { onOpen: (id: string) => void }) {
             <table style={reportStyles.table}>
               <thead>
                 <tr>
-                  {['Report Name', 'Run Code', 'Formulation', 'Best Match', 'Predictability Index', 'Status', 'Generated At', 'Actions'].map((column) => (
-                    <th key={column} style={reportStyles.th}>{column}</th>
+                  {[
+                    ['reportName', 'Report Name'], ['runCode', 'Run Code'], ['formulation', 'Formulation'], ['bestMatch', 'Best Match'], ['predictabilityIndex', 'Predictability Index'], ['status', 'Status'], ['generatedAt', 'Generated At'],
+                  ].map(([key, label]) => (
+                    <th key={key} style={reportStyles.th}><SortButton column={key} onSort={table.toggleSort} sort={table.sort}>{label}</SortButton></th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {records.map((record) => (
+                {table.pagedRecords.map((record) => (
                   <tr key={record.id}>
-                    <td style={reportStyles.td}>{record.reportName}</td>
+                    <td style={reportStyles.td}><button onClick={() => onOpen(record.id)} style={controlStyles.linkButton} type="button">{record.reportName}</button></td>
                     <td style={reportStyles.td}>{record.runCode}</td>
                     <td style={reportStyles.td}>{record.formulation}</td>
                     <td style={reportStyles.td}>{record.bestMatch ?? '-'}</td>
                     <td style={reportStyles.td}>{formatScore(record.predictabilityIndex)}</td>
                     <td style={reportStyles.td}><TrafficBadge value={record.trafficLight} /> {formatReportValue(record.status)}</td>
                     <td style={reportStyles.td}>{formatReportValue(record.generatedAt)}</td>
-                    <td style={reportStyles.td}>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                        <button onClick={() => onOpen(record.id)} style={controlStyles.subtleButton} type="button">View</button>
-                        <a href={reportExportUrl(record.id, 'pdf')} style={controlStyles.subtleButton}>PDF</a>
-                        <a href={reportExportUrl(record.id, 'csv')} style={controlStyles.subtleButton}>CSV</a>
-                        <button onClick={() => void regenerate(record.productionRunId)} style={controlStyles.subtleButton} type="button">Regenerate</button>
-                      </div>
-                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <TablePagination currentPage={table.currentPage} onPageChange={table.setPage} pageCount={table.pageCount} />
           </div>
         )}
       </Card>

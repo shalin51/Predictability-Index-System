@@ -9,6 +9,7 @@ export function createReportRoutes(controller: ReportController) {
   router.post('/runs/:runId/generate', (req, res) => controller.generate(req, res));
   router.post('/runs/:runId/regenerate', (req, res) => controller.regenerate(req, res));
   router.get('/:reportId/export/pdf', (req, res) => controller.exportPdf(req, res));
+  router.get('/:reportId/export/xlsx', (req, res) => controller.exportXlsx(req, res));
   router.get('/:reportId/export/csv', (req, res) => controller.exportCsv(req, res));
   router.get('/:reportId', (req, res) => controller.detail(req, res));
 

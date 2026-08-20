@@ -46,7 +46,9 @@ export class RunSummaryService {
   private async generateInternal(runId: string, changedBy: string, regenerate: boolean): Promise<RunSummaryRecord> {
     validateRunId(runId);
     const before = await this.requireRun(runId);
-    if (before['labTestingStatus'] !== 'completed') throw new ConflictError('Only completed runs can generate summaries');
+    if (before['labTestingStatus'] !== 'completed' && before['labTestingStatus'] !== 'scored') {
+      throw new ConflictError('Only completed or scored runs can generate summaries');
+    }
     const missing = await this.repo.missingRequiredMetrics(runId);
     if (missing.length > 0) throw new ConflictError('Required metrics are missing');
 

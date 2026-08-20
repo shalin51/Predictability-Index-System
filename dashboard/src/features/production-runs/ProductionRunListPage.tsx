@@ -14,7 +14,8 @@ import { ProductionRunTable } from './components/ProductionRunTable';
 import { runStyles } from './productionRunUi';
 
 const defaultFilters: ProductionRunFiltersState = {
-  dateProduced: '',
+  dateProducedFrom: '',
+  dateProducedTo: '',
   formulationId: '',
   machineId: '',
   moldId: '',
@@ -23,7 +24,7 @@ const defaultFilters: ProductionRunFiltersState = {
   targetBenchmarkId: '',
 };
 
-export function ProductionRunListPage({ onCreate, onDuplicate, onImport, onOpen }: { onCreate: () => void; onDuplicate: (id: string) => void; onImport: () => void; onOpen: (id: string) => void }) {
+export function ProductionRunListPage({ onCreate, onImport, onOpen }: { onCreate: () => void; onImport: () => void; onOpen: (id: string) => void }) {
   const [records, setRecords] = useState<ProductionRunRecord[]>([]);
   const [benchmarks, setBenchmarks] = useState<LibraryRecord[]>([]);
   const [formulations, setFormulations] = useState<LibraryRecord[]>([]);
@@ -81,7 +82,6 @@ export function ProductionRunListPage({ onCreate, onDuplicate, onImport, onOpen 
         {!loading && records.length === 0 && <EmptyState>No production runs.</EmptyState>}
         {records.length > 0 && (
           <ProductionRunTable
-            onDuplicate={onDuplicate}
             onOpen={onOpen}
             records={records}
           />

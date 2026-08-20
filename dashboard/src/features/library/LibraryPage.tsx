@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/Button';
 import { Card, CardHeader, CardSubtitle, CardTitle, Divider } from '../../components/ui/Card';
 import { controlStyles } from '../../components/ui/controls';
 import { DataTable, DataTableBody, DataTableCell, DataTableHead, DataTableHeader, DataTableRow } from '../../components/ui/DataTable';
+import { SortButton, TablePagination, useTableState } from '../../components/ui/useTableState';
 import { Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from '../../components/ui/Modal';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
 import {
@@ -37,19 +38,19 @@ const sections = [
 ] as const;
 
 const columns: Record<string, string[]> = {
-  benchmarks: ['benchmarkCode', 'benchmarkName', 'profileVersion', 'ballBrand', 'ballModel', 'status'],
-  machines: ['machineCode', 'machineName', 'manufacturer', 'machineType', 'modelNumber', 'location', 'status'],
-  'machine-parameters': ['machineCode', 'displayName', 'sectionKey', 'positionLabel', 'minimumValue', 'maximumValue', 'unit', 'status'],
-  materials: ['materialCode', 'materialName', 'materialSupplierCode', 'materialLot', 'productGrade', 'chemistry', 'roleInBlend', 'sourceRevisionDate', 'status'],
-  'material-properties': ['materialId', 'productGrade', 'propertyId', 'propertyName', 'valueNumeric', 'valueText', 'qualifier', 'unit', 'testMethod', 'testCondition'],
-  'material-suppliers': ['supplierCode', 'supplierName', 'supplierRole', 'contactName', 'contactEmail', 'contactPhone', 'status'],
-  metrics: ['metricKey', 'displayName', 'category', 'defaultUnit', 'dataType', 'benchmarkComparable', 'requiredForScoring', 'status'],
-  molds: ['moldCode', 'moldName', 'moldType', 'manufacturer', 'cavityCount', 'zoneCount', 'status'],
-  'mold-zones': ['moldCode', 'zoneNumber', 'zoneName', 'zoneType', 'minimumTemperature', 'maximumTemperature', 'temperatureUnit', 'status'],
-  'scoring-rules': ['benchmarkCode', 'metricKey', 'comparisonMode', 'targetMean', 'minAcceptable', 'maxAcceptable', 'targetStdDev', 'weight', 'criticality'],
+  benchmarks: ['benchmarkName', 'profileVersion', 'ballBrand', 'ballModel', 'status'],
+  machines: ['machineName', 'manufacturer', 'machineType', 'modelNumber', 'location', 'status'],
+  'machine-parameters': ['displayName', 'sectionKey', 'positionLabel', 'minimumValue', 'maximumValue', 'unit', 'status'],
+  materials: ['materialName', 'materialCode', 'productGrade', 'chemistry', 'roleInBlend', 'sourceRevisionDate', 'status'],
+  'material-properties': ['propertyName', 'productGrade', 'propertyId', 'valueNumeric', 'valueText', 'qualifier', 'unit', 'testMethod', 'testCondition'],
+  'material-suppliers': ['supplierName', 'supplierRole', 'contactName', 'contactEmail', 'contactPhone', 'status'],
+  metrics: ['displayName', 'metricKey', 'category', 'defaultUnit', 'dataType', 'benchmarkComparable', 'requiredForScoring', 'status'],
+  molds: ['moldName', 'moldType', 'manufacturer', 'cavityCount', 'zoneCount', 'status'],
+  'mold-zones': ['zoneNumber', 'zoneName', 'zoneType', 'minimumTemperature', 'maximumTemperature', 'temperatureUnit', 'status'],
+  'scoring-rules': ['metricKey', 'comparisonMode', 'targetMean', 'minAcceptable', 'maxAcceptable', 'targetStdDev', 'weight', 'criticality'],
   suppliers: ['supplierName', 'supplierType', 'contactName', 'contactEmail', 'contactPhone', 'status'],
   'test-conditions': ['conditionCode', 'conditionName', 'description', 'status'],
-  'test-methods': ['methodCode', 'methodName', 'metricKey', 'cureHours', 'status'],
+  'test-methods': ['methodName', 'methodCode', 'metricKey', 'status'],
   'process-setups': ['machine', 'mold', 'formulation', 'revisionNo', 'status', 'approvedBy', 'approvedAt', 'parameterCount'],
 };
 
@@ -57,7 +58,6 @@ export function LibraryPage({
   activeSection,
   onSectionChange,
   onImport,
-  onEditRecord,
   onOpenRecord,
   sectionOptions,
   standalone = false,
@@ -65,7 +65,6 @@ export function LibraryPage({
   activeSection: string;
   onSectionChange: (section: string) => void;
   onImport?: () => void;
-  onEditRecord: (id: string) => void;
   onOpenRecord: (id: string) => void;
   sectionOptions?: readonly string[];
   standalone?: boolean;
@@ -85,6 +84,8 @@ export function LibraryPage({
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const visibleColumns = columns[section] ?? [];
+  const table = useTableState(records, (record, key) => record[key], { key: visibleColumns.find((column) => /date|at$/i.test(column)) ?? visibleColumns[0] ?? 'id', direction: visibleColumns.some((column) => /date|at$/i.test(column)) ? 'desc' : 'asc' });
 
   useEffect(() => {
     setStatus(section === 'benchmarks' ? 'all' : 'active');
@@ -187,31 +188,25 @@ export function LibraryPage({
               <DataTable minWidth={900} selectableRows>
                 <DataTableHeader>
                   <tr>
-                    {(columns[section] ?? []).map((column) => <DataTableHead key={column}>{labelize(column)}</DataTableHead>)}
-                    <DataTableHead>Actions</DataTableHead>
+                    {visibleColumns.map((column) => <DataTableHead key={column}><SortButton column={column} onSort={table.toggleSort} sort={table.sort}>{labelize(column)}</SortButton></DataTableHead>)}
                   </tr>
                 </DataTableHeader>
                 <DataTableBody>
-                  {records.map((record) => {
+                  {table.pagedRecords.map((record) => {
                     const isSelected = selected?.id === record.id;
                     return (
                       <DataTableRow key={record.id} onClick={() => setSelected(record)} selected={isSelected}>
-                        {(columns[section] ?? []).map((column) => (
+                        {visibleColumns.map((column) => (
                           <DataTableCell key={column}>
-                            {formatValue(record[column])}
+                            {column === visibleColumns[0] ? <button onClick={(event) => { event.stopPropagation(); onOpenRecord(record.id); }} style={controlStyles.linkButton} type="button">{formatValue(record[column])}</button> : formatValue(record[column])}
                           </DataTableCell>
                         ))}
-                        <DataTableCell>
-                          <div style={styles.rowActions}>
-                            <Button onClick={(event) => { event.stopPropagation(); onOpenRecord(record.id); }} size="sm" type="button" variant="subtle">View</Button>
-                            {section !== 'process-setups' && !readOnly && <Button onClick={(event) => { event.stopPropagation(); onEditRecord(record.id); }} size="sm" type="button" variant="subtle">Edit</Button>}
-                          </div>
-                        </DataTableCell>
                       </DataTableRow>
                     );
                   })}
                 </DataTableBody>
               </DataTable>
+              <TablePagination currentPage={table.currentPage} onPageChange={table.setPage} pageCount={table.pageCount} />
             </div>
           )}
         </Card>
@@ -253,6 +248,5 @@ const styles: Record<string, CSSProperties> = {
   layout: { display: 'flex', flexDirection: 'column', gap: spacing.space5, height: '100%', minHeight: 0, overflow: 'hidden' },
   layoutStandalone: {},
   muted: { color: colors.text.muted, fontSize: font.size.small },
-  rowActions: { display: 'flex', flexWrap: 'wrap', gap: spacing.space2 },
   tableWrap: { border: `1px solid ${colors.border}`, borderRadius: radius.md, minHeight: 0, overflow: 'auto' },
 };

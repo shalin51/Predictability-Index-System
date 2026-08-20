@@ -56,7 +56,6 @@ export function RunSummaryPanel({ onContinueToScoring, runId }: { onContinueToSc
       <div style={styles.headerGrid}>
         <div style={runStyles.panel}>Run Code<br /><strong>{detail.run.runCode}</strong></div>
         <div style={runStyles.panel}>Formulation<br /><strong>{detail.run.formulation}</strong></div>
-        <div style={runStyles.panel}>Target Benchmark<br /><strong>{detail.run.targetBenchmark ?? '-'}</strong></div>
         <div style={runStyles.panel}>Lab Testing Status<br /><strong>{detail.run.labTestingStatus}</strong></div>
         <div style={runStyles.panel}>Summary Status<br /><strong>{statusLabels[detail.status]}</strong></div>
         <div style={runStyles.panel}>Last Generated<br /><strong>{formatValue(detail.run.lastGeneratedAt)}</strong></div>

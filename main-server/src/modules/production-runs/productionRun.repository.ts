@@ -42,9 +42,14 @@ export class ProductionRunRepository {
       clauses.push(`f.target_benchmark_id = $${params.length}`);
     }
 
-    if (query.dateProduced) {
-      params.push(query.dateProduced);
-      clauses.push(`pr.date_produced = $${params.length}::date`);
+    if (query.dateProducedFrom) {
+      params.push(query.dateProducedFrom);
+      clauses.push(`pr.date_produced >= $${params.length}::date`);
+    }
+
+    if (query.dateProducedTo) {
+      params.push(query.dateProducedTo);
+      clauses.push(`pr.date_produced <= $${params.length}::date`);
     }
 
     const result = await getPool().query(

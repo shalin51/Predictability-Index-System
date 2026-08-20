@@ -8,8 +8,10 @@ import {
   getProductionRun,
   listApprovedFormulationOptions,
   listLibraryOptions,
+  listProductionRuns,
   type LibraryRecord,
   type ProductionRunPayload,
+  type ProductionRunRecord,
   type SampleGenerationPayload,
 } from '../../services/api';
 import { spacing } from '../../theme/tokens';
@@ -25,6 +27,8 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
   const [formulations, setFormulations] = useState<LibraryRecord[]>([]);
   const [machines, setMachines] = useState<LibraryRecord[]>([]);
   const [molds, setMolds] = useState<LibraryRecord[]>([]);
+  const [priorRuns, setPriorRuns] = useState<ProductionRunRecord[]>([]);
+  const [selectedPriorRunId, setSelectedPriorRunId] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(Boolean(duplicateSourceId));
   const [sourceRunCode, setSourceRunCode] = useState('');
@@ -35,15 +39,22 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
     setLoading(Boolean(duplicateSourceId));
     setPayload(createProductionRunDraft(today));
     setSourceRunCode('');
+    setSelectedPriorRunId(duplicateSourceId ?? '');
     const sourceRequest = duplicateSourceId ? getProductionRun(duplicateSourceId) : Promise.resolve(null);
-    void Promise.all([listApprovedFormulationOptions(), listLibraryOptions('machines'), listLibraryOptions('molds'), sourceRequest])
-      .then(([formulationOptions, machineOptions, moldOptions, source]) => {
+    void Promise.all([listApprovedFormulationOptions(), listLibraryOptions('machines'), listLibraryOptions('molds'), listProductionRuns(), sourceRequest])
+      .then(([formulationOptions, machineOptions, moldOptions, runOptions, source]) => {
         setFormulations(formulationOptions);
         setMachines(machineOptions);
         setMolds(moldOptions);
+        setPriorRuns(runOptions);
         if (source) {
-          setPayload(duplicateProductionRunDraft(source, today));
+          const draft = duplicateProductionRunDraft(source, today);
+          const sourceFormulationIsApproved = formulationOptions.some((formulation) => formulation.id === source.formulationId);
+          setPayload({ ...draft, formulationId: sourceFormulationIsApproved ? source.formulationId : '' });
           setSourceRunCode(source.runCode);
+          if (!sourceFormulationIsApproved) {
+            setError(`The formulation used by ${source.runCode} is no longer approved. Select an approved formulation version before saving.`);
+          }
         }
       })
       .catch((err: Error) => setError(err.message))
@@ -56,6 +67,30 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
   const samplePreview = useMemo(() => buildPreview(payload.sampleGeneration), [payload.sampleGeneration]);
 
   const update = (patch: Partial<ProductionRunPayload>) => setPayload((current) => ({ ...current, ...patch }));
+
+  const importPriorRun = async (id: string) => {
+    if (!id) {
+      setError('');
+      setPayload(createProductionRunDraft(today));
+      setSourceRunCode('');
+      setSelectedPriorRunId('');
+      return;
+    }
+    try {
+      setError('');
+      const source = await getProductionRun(id);
+      const draft = duplicateProductionRunDraft(source, today);
+      const sourceFormulationIsApproved = formulations.some((formulation) => formulation.id === source.formulationId);
+      setPayload({ ...draft, formulationId: sourceFormulationIsApproved ? source.formulationId : '' });
+      setSourceRunCode(source.runCode);
+      setSelectedPriorRunId(id);
+      if (!sourceFormulationIsApproved) {
+        setError(`Imported settings from ${source.runCode}. Select an approved formulation version before saving.`);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not import the selected production run');
+    }
+  };
 
   const save = async (status: 'planned' | 'molded') => {
     try {
@@ -89,6 +124,21 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
           <>
         {step === 0 && (
           <div style={runStyles.formGrid}>
+            {!duplicateSourceId && (
+              <label style={controlStyles.field}>
+                <span style={controlStyles.fieldLabel}>Copy a Previous Production Run</span>
+                <select
+                  onChange={(event) => void importPriorRun(event.target.value)}
+                  style={controlStyles.input}
+                  value={selectedPriorRunId}
+                >
+                  <option value="">Start with a blank production run</option>
+                  {priorRuns.map((run) => (
+                    <option key={run.id} value={run.id}>{run.runCode} — {run.formulation} ({formatValue(run.dateProduced)})</option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label style={controlStyles.field}>
               <span style={controlStyles.fieldLabel}>Formulation</span>
               <select onChange={(event) => update({ formulationId: event.target.value })} style={controlStyles.input} value={payload.formulationId}>

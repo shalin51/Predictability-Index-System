@@ -5,11 +5,14 @@ import { controlStyles, getTabButtonStyle } from '../../components/ui/controls';
 import { DashboardPage, MessageBanner } from '../../components/ui/Page';
 import {
   createFormulation,
+  duplicateFormulation,
   listFormulationOptions,
+  listFormulations,
   listLibraryOptions,
   type FormulationComponentPayload,
   type FormulationOptions,
   type FormulationPayload,
+  type FormulationRecord,
   type LibraryRecord,
 } from '../../services/api';
 import { colors, spacing } from '../../theme/tokens';
@@ -32,6 +35,8 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
   const [suppliers, setSuppliers] = useState<LibraryRecord[]>([]);
   const [lots, setLots] = useState<LibraryRecord[]>([]);
   const [options, setOptions] = useState<FormulationOptions>({ experiments: [], families: [] });
+  const [duplicateSourceId, setDuplicateSourceId] = useState('');
+  const [formulations, setFormulations] = useState<FormulationRecord[]>([]);
   const [error, setError] = useState('');
   const total = useMemo(() => form.components.reduce((sum, component) => sum + Number(component.percentComposition || 0), 0), [form.components]);
   const canApprove = Math.abs(total - 100) < 0.0001;
@@ -43,12 +48,14 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
       listLibraryOptions('suppliers'),
       listLibraryOptions('material-lots'),
       listFormulationOptions(),
-    ]).then(([benchmarkOptions, materialOptions, supplierOptions, lotOptions, formulationOptions]) => {
+      listFormulations(),
+    ]).then(([benchmarkOptions, materialOptions, supplierOptions, lotOptions, formulationOptions, formulationRecords]) => {
       setBenchmarks(benchmarkOptions);
       setMaterials(materialOptions);
       setSuppliers(supplierOptions);
       setLots(lotOptions);
       setOptions(formulationOptions);
+      setFormulations(formulationRecords);
     }).catch((err: Error) => setError(err.message));
   }, []);
 
@@ -59,6 +66,17 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
       onSaved(record.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
+    }
+  };
+
+  const duplicate = async () => {
+    if (!duplicateSourceId) return;
+    try {
+      setError('');
+      const record = await duplicateFormulation(duplicateSourceId);
+      onSaved(record.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Duplicate failed');
     }
   };
 
@@ -106,6 +124,14 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
             <label style={controlStyles.field}>
               <span style={controlStyles.fieldLabel}>Formulation Code</span>
               <input onChange={(event) => setForm((current) => ({ ...current, formulationCode: event.target.value }))} placeholder="Auto if blank" style={controlStyles.input} value={form.formulationCode ?? ''} />
+            </label>
+            <label style={controlStyles.field}>
+              <span style={controlStyles.fieldLabel}>Duplicate Existing Formulation</span>
+              <select onChange={(event) => setDuplicateSourceId(event.target.value)} style={controlStyles.input} value={duplicateSourceId}>
+                <option value="">Select formulation</option>
+                {formulations.map((item) => <option key={item.id} value={item.id}>{item.formulationCode} V{item.version}</option>)}
+              </select>
+              <button disabled={!duplicateSourceId} onClick={() => void duplicate()} style={controlStyles.secondaryButton} type="button">Duplicate</button>
             </label>
             <label style={controlStyles.field}>
               <span style={controlStyles.fieldLabel}>Version No</span>

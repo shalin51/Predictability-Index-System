@@ -1,39 +1,30 @@
 import { ShellIcon } from './ShellIcon';
-import { ShellNotificationsMenu } from './ShellNotificationsMenu';
 import { ShellProfileMenu } from './ShellProfileMenu';
 import { shellStyles } from './shellStyles';
 import type {
-  ShellNotification,
   ShellThemeOption,
 } from './AppShell';
 import type { ThemeName } from '../../theme/tokens';
 
 interface ShellHeaderProps {
-  notifications: ShellNotification[];
-  onMarkAllNotificationsRead: () => void;
   onLogout: () => void;
   onOpenSettings: () => void;
   onThemeChange: (theme: ThemeName) => void;
-  onToggleNotificationRead: (id: string) => void;
-  openMenu: 'notifications' | 'profile' | null;
-  setOpenMenu: (menu: 'notifications' | 'profile' | null) => void;
+  openMenu: 'profile' | null;
+  setOpenMenu: (menu: 'profile' | null) => void;
   sidebarOpen: boolean;
   subtitle: string;
   theme: ThemeName;
   themeOptions: ShellThemeOption[];
   title: string;
   toggleSidebar: () => void;
-  unreadCount: number;
   userName: string;
 }
 
 export function ShellHeader({
-  notifications,
-  onMarkAllNotificationsRead,
   onLogout,
   onOpenSettings,
   onThemeChange,
-  onToggleNotificationRead,
   openMenu,
   setOpenMenu,
   sidebarOpen,
@@ -42,7 +33,6 @@ export function ShellHeader({
   themeOptions,
   title,
   toggleSidebar,
-  unreadCount,
   userName,
 }: ShellHeaderProps) {
   return (
@@ -64,22 +54,6 @@ export function ShellHeader({
       </div>
 
       <div className="dashboard-shell__header-actions" style={shellStyles.headerActions}>
-        <label className="dashboard-shell__search" style={shellStyles.search}>
-          <ShellIcon name="search" />
-          <input aria-label="Search" placeholder="Search" style={shellStyles.searchInput} type="search" />
-          <span style={shellStyles.searchShortcut}>Ctrl K</span>
-        </label>
-
-        <button
-          aria-label="Open notifications"
-          onClick={() => setOpenMenu(openMenu === 'notifications' ? null : 'notifications')}
-          style={shellStyles.iconButton}
-          type="button"
-        >
-          <ShellIcon name="bell" />
-          {unreadCount > 0 && <span style={shellStyles.badge}>{unreadCount}</span>}
-        </button>
-
         <button
           aria-label="Open profile menu"
           onClick={() => setOpenMenu(openMenu === 'profile' ? null : 'profile')}
@@ -95,18 +69,8 @@ export function ShellHeader({
         </button>
       </div>
 
-      {openMenu === 'notifications' && (
-        <ShellNotificationsMenu
-          notifications={notifications}
-          onMarkAllNotificationsRead={onMarkAllNotificationsRead}
-          onToggleNotificationRead={onToggleNotificationRead}
-          unreadCount={unreadCount}
-        />
-      )}
-
       {openMenu === 'profile' && (
         <ShellProfileMenu
-          onMarkAllNotificationsRead={onMarkAllNotificationsRead}
           onLogout={onLogout}
           onOpenSettings={onOpenSettings}
           onThemeChange={onThemeChange}

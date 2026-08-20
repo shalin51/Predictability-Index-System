@@ -18,6 +18,7 @@
     "db:seed:dev": "tsx src/database/migrate.ts --seed",
     "db:fresh:dev": "tsx src/database/migrate.ts --reset --seed",
     "db:cleanup-domain-data:dev": "tsx src/database/cleanup-domain-data.ts",
+    "score-all:dev": "tsx scripts/score-all-completed-runs.ts",
     "verify:env:dev": "node scripts/verify-env.cjs .env.development",
     "verify:env:staging": "node scripts/verify-env.cjs .env.staging",
     "verify:env:production": "node scripts/verify-env.cjs .env.production",

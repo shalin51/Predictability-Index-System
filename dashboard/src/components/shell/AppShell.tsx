@@ -7,23 +7,12 @@ import { shellStyles } from './shellStyles';
 import { useTransientScrollbars } from '../../hooks/useTransientScrollbars';
 import type { ThemeName } from '../../theme/tokens';
 
-type NotificationTone = 'info' | 'warning' | 'success';
-
 export interface ShellNavItem<T extends string> {
   id: T;
   label: string;
   description: string;
   group: string;
   icon: IconName;
-}
-
-export interface ShellNotification {
-  id: string;
-  title: string;
-  detail: string;
-  timeLabel: string;
-  tone: NotificationTone;
-  read: boolean;
 }
 
 export interface ShellThemeOption {
@@ -35,13 +24,10 @@ export interface ShellThemeOption {
 interface AppShellProps<T extends string> {
   activeView: T;
   children: ReactNode;
-  notifications: ShellNotification[];
-  onMarkAllNotificationsRead: () => void;
   onLogout: () => void;
   onNavigate: (view: T) => void;
   onOpenSettings: () => void;
   onThemeChange: (theme: ThemeName) => void;
-  onToggleNotificationRead: (id: string) => void;
   subtitle: string;
   theme: ThemeName;
   themeOptions: ShellThemeOption[];
@@ -53,13 +39,10 @@ interface AppShellProps<T extends string> {
 export function AppShell<T extends string>({
   activeView,
   children,
-  notifications,
-  onMarkAllNotificationsRead,
   onLogout,
   onNavigate,
   onOpenSettings,
   onThemeChange,
-  onToggleNotificationRead,
   subtitle,
   theme,
   themeOptions,
@@ -67,12 +50,10 @@ export function AppShell<T extends string>({
   userName,
   navItems,
 }: AppShellProps<T>) {
-  const [openMenu, setOpenMenu] = useState<'notifications' | 'profile' | null>(null);
+  const [openMenu, setOpenMenu] = useState<'profile' | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(() => (
     typeof window === 'undefined' ? true : !window.matchMedia('(max-width: 1080px)').matches
   ));
-  const unreadCount = notifications.filter((notification) => !notification.read).length;
-
   useTransientScrollbars();
 
   const closeSidebarOnSmallScreen = () => {
@@ -108,15 +89,12 @@ export function AppShell<T extends string>({
         style={shellStyles.main}
       >
         <ShellHeader
-          notifications={notifications}
-          onMarkAllNotificationsRead={onMarkAllNotificationsRead}
           onLogout={onLogout}
           onOpenSettings={() => {
             onOpenSettings();
             closeSidebarOnSmallScreen();
           }}
           onThemeChange={onThemeChange}
-          onToggleNotificationRead={onToggleNotificationRead}
           openMenu={openMenu}
           setOpenMenu={setOpenMenu}
           sidebarOpen={sidebarOpen}
@@ -126,7 +104,6 @@ export function AppShell<T extends string>({
           title={title}
           userName={userName}
           toggleSidebar={() => setSidebarOpen((current) => !current)}
-          unreadCount={unreadCount}
         />
 
         <main className="dashboard-shell__content">

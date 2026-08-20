@@ -17,6 +17,14 @@ export class BenchmarkScoringController {
     respondJson(res, () => this.service.regenerate(req.params['runId'] ?? '', this.changedBy(req)), { errorStatus: this.resolveStatus });
   }
 
+  regenerateBenchmarkGlobally(req: Request, res: Response): void {
+    respondJson(
+      res,
+      () => this.service.regenerateBenchmarkGlobally(req.params['benchmarkId'] ?? '', this.changedBy(req)),
+      { errorStatus: this.resolveStatus }
+    );
+  }
+
   compare(req: Request, res: Response): void {
     respondJson(res, () => this.service.compare(req.params['runId'] ?? ''), { errorStatus: this.resolveStatus });
   }

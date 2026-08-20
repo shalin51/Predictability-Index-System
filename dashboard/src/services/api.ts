@@ -28,6 +28,13 @@ export interface LibraryWeightValidation {
   message: string;
 }
 
+export interface GlobalBenchmarkRegenerationResult {
+  benchmarkId: string;
+  benchmarkName: string;
+  runsScored: number;
+  runsSkipped: number;
+}
+
 export type FormulationStatus = 'draft' | 'approved' | 'molded' | 'testing' | 'scored' | 'archived';
 
 export interface FormulationComponentPayload {
@@ -227,8 +234,10 @@ export interface MaterialCatalogDetail extends LibraryRecord {
   productGrade?: string | null;
   properties: Array<{
     id: string;
+    notes?: string | null;
     category: string;
     propertyKey: string;
+    propertyDefinitionId?: string;
     propertyName: string;
     qualifier?: string | null;
     sourceFilename?: string | null;
@@ -242,6 +251,35 @@ export interface MaterialCatalogDetail extends LibraryRecord {
   sourceFile?: string | null;
   sourceRevisionDate?: string | null;
   supplierName?: string | null;
+}
+
+export interface MaterialPropertyDefinitionOption {
+  id: string;
+  category: string;
+  commonUnits?: string | null;
+  propertyKey: string;
+  propertyName: string;
+  valueType: string;
+}
+
+export interface MaterialPropertyInput {
+  notes?: string | null;
+  propertyDefinitionId: string;
+  qualifier?: string | null;
+  testCondition?: string | null;
+  testMethod?: string;
+  unit?: string | null;
+  valueNumeric?: number | string | null;
+  valueText?: string | null;
+}
+
+export interface MaterialPropertyDefinitionInput {
+  category: string;
+  commonUnits?: string | null;
+  implementationNotes?: string | null;
+  propertyKey?: string;
+  propertyName: string;
+  valueType?: string;
 }
 
 export interface ProcessSetupDetail extends LibraryRecord {
@@ -770,6 +808,22 @@ export async function getMaterialCatalog(id: string): Promise<MaterialCatalogDet
   return fetchJSON<MaterialCatalogDetail>(`/materials/${id}`);
 }
 
+export async function getMaterialPropertyOptions(materialId: string): Promise<MaterialPropertyDefinitionOption[]> {
+  return fetchJSON<MaterialPropertyDefinitionOption[]>(`/materials/${materialId}/property-options`);
+}
+
+export async function createMaterialPropertyDefinition(input: MaterialPropertyDefinitionInput): Promise<MaterialPropertyDefinitionOption> {
+  return fetchJSON<MaterialPropertyDefinitionOption>('/materials/property-definitions', { body: JSON.stringify(input), method: 'POST' });
+}
+
+export async function createMaterialProperty(materialId: string, input: MaterialPropertyInput): Promise<MaterialCatalogDetail['properties'][number]> {
+  return fetchJSON<MaterialCatalogDetail['properties'][number]>(`/materials/${materialId}/properties`, { body: JSON.stringify(input), method: 'POST' });
+}
+
+export async function updateMaterialProperty(materialId: string, propertyFactId: string, input: MaterialPropertyInput): Promise<MaterialCatalogDetail['properties'][number]> {
+  return fetchJSON<MaterialCatalogDetail['properties'][number]>(`/materials/${materialId}/properties/${propertyFactId}`, { body: JSON.stringify(input), method: 'PUT' });
+}
+
 export async function getProductionRunProcessSetup(runId: string): Promise<ProcessSetupDetail> {
   return fetchJSON<ProcessSetupDetail>(`/production-runs/${runId}/process-setup`);
 }
@@ -923,6 +977,10 @@ export async function regenerateBenchmarkScoring(runId: string): Promise<Benchma
   return fetchJSON<BenchmarkScoringRunDetail>(`/benchmark-scoring/runs/${runId}/regenerate`, { method: 'POST' });
 }
 
+export async function regenerateBenchmarkGlobally(benchmarkId: string): Promise<GlobalBenchmarkRegenerationResult> {
+  return fetchJSON<GlobalBenchmarkRegenerationResult>(`/benchmark-scoring/benchmarks/${benchmarkId}/regenerate-all`, { method: 'POST' });
+}
+
 export async function getScoreReport(scoreReportId: string): Promise<ScoreReport> {
   return fetchJSON<ScoreReport>(`/benchmark-scoring/reports/${scoreReportId}`);
 }
@@ -952,7 +1010,7 @@ export async function regenerateRunReport(runId: string): Promise<GeneratedRepor
   return fetchJSON<GeneratedReportRecord>(`/reports/runs/${runId}/regenerate`, { method: 'POST' });
 }
 
-export function reportExportUrl(reportId: string, format: 'csv' | 'pdf'): string {
+export function reportExportUrl(reportId: string, format: 'csv' | 'pdf' | 'xlsx'): string {
   return `${env.apiBaseUrl}/reports/${encodeURIComponent(reportId)}/export/${format}`;
 }
 

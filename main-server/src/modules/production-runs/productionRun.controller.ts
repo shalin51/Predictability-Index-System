@@ -45,7 +45,8 @@ export class ProductionRunController {
 
   private getQuery(req: Request): ProductionRunListQuery {
     return {
-      dateProduced: req.query['dateProduced'] as string | undefined,
+      dateProducedFrom: req.query['dateProducedFrom'] as string | undefined,
+      dateProducedTo: req.query['dateProducedTo'] as string | undefined,
       formulationId: req.query['formulationId'] as string | undefined,
       machineId: req.query['machineId'] as string | undefined,
       moldId: req.query['moldId'] as string | undefined,

@@ -18,6 +18,7 @@ export function createBenchmarkScoringRouter() {
   router.get('/runs/:runId', (req, res) => controller.runScores(req, res));
   router.post('/runs/:runId/generate', (req, res) => controller.generate(req, res));
   router.post('/runs/:runId/regenerate', (req, res) => controller.regenerate(req, res));
+  router.post('/benchmarks/:benchmarkId/regenerate-all', (req, res) => controller.regenerateBenchmarkGlobally(req, res));
   router.get('/runs/:runId/compare', (req, res) => controller.compare(req, res));
   router.get('/reports/:scoreReportId', (req, res) => controller.report(req, res));
 

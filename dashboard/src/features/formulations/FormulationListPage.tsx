@@ -1,25 +1,24 @@
-import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 import { Card, Divider } from '../../components/ui/Card';
 import { controlStyles } from '../../components/ui/controls';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
+import { SortButton, TablePagination, useTableState } from '../../components/ui/useTableState';
 import {
-  duplicateFormulation,
   listFormulations,
   listLibraryOptions,
   type FormulationRecord,
   type LibraryRecord,
 } from '../../services/api';
-import { spacing } from '../../theme/tokens';
 import { formatValue, formulationStyles, labelize, totalTone } from './formulationUi';
 
 export function FormulationListPage({ onCreate, onOpen }: { onCreate: () => void; onOpen: (id: string) => void }) {
   const [records, setRecords] = useState<FormulationRecord[]>([]);
   const [benchmarks, setBenchmarks] = useState<LibraryRecord[]>([]);
   const [materials, setMaterials] = useState<LibraryRecord[]>([]);
-  const [filters, setFilters] = useState({ createdFrom: '', materialId: '', search: '', status: 'all', targetBenchmarkId: '' });
+  const [filters, setFilters] = useState({ createdFrom: '', createdTo: '', materialId: '', search: '', status: 'all', targetBenchmarkId: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const table = useTableState(records, (record, key) => record[key as keyof FormulationRecord], { key: 'updatedAt', direction: 'desc' });
 
   const load = () => {
     setLoading(true);
@@ -63,7 +62,14 @@ export function FormulationListPage({ onCreate, onOpen }: { onCreate: () => void
             <option value="">Material</option>
             {materials.map((item) => <option key={item.id} value={item.id}>{String(item['code'] ?? item['label'])}</option>)}
           </select>
-          <input onChange={(event) => setFilter('createdFrom', event.target.value)} style={controlStyles.input} type="date" value={filters.createdFrom} />
+          <label style={controlStyles.field}>
+            <span style={controlStyles.fieldLabel}>Created from</span>
+            <input onChange={(event) => setFilter('createdFrom', event.target.value)} style={controlStyles.input} type="date" value={filters.createdFrom} />
+          </label>
+          <label style={controlStyles.field}>
+            <span style={controlStyles.fieldLabel}>Created to</span>
+            <input onChange={(event) => setFilter('createdTo', event.target.value)} style={controlStyles.input} type="date" value={filters.createdTo} />
+          </label>
         </div>
         {error && <MessageBanner tone="danger">{error}</MessageBanner>}
         {loading && <div style={formulationStyles.muted}>Loading...</div>}
@@ -73,39 +79,29 @@ export function FormulationListPage({ onCreate, onOpen }: { onCreate: () => void
             <table style={formulationStyles.table}>
               <thead>
                 <tr>
-                  {['Formulation Code', 'Version', 'Family', 'Target Benchmark', 'Status', 'Components Total', 'Last Updated', 'Actions'].map((column) => (
-                    <th key={column} style={formulationStyles.th}>{column}</th>
+                  {[
+                    ['formulationCode', 'Formulation Code'], ['version', 'Version'], ['status', 'Status'], ['componentsTotal', 'Components Total'], ['updatedAt', 'Last Updated'],
+                  ].map(([key, label]) => (
+                    <th key={key} style={formulationStyles.th}><SortButton column={key} onSort={table.toggleSort} sort={table.sort}>{label}</SortButton></th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {records.map((record) => (
+                {table.pagedRecords.map((record) => (
                   <tr key={record.id}>
-                    <td style={formulationStyles.td}>{record.formulationCode}</td>
+                    <td style={formulationStyles.td}><button onClick={() => onOpen(record.id)} style={controlStyles.linkButton} type="button">{record.formulationCode}</button></td>
                     <td style={formulationStyles.td}>{record.version}</td>
-                    <td style={formulationStyles.td}>{record.family ?? '-'}</td>
-                    <td style={formulationStyles.td}>{record.targetBenchmark ?? '-'}</td>
                     <td style={formulationStyles.td}>{labelize(record.status)}</td>
                     <td style={formulationStyles.td}><span style={{ ...formulationStyles.badge, ...totalTone(record.componentsTotal) }}>{formatValue(record.componentsTotal)}%</span></td>
                     <td style={formulationStyles.td}>{formatValue(record.updatedAt)}</td>
-                    <td style={formulationStyles.td}>
-                      <div style={styles.rowActions}>
-                        <button onClick={() => onOpen(record.id)} style={controlStyles.subtleButton} type="button">View</button>
-                        <button onClick={() => onOpen(record.id)} style={controlStyles.subtleButton} type="button">Edit</button>
-                        <button onClick={() => void duplicateFormulation(record.id).then((next) => onOpen(next.id)).catch((err: Error) => setError(err.message))} style={controlStyles.subtleButton} type="button">Duplicate</button>
-                      </div>
-                    </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <TablePagination currentPage={table.currentPage} onPageChange={table.setPage} pageCount={table.pageCount} />
           </div>
         )}
       </Card>
     </DashboardPage>
   );
 }
-
-const styles: Record<string, CSSProperties> = {
-  rowActions: { display: 'flex', flexWrap: 'wrap', gap: spacing.space2 },
-};

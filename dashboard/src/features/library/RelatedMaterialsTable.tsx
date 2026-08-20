@@ -14,7 +14,6 @@ export function RelatedMaterialsTable({ error, materials }: { error: string; mat
         <DataTable compact minWidth={800}>
           <DataTableHeader>
             <tr>
-              <DataTableHead>Material ID</DataTableHead>
               <DataTableHead>Material Name</DataTableHead>
               <DataTableHead>Product Grade</DataTableHead>
               <DataTableHead>Chemistry</DataTableHead>
@@ -25,8 +24,7 @@ export function RelatedMaterialsTable({ error, materials }: { error: string; mat
           <DataTableBody>
             {materials.map((material) => (
               <DataTableRow key={material.id}>
-                <DataTableCell><a href={`/materials/${encodeURIComponent(material.id)}`} style={styles.link}>{formatValue(material['materialCode'])}</a></DataTableCell>
-                <DataTableCell>{formatValue(material['materialName'])}</DataTableCell>
+                <DataTableCell><a href={`/materials/${encodeURIComponent(material.id)}`} style={styles.link}>{formatValue(material['materialName'])}</a></DataTableCell>
                 <DataTableCell>{formatValue(material['productGrade'])}</DataTableCell>
                 <DataTableCell>{formatValue(material['chemistry'])}</DataTableCell>
                 <DataTableCell>{formatValue(material['roleInBlend'])}</DataTableCell>

@@ -11,7 +11,8 @@ export type ProductionRunStatus =
 export type SampleStatus = 'created' | 'testing' | 'tested' | 'archived';
 
 export interface ProductionRunListQuery {
-  dateProduced?: string;
+  dateProducedFrom?: string;
+  dateProducedTo?: string;
   formulationId?: string;
   machineId?: string;
   moldId?: string;

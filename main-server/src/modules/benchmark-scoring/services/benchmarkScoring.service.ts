@@ -3,7 +3,7 @@ import type { AuditService } from '../../audit/audit.service';
 import type { BenchmarkScoringRepository } from '../repositories/benchmarkScoring.repository';
 import type { PerformanceDistanceService } from './performanceDistance.service';
 import type { BenchmarkScoreResult, BenchmarkScoringRecord } from '../benchmarkScoring.types';
-import { validateReportId, validateRunId } from '../validators/benchmarkScoring.validator';
+import { validateBenchmarkId, validateReportId, validateRunId } from '../validators/benchmarkScoring.validator';
 
 export class BenchmarkScoringService {
   constructor(
@@ -44,6 +44,51 @@ export class BenchmarkScoringService {
 
   async regenerate(runId: string, changedBy: string): Promise<BenchmarkScoringRecord> {
     return this.generateInternal(runId, changedBy, true);
+  }
+
+  async regenerateBenchmarkGlobally(benchmarkId: string, changedBy: string): Promise<BenchmarkScoringRecord> {
+    validateBenchmarkId(benchmarkId);
+    const benchmark = await this.repo.benchmark(benchmarkId);
+    if (!benchmark) throw new NotFoundError(`Active Benchmark ${benchmarkId}`);
+    const algorithm = await this.repo.algorithmVersion();
+    if (!algorithm) throw new NotFoundError('PERFORMANCE_DISTANCE v1.0');
+
+    const runs = await this.repo.scorableRuns();
+    let runsScored = 0;
+    let runsSkipped = 0;
+    for (const run of runs) {
+      if (!(await this.scoringReady(run.id))) {
+        runsSkipped += 1;
+        continue;
+      }
+      const inputs = await this.repo.scoringInputs(run.id, benchmarkId);
+      const score = this.scoringService.scoreBenchmark(
+        {
+          benchmarkCode: String(benchmark['benchmarkCode']),
+          benchmarkId,
+          benchmarkName: String(benchmark['benchmarkName']),
+        },
+        inputs,
+        algorithm['config']
+      );
+      await this.repo.saveBenchmarkReport(run.id, algorithm.id, score);
+      runsScored += 1;
+    }
+
+    const result = {
+      benchmarkId,
+      benchmarkName: benchmark['benchmarkName'],
+      runsScored,
+      runsSkipped,
+    };
+    await this.auditService.log({
+      tableName: 'benchmark_profiles',
+      recordId: benchmarkId,
+      action: 'UPDATE',
+      changedBy,
+      newValues: { ...result, action: 'GLOBAL_SCORE_REGENERATION' },
+    });
+    return { id: benchmarkId, ...result };
   }
 
   private async generateInternal(runId: string, changedBy: string, regenerate: boolean): Promise<BenchmarkScoringRecord> {

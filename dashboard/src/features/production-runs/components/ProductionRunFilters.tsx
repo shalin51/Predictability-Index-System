@@ -3,7 +3,8 @@ import type { LibraryRecord } from '../../../services/api';
 import { runStyles, statusLabels } from '../productionRunUi';
 
 export interface ProductionRunFiltersState {
-  dateProduced: string;
+  dateProducedFrom: string;
+  dateProducedTo: string;
   formulationId: string;
   machineId: string;
   moldId: string;
@@ -50,7 +51,14 @@ export function ProductionRunFilters({
         <option value="">Benchmark</option>
         {benchmarks.map((item) => <option key={item.id} value={item.id}>{String(item['label'])}</option>)}
       </select>
-      <input onChange={(event) => onChange('dateProduced', event.target.value)} style={controlStyles.input} type="date" value={filters.dateProduced} />
+      <label style={controlStyles.field}>
+        <span style={controlStyles.fieldLabel}>Produced from</span>
+        <input onChange={(event) => onChange('dateProducedFrom', event.target.value)} style={controlStyles.input} type="date" value={filters.dateProducedFrom} />
+      </label>
+      <label style={controlStyles.field}>
+        <span style={controlStyles.fieldLabel}>Produced to</span>
+        <input onChange={(event) => onChange('dateProducedTo', event.target.value)} style={controlStyles.input} type="date" value={filters.dateProducedTo} />
+      </label>
     </div>
   );
 }
