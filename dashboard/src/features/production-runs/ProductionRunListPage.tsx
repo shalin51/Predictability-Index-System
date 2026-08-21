@@ -12,6 +12,7 @@ import {
 import { ProductionRunFilters, type ProductionRunFiltersState } from './components/ProductionRunFilters';
 import { ProductionRunTable } from './components/ProductionRunTable';
 import { runStyles } from './productionRunUi';
+import { DataTransferActions } from '../../components/data-transfer/DataTransferActions';
 
 const defaultFilters: ProductionRunFiltersState = {
   dateProducedFrom: '',
@@ -64,6 +65,7 @@ export function ProductionRunListPage({ onCreate, onImport, onOpen }: { onCreate
             <p style={runStyles.subtitle}>Approved formulations molded into traceable batches and samples.</p>
           </div>
           <div style={runStyles.actions}>
+            <DataTransferActions onImported={load} resource="production-runs" />
             <button onClick={onImport} style={controlStyles.secondaryButton} type="button">Import Setup Sheet</button>
             <button onClick={onCreate} style={controlStyles.primaryButton} type="button">New Production Run</button>
           </div>

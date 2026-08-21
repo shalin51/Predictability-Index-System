@@ -24,6 +24,7 @@ import {
 import { createMaterialImportRouter } from './modules/material-imports/materialImport.module';
 import { createMaterialCatalogRouter } from './modules/materials/materialCatalog.module';
 import { createAuthRouter } from './modules/auth/auth.module';
+import { createDataTransferRouter } from './modules/data-transfer/dataTransfer.module';
 
 export function createApp() {
   const app = express();
@@ -41,16 +42,17 @@ function registerCommonMiddleware(app: Express): void {
       credentials: true,
     })
   );
-  app.use(['/setup-sheet-imports/preview', '/production-run-imports/preview', '/material-imports/preview'], (req, res, next) => {
+  app.use(['/setup-sheet-imports/preview', '/production-run-imports/preview', '/material-imports/preview', '/data-transfer'], (req, res, next) => {
     const contentType = req.headers['content-type']?.toLowerCase() ?? '';
-    if (req.method === 'POST' && !contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') && !contentType.includes('application/octet-stream')) {
+    const requiresWorkbook = req.method === 'POST' && (!req.originalUrl.startsWith('/data-transfer') || req.path.endsWith('/import'));
+    if (requiresWorkbook && !contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') && !contentType.includes('application/octet-stream')) {
       res.status(415).json({ error: 'Unsupported workbook content type', code: 'UNSUPPORTED_MEDIA_TYPE' });
       return;
     }
     next();
   });
   app.use(
-    ['/setup-sheet-imports/preview', '/production-run-imports/preview', '/material-imports/preview'],
+    ['/setup-sheet-imports/preview', '/production-run-imports/preview', '/material-imports/preview', '/data-transfer'],
     express.raw({
       type: [
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -73,6 +75,7 @@ function registerRoutes(app: Express): void {
   app.use('/auth', createAuthRouter());
   app.use('/dashboard', createDashboardRouter());
   app.use('/library', createLibraryRouter());
+  app.use('/data-transfer', createDataTransferRouter());
   app.use('/formulations', createFormulationRouter());
   app.use('/setup-sheet-imports', createSetupImportRouter());
   app.use('/production-run-imports', createSetupImportRouter());

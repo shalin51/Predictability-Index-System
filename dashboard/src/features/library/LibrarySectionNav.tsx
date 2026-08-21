@@ -30,6 +30,14 @@ export function LibrarySectionNav({
 }
 
 export function labelize(value: string) {
+  const labels: Record<string, string> = {
+    'machine-parameters': 'Parameters',
+    'material-properties': 'Properties',
+    'material-suppliers': 'Suppliers',
+    'mold-zones': 'Zones',
+    'scoring-rules': 'Properties',
+  };
+  if (labels[value]) return labels[value];
   return value.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[-_]/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 

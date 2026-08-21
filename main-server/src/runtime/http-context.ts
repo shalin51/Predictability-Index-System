@@ -106,6 +106,12 @@ export class ResponseCapture {
     return this as unknown as Response;
   }
 
+  send(payload?: unknown): Response {
+    this.body = payload;
+    this.finish();
+    return this as unknown as Response;
+  }
+
   setHeader(name: string, value: string): void {
     this.headers[name] = value;
   }
@@ -133,7 +139,14 @@ export class ResponseCapture {
     this.resolveFinished();
   }
 
-  toHttpResponse(): { status: number; headers: Record<string, string>; body?: string; jsonBody?: unknown } {
+  toHttpResponse(): { status: number; headers: Record<string, string>; body?: string | Uint8Array; jsonBody?: unknown } {
+    if (Buffer.isBuffer(this.body)) {
+      return {
+        status: this.statusCode,
+        headers: this.headers,
+        body: new Uint8Array(this.body),
+      };
+    }
     if (typeof this.body === 'string') {
       return {
         status: this.statusCode,

@@ -20,6 +20,7 @@ import {
 import { colors, font, radius, spacing } from '../../theme/tokens';
 import { coerceLibraryPayload, LibraryRecordForm, libraryOptionResources } from './LibraryRecordForm';
 import { labelize, LibrarySectionNav } from './LibrarySectionNav';
+import { DataTransferActions } from '../../components/data-transfer/DataTransferActions';
 
 const sections = [
   'materials',
@@ -155,6 +156,7 @@ export function LibraryPage({
               <CardSubtitle>{standalone ? `Manage ${labelize(section).toLowerCase()} master data used by formulations and production.` : 'Controlled reference records for dropdowns, benchmarks, and scoring.'}</CardSubtitle>
             </div>
             <div style={styles.headerActions}>
+              {section !== 'process-setups' && <DataTransferActions onImported={load} resource={section} />}
               {section === 'scoring-rules' && (
                 <Button
                   disabled={!selected}
@@ -166,7 +168,7 @@ export function LibraryPage({
                 </Button>
               )}
               {section !== 'process-setups' && !readOnly && <Button onClick={() => startEdit()} type="button" variant="primary">New</Button>}
-              {section === 'materials' && onImport && <Button onClick={onImport} type="button" variant="secondary">Import Materials</Button>}
+              {section === 'materials' && onImport && <Button onClick={onImport} type="button" variant="subtle">Advanced Catalog Import</Button>}
             </div>
           </CardHeader>
           <Divider />

@@ -10,6 +10,7 @@ import {
 } from '../../services/api';
 import { LabTestingQueueTable } from '../../features/lab-testing/components/LabTestingQueueTable';
 import { labStyles } from '../../features/lab-testing/labTestingUi';
+import { DataTransferActions } from '../../components/data-transfer/DataTransferActions';
 
 const defaultFilters = {
   dateProduced: '',
@@ -55,6 +56,7 @@ export function LabTestingQueuePage({ onOpen }: { onOpen: (id: string) => void }
             <h1 style={labStyles.title}>Lab Testing</h1>
             <p style={labStyles.subtitle}>Ready and active production runs awaiting sample result entry.</p>
           </div>
+          <DataTransferActions onImported={load} resource="lab-results" />
         </div>
         <Divider />
         <div style={labStyles.filters}>

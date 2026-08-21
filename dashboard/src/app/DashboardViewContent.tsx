@@ -91,7 +91,7 @@ export function DashboardViewContent({
   }
 
   if (view === 'benchmarks') {
-    const section = 'benchmarks';
+    const section = librarySection === 'scoring-rules' ? librarySection : 'benchmarks';
     return (
       <MasterDataPage
         activeSection={section}
@@ -99,13 +99,13 @@ export function DashboardViewContent({
         onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'benchmarks' })}
         onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'benchmarks' })}
         recordId={libraryRecordId}
-        sections={['benchmarks']}
+        sections={['benchmarks', 'scoring-rules']}
       />
     );
   }
 
   if (view === 'machines') {
-    const section = 'machines';
+    const section = librarySection === 'machine-parameters' ? librarySection : 'machines';
     return (
       <MasterDataPage
         activeSection={section}
@@ -113,13 +113,13 @@ export function DashboardViewContent({
         onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'machines' })}
         onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'machines' })}
         recordId={libraryRecordId}
-        sections={['machines']}
+        sections={['machines', 'machine-parameters']}
       />
     );
   }
 
   if (view === 'molds') {
-    const section = 'molds';
+    const section = librarySection === 'mold-zones' ? librarySection : 'molds';
     return (
       <MasterDataPage
         activeSection={section}
@@ -127,7 +127,7 @@ export function DashboardViewContent({
         onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'molds' })}
         onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'molds' })}
         recordId={libraryRecordId}
-        sections={['molds']}
+        sections={['molds', 'mold-zones']}
       />
     );
   }

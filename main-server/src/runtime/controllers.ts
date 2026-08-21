@@ -49,6 +49,7 @@ import { createMaterialImportController } from '../modules/material-imports/mate
 import { createMaterialCatalogController } from '../modules/materials/materialCatalog.module';
 import { AuthController } from '../modules/auth/auth.controller';
 import { AuthService } from '../modules/auth/auth.service';
+import { createDataTransferController } from '../modules/data-transfer/dataTransfer.module';
 
 const auditService = new AuditService();
 const libraryRepo = new LibraryRepository();
@@ -79,4 +80,5 @@ export const controllers = {
   processSetups: createProcessSetupController(),
   materialImports: createMaterialImportController(),
   materials: createMaterialCatalogController(),
+  dataTransfer: createDataTransferController(),
 };

@@ -15,6 +15,7 @@ export type LibrarySection =
   | 'material-properties'
   | 'material-suppliers'
   | 'benchmarks'
+  | 'scoring-rules'
   | 'machines'
   | 'machine-parameters'
   | 'molds'
@@ -39,6 +40,7 @@ export interface DashboardRouteState {
 
 const libraryViewBySection: Record<LibrarySection, DashboardView> = {
   benchmarks: 'benchmarks',
+  'scoring-rules': 'benchmarks',
   machines: 'machines',
   'machine-parameters': 'machines',
   materials: 'materials',
@@ -82,8 +84,6 @@ function parseRouteSegments(segments: string[]): DashboardRouteState | null {
 
   if (segments[0] === 'library') {
     const legacy = segments[1] === 'suppliers' ? 'material-suppliers' : segments[1];
-    if (legacy === 'machine-parameters') return parseLibraryRoute('machines');
-    if (legacy === 'mold-zones') return parseLibraryRoute('molds');
     return legacy && librarySections.has(legacy as LibrarySection)
       ? parseLibraryRoute(legacy as LibrarySection, segments[2])
       : parseLibraryRoute('materials');
@@ -99,8 +99,6 @@ function parseRouteSegments(segments: string[]): DashboardRouteState | null {
   }
 
   if (librarySections.has(segments[0] as LibrarySection)) {
-    if (segments[0] === 'machine-parameters') return parseLibraryRoute('machines');
-    if (segments[0] === 'mold-zones') return parseLibraryRoute('molds');
     return parseLibraryRoute(segments[0] as LibrarySection, segments[1]);
   }
 
@@ -181,15 +179,18 @@ export function buildDashboardPath({ formulationId, formulationMode, labRunId, l
   }
 
   if (view === 'benchmarks') {
-    return `/benchmarks${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
+    const section = librarySection === 'scoring-rules' ? librarySection : 'benchmarks';
+    return `/${section}${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
   }
 
   if (view === 'machines') {
-    return `/machines${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
+    const section = librarySection === 'machine-parameters' ? librarySection : 'machines';
+    return `/${section}${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
   }
 
   if (view === 'molds') {
-    return `/molds${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
+    const section = librarySection === 'mold-zones' ? librarySection : 'molds';
+    return `/${section}${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
   }
 
   if (view === 'formulations') {

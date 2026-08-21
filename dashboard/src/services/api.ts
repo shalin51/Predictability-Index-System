@@ -28,6 +28,14 @@ export interface LibraryWeightValidation {
   message: string;
 }
 
+export interface DataTransferImportResult {
+  created: number;
+  errors: string[];
+  processed: number;
+  skipped: number;
+  updated: number;
+}
+
 export interface GlobalBenchmarkRegenerationResult {
   benchmarkId: string;
   benchmarkName: string;
@@ -647,6 +655,39 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
     throw new Error(body['error'] ?? `HTTP ${response.status}`);
   }
   return response.json() as Promise<T>;
+}
+
+export async function downloadDataTransferWorkbook(resource: string, mode: 'export' | 'template'): Promise<void> {
+  const headers = new Headers();
+  const accessToken = getAccessToken();
+  if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
+  const response = await fetch(`${env.apiBaseUrl}/data-transfer/${encodeURIComponent(resource)}/${mode}`, { headers });
+  if (response.status === 401) clearAuthSession();
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({ error: response.statusText }))) as Record<string, string>;
+    throw new Error(body['error'] ?? `HTTP ${response.status}`);
+  }
+  const disposition = response.headers.get('content-disposition') ?? '';
+  const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] ?? `${resource}-${mode}.xlsx`;
+  const url = URL.createObjectURL(await response.blob());
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+export async function importDataTransferWorkbook(resource: string, file: File): Promise<DataTransferImportResult> {
+  return fetchJSON<DataTransferImportResult>(`/data-transfer/${encodeURIComponent(resource)}/import`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'x-file-name': encodeURIComponent(file.name),
+    },
+    body: file,
+  });
 }
 
 export async function checkHealth(): Promise<HealthResponse> {
