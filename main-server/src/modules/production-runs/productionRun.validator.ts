@@ -1,19 +1,12 @@
 import { ValidationError } from '../../errors/app-error';
+import { PRODUCTION_RUN_STATUSES } from '../../constants/domain.constants';
 import type { ProductionRunInput, ProductionRunStatus, SampleGenerationInput } from './productionRun.types';
 
-const statuses = new Set<ProductionRunStatus>([
-  'planned',
-  'molded',
-  'curing',
-  'ready_for_testing',
-  'testing',
-  'completed',
-  'scored',
-  'archived',
-]);
+const statuses = new Set<ProductionRunStatus>(PRODUCTION_RUN_STATUSES);
 
 export function normalizeProductionRunInput(input: Record<string, unknown>): ProductionRunInput {
   return {
+    approvedBy: stringValue(input['approvedBy']) || null,
     auditReason: stringValue(input['auditReason']),
     coolingTime: nullableNumber(input['coolingTime']),
     coolingTimeUnit: stringValue(input['coolingTimeUnit']) || 'sec',
@@ -50,6 +43,12 @@ export function validateProductionRunInput(input: ProductionRunInput, partial = 
 }
 
 export function nextProductionRunStatus(current: ProductionRunStatus, requested: ProductionRunStatus): void {
+  const allowedBackwards: Partial<Record<ProductionRunStatus, ProductionRunStatus>> = {
+    molded: 'planned',
+    ready_for_testing: 'curing',
+    completed: 'testing',
+  };
+  if (allowedBackwards[current] === requested) return;
   const flow: ProductionRunStatus[] = ['planned', 'molded', 'curing', 'ready_for_testing', 'testing', 'completed', 'scored'];
   const currentIndex = flow.indexOf(current);
   const requestedIndex = flow.indexOf(requested);

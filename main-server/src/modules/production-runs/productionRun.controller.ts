@@ -52,7 +52,6 @@ export class ProductionRunController {
       moldId: req.query['moldId'] as string | undefined,
       search: req.query['search'] as string | undefined,
       status: req.query['status'] as ProductionRunListQuery['status'],
-      targetBenchmarkId: req.query['targetBenchmarkId'] as string | undefined,
     };
   }
 

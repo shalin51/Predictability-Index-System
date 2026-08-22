@@ -94,6 +94,7 @@ export class ProcessSetupService {
     const state = await this.repo.runState(runId);
     if (!state) throw new NotFoundError(`Production run ${runId}`);
     if (['completed', 'scored', 'archived'].includes(state.status)) throw new ConflictError('Completed or archived production runs are locked');
+    if (!['planned', 'molded'].includes(state.status)) throw new ConflictError('Process setups can only be imported while a run is planned or molded');
     const auditReason = String(raw['auditReason'] ?? '').trim();
     if (state.status === 'testing' && !auditReason) throw new ValidationError('Audit reason is required after testing starts');
     const values = Array.isArray(raw['values']) ? raw['values'].filter((value): value is Record<string, unknown> => Boolean(value) && typeof value === 'object') : [];
@@ -103,14 +104,33 @@ export class ProcessSetupService {
       const typedCount = [value['actualNumeric'], value['actualText'], value['actualDate']].filter((item) => item !== null && item !== undefined && item !== '').length;
       if (typedCount > 1) throw new ValidationError('A process value may contain only one actual value type');
     }
+    const before = await this.runProcessSetup(runId);
     try {
       await this.repo.updateRunValues(runId, values);
     } catch (error) {
       if (error instanceof Error && error.message === 'PROCESS_VALUE_NOT_FOUND') throw new NotFoundError('One or more process values');
       throw error;
     }
-    await this.audit.log({ tableName: 'production_runs', recordId: runId, action: 'UPDATE', changedBy: actor, newValues: { processValueIds: values.map((value) => value['id']), auditReason: auditReason || undefined } });
-    return this.runProcessSetup(runId);
+    const record = await this.runProcessSetup(runId);
+    await this.audit.log({ tableName: 'production_runs', recordId: runId, action: 'UPDATE', changedBy: actor, oldValues: { processValues: before.values }, newValues: { processValues: record.values, auditReason: auditReason || undefined } });
+    return record;
+  }
+
+  async importRunValues(runId: string, sourceRunId: string, actor: string) {
+    if (!sourceRunId || sourceRunId === runId) throw new ValidationError('Select a different production run to import');
+    const state = await this.repo.runState(runId);
+    if (!state) throw new NotFoundError(`Production run ${runId}`);
+    if (['completed', 'scored', 'archived'].includes(state.status)) throw new ConflictError('Completed or archived production runs are locked');
+    const before = await this.runProcessSetup(runId);
+    try {
+      await this.repo.importRunValues(runId, sourceRunId);
+    } catch (error) {
+      if (error instanceof Error && error.message === 'SOURCE_PROCESS_SETUP_NOT_FOUND') throw new ValidationError('The selected run has no process setup to import');
+      throw error;
+    }
+    const record = await this.runProcessSetup(runId);
+    await this.audit.log({ tableName: 'production_runs', recordId: runId, action: 'UPDATE', changedBy: actor, oldValues: { processValues: before.values }, newValues: { importedFromRunId: sourceRunId, processValues: record.values } });
+    return record;
   }
 
   private async withMatches(record: Awaited<ReturnType<ProcessSetupRepository['findImport']>>) {

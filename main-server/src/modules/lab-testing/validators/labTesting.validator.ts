@@ -13,7 +13,6 @@ export function normalizeQueueQuery(query: Record<string, unknown>): LabTestingQ
     moldId: stringValue(query['moldId']),
     search: stringValue(query['search']),
     status: status || 'all',
-    targetBenchmarkId: stringValue(query['targetBenchmarkId']),
   };
 }
 

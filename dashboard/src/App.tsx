@@ -49,6 +49,7 @@ function AuthenticatedApp({ onLogout, session }: AuthenticatedAppProps) {
   const {
     formulationId,
     formulationMode,
+    goBack,
     importResource,
     labRunId,
     labTestingMode,
@@ -109,6 +110,7 @@ function AuthenticatedApp({ onLogout, session }: AuthenticatedAppProps) {
         userName={session.userName}
         >
         <DashboardViewContent
+          goBack={goBack}
           navigate={navigate}
           formulationId={formulationId}
           formulationMode={formulationMode}

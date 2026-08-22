@@ -80,13 +80,14 @@ function coerce(value: unknown, type: TransferValueType | undefined, location: s
 
 /** Generates a realistic sample value for test_X sheets. */
 function sampleValue(column: TransferColumn): unknown {
+  if (column.defaultValue != null) return column.defaultValue;
+  if (column.allowedValues?.length) return column.allowedValues[0];
   if (column.type === 'number') return 1;
   if (column.type === 'boolean') return 'Yes';
   if (column.type === 'date') return '2026-01-15';
   const key = column.key.toLowerCase();
   if (key.includes('code')) return 'EXAMPLE-001';
   if (key.includes('name')) return `Example ${column.header.replace(' *', '')}`;
-  if (key === 'status') return 'active';
   if (key.includes('email')) return 'contact@example.com';
   if (key.includes('phone')) return '+1-555-0100';
   if (key.includes('website') || key.includes('url')) return 'https://example.com';
@@ -112,9 +113,7 @@ function fieldDescription(column: TransferColumn): string {
   if (type === 'boolean') notes.push('Accepted values: Yes, No, true, false, 1, 0');
   if (type === 'date') notes.push('Format: YYYY-MM-DD (e.g. 2026-01-15)');
   if (type === 'number') notes.push('Must be a valid number');
-  if (key === 'status') notes.push('Accepted values: active, inactive, archived');
-  if (key === 'positiontype') notes.push('Accepted values: single, zone, position');
-  if (key === 'basistype' || key === 'basis') notes.push('Accepted values: weight_percent');
+  if (column.allowedValues?.length) notes.push(`Accepted values: ${column.allowedValues.join(', ')}`);
   if (key.includes('suppliercode')) notes.push('Must match an existing Supplier Code — import Material Suppliers first');
   if (key.includes('machinecode') && !key.includes('name')) notes.push('Must match an existing Machine Code — import Machines first');
   if (key.includes('moldcode') && !key.includes('name')) notes.push('Must match an existing Mold Code — import Molds first');
@@ -275,6 +274,9 @@ export function parseTransferWorkbookSafe(bytes: Buffer, definition: TransferDef
         if (column.required && (value === null || value === '')) {
           parseErrors.push(`${column.header} is required`);
         }
+        if (value !== null && column.allowedValues && !column.allowedValues.includes(String(value))) {
+          parseErrors.push(`${column.header} must be one of: ${column.allowedValues.join(', ')}`);
+        }
         record[column.key] = value;
       }
       results.push({ rowIndex, data: record, parseErrors });
@@ -314,6 +316,9 @@ function parseSheets(workbook: XLSX.WorkBook, definition: TransferDefinition, _t
           const value = coerce(row[headerIndexes.get(column.header.toLowerCase()) ?? -1], column.type, `${tabName} row ${rowIndex + 2} ${column.header}`);
           if (column.required && (value === null || value === '')) {
             throw new ValidationError(`${tabName} row ${rowIndex + 2} requires "${column.header}"`);
+          }
+          if (value !== null && column.allowedValues && !column.allowedValues.includes(String(value))) {
+            throw new ValidationError(`${tabName} row ${rowIndex + 2} ${column.header} must be one of: ${column.allowedValues.join(', ')}`);
           }
           record[column.key] = value;
         }

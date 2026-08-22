@@ -1,22 +1,46 @@
 import type { CSSProperties } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Card, Divider } from '../../../components/ui/Card';
+import { controlStyles } from '../../../components/ui/controls';
 import { DataTable, DataTableBody, DataTableCell, DataTableHead, DataTableHeader, DataTableRow } from '../../../components/ui/DataTable';
 import { EmptyState, MessageBanner } from '../../../components/ui/Page';
-import { getProductionRunProcessSetup, type ProcessSetupDetail } from '../../../services/api';
+import { getProductionRunProcessSetup, importProductionRunProcessValues, listProductionRuns, updateProductionRunProcessValues, type ProcessSetupDetail, type ProductionRunRecord } from '../../../services/api';
 import { colors, spacing } from '../../../theme/tokens';
 import { formatValue, runStyles } from '../productionRunUi';
 
 export function ProcessSetupPanel({ runId }: { runId: string }) {
   const [record, setRecord] = useState<ProcessSetupDetail | null>(null);
+  const [runs, setRuns] = useState<ProductionRunRecord[]>([]);
+  const [sourceRunId, setSourceRunId] = useState('');
+  const [draft, setDraft] = useState<Array<Record<string, unknown>>>([]);
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  useEffect(() => { void getProductionRunProcessSetup(runId).then(setRecord).catch((caught: Error) => setError(caught.message)); }, [runId]);
+  const load = () => void getProductionRunProcessSetup(runId).then((next) => { setRecord(next); setDraft(next.values ?? []); }).catch((caught: Error) => setError(caught.message));
+  useEffect(() => { load(); void listProductionRuns().then(setRuns).catch(() => undefined); }, [runId]);
   const sections = useMemo(() => groupBy(record?.values ?? [], 'section'), [record]);
-  if (error) return <MessageBanner tone="danger">{error}</MessageBanner>;
   if (!record) return <div style={runStyles.muted}>Loading process setup…</div>;
-  if (!record.processSetupRevisionId) return <EmptyState>This run has no imported process setup.</EmptyState>;
+  const importSetup = async () => {
+    if (!sourceRunId) return;
+    try { setBusy(true); setError(''); const next = await importProductionRunProcessValues(runId, sourceRunId); setRecord(next); setDraft(next.values ?? []); setEditing(false); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not import process setup'); } finally { setBusy(false); }
+  };
+  const save = async () => {
+    try { setBusy(true); setError(''); const next = await updateProductionRunProcessValues(runId, { values: draft }); setRecord(next); setDraft(next.values ?? []); setEditing(false); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not save process values'); } finally { setBusy(false); }
+  };
+  const updateDraft = (id: unknown, patch: Record<string, unknown>) => setDraft((current) => current.map((value) => value['id'] === id ? { ...value, ...patch } : value));
   return (
     <div style={runStyles.stack}>
+      {error && <MessageBanner tone="danger">{error}</MessageBanner>}
+      {(['planned', 'molded'] as const).includes(String(record.status) as 'planned' | 'molded') && <Card>
+        <div style={styles.importRow}>
+          <label style={controlStyles.field}><span style={controlStyles.fieldLabel}>Import process setup from a scored production run</span><select disabled={busy} onChange={(event) => setSourceRunId(event.target.value)} style={controlStyles.input} value={sourceRunId}><option value="">Select a production run</option>{runs.filter((run) => run.id !== runId && run.status === 'scored').slice(0, 10).map((run) => <option key={run.id} value={run.id}>{run.runCode} — {run.formulation}</option>)}</select></label>
+          <button disabled={!sourceRunId || busy} onClick={() => void importSetup()} style={controlStyles.secondaryButton} type="button">Import Setup</button>
+          {Boolean(record.processSetupRevisionId) && !editing && <button onClick={() => setEditing(true)} style={controlStyles.primaryButton} type="button">Edit Values</button>}
+          {editing && <><button disabled={busy} onClick={() => { setDraft(record.values ?? []); setEditing(false); }} style={controlStyles.secondaryButton} type="button">Cancel</button><button disabled={busy} onClick={() => void save()} style={controlStyles.primaryButton} type="button">Save Changes</button></>}
+        </div>
+      </Card>}
+      {!record.processSetupRevisionId && <EmptyState>Import a process setup to add and edit process values for this run.</EmptyState>}
+      {Boolean(record.processSetupRevisionId) && <>
       <div style={styles.summary}>
         <div style={runStyles.panel}>Revision<br /><strong>{formatValue(record.revisionNo)}</strong></div>
         <div style={runStyles.panel}>Approved By<br /><strong>{formatValue(record.approvedBy)}</strong></div>
@@ -28,7 +52,7 @@ export function ProcessSetupPanel({ runId }: { runId: string }) {
           <h3 style={styles.heading}>{label(section)}</h3><Divider />
           <DataTable minWidth={900}>
             <DataTableHeader><tr><DataTableHead>Parameter</DataTableHead><DataTableHead>Position</DataTableHead><DataTableHead>Setpoint</DataTableHead><DataTableHead>Actual</DataTableHead><DataTableHead>Unit</DataTableHead><DataTableHead>Tolerance</DataTableHead><DataTableHead>Status</DataTableHead><DataTableHead>Notes</DataTableHead></tr></DataTableHeader>
-            <DataTableBody>{values.map((value) => { const exception = toleranceException(value); return <DataTableRow key={String(value['id'])}><DataTableCell>{formatValue(value['displayName'])}</DataTableCell><DataTableCell>{formatValue(value['positionLabel'] ?? value['positionIndex'])}</DataTableCell><DataTableCell>{typed(value, 'setpoint')}</DataTableCell><DataTableCell>{typed(value, 'actual')}</DataTableCell><DataTableCell>{formatValue(value['unit'])}</DataTableCell><DataTableCell>{range(value)}</DataTableCell><DataTableCell><span style={exception ? styles.exception : styles.ok}>{exception ? 'Out of tolerance' : 'Within / n.a.'}</span></DataTableCell><DataTableCell>{formatValue(value['notes'])}</DataTableCell></DataTableRow>; })}</DataTableBody>
+            <DataTableBody>{values.map((value) => { const exception = toleranceException(value); const edited = draft.find((item) => item['id'] === value['id']) ?? value; return <DataTableRow key={String(value['id'])}><DataTableCell>{formatValue(value['displayName'])}</DataTableCell><DataTableCell>{formatValue(value['positionLabel'] ?? value['positionIndex'])}</DataTableCell><DataTableCell>{typed(value, 'setpoint')}</DataTableCell><DataTableCell>{editing ? <ActualValueInput value={edited} onChange={(patch) => updateDraft(value['id'], patch)} /> : typed(value, 'actual')}</DataTableCell><DataTableCell>{formatValue(value['unit'])}</DataTableCell><DataTableCell>{range(value)}</DataTableCell><DataTableCell><span style={exception ? styles.exception : styles.ok}>{exception ? 'Out of tolerance' : 'Within / n.a.'}</span></DataTableCell><DataTableCell>{editing ? <input onChange={(event) => updateDraft(value['id'], { notes: event.target.value })} style={controlStyles.input} value={String(edited['notes'] ?? '')} /> : formatValue(value['notes'])}</DataTableCell></DataTableRow>; })}</DataTableBody>
           </DataTable>
         </Card>
       ))}
@@ -36,8 +60,16 @@ export function ProcessSetupPanel({ runId }: { runId: string }) {
       {(record.materialProfile?.length ?? 0) > 0 && <Card><h3 style={styles.heading}>Material Processing Profile</h3><Divider /><div style={styles.summary}><div style={runStyles.panel}>Trade Name<br /><strong>{formatValue(record.materialProfile?.[0]?.['trade_name'])}</strong></div><div style={runStyles.panel}>Manufacturer<br /><strong>{formatValue(record.materialProfile?.[0]?.['manufacturer'])}</strong></div><div style={runStyles.panel}>Grade<br /><strong>{formatValue(record.materialProfile?.[0]?.['grade'])}</strong></div><div style={runStyles.panel}>Color / Pigment<br /><strong>{formatValue(record.materialProfile?.[0]?.['color_pigment'])}</strong></div></div>{record.materialProfile?.filter((range) => range['parameterKey']).map((range, index) => <div key={index} style={runStyles.panel}>{formatValue(range['rangeDisplayName'])}: {formatValue(range['minValue'])} – {formatValue(range['maxValue'])}; recommended {formatValue(range['recommendedValue'])} {formatValue(range['rangeUnit'])}</div>)}</Card>}
       {(record.dryingEvents?.length ?? 0) > 0 && <Card><h3 style={styles.heading}>Material Drying</h3><Divider />{record.dryingEvents?.map((event, index) => <div key={index} style={runStyles.panel}>Dryer {formatValue(event['dryerCode'])}: setpoint {formatValue(event['setpointTemperature'])}, actual {formatValue(event['actualTemperature'])} {formatValue(event['temperatureUnit'])}; {formatValue(event['startedAt'])} to {formatValue(event['endedAt'])} ({formatValue(event['durationHours'])} hours); approved by {formatValue(event['approvedBy'])}</div>)}</Card>}
       {(record.revisionHistory?.length ?? 0) > 0 && <Card><h3 style={styles.heading}>Workbook Revision History</h3><Divider />{record.revisionHistory?.map((entry, index) => <div key={index} style={runStyles.panel}>Rev {formatValue(entry['revisionNo'])} — {formatValue(entry['revisionDate'])} — {formatValue(entry['description'])}</div>)}</Card>}
+      </>}
     </div>
   );
+}
+
+function ActualValueInput({ onChange, value }: { onChange: (patch: Record<string, unknown>) => void; value: Record<string, unknown> }) {
+  const dataType = String(value['dataType'] ?? 'number');
+  if (dataType === 'date') return <input onChange={(event) => onChange({ actualDate: event.target.value || null, actualNumeric: null, actualText: null })} style={controlStyles.input} type="date" value={String(value['actualDate'] ?? '')} />;
+  if (dataType === 'numeric' || dataType === 'number') return <input onChange={(event) => onChange({ actualNumeric: event.target.value === '' ? null : Number(event.target.value), actualText: null, actualDate: null })} style={controlStyles.input} type="number" value={value['actualNumeric'] == null ? '' : String(value['actualNumeric'])} />;
+  return <input onChange={(event) => onChange({ actualText: event.target.value || null, actualNumeric: null, actualDate: null })} style={controlStyles.input} value={String(value['actualText'] ?? '')} />;
 }
 
 function groupBy(items: Array<Record<string, unknown>>, key: string): Record<string, Array<Record<string, unknown>>> { return items.reduce<Record<string, Array<Record<string, unknown>>>>((groups, item) => { const group = String(item[key] ?? 'other'); (groups[group] ??= []).push(item); return groups; }, {}); }
@@ -45,4 +77,4 @@ function typed(value: Record<string, unknown>, prefix: 'setpoint' | 'actual'): s
 function range(value: Record<string, unknown>): string { const min = value['toleranceMin']; const max = value['toleranceMax']; return min == null && max == null ? '-' : `${formatValue(min)} – ${formatValue(max)}`; }
 function toleranceException(value: Record<string, unknown>): boolean { const actual = Number(value['actualNumeric']); const min = value['toleranceMin']; const max = value['toleranceMax']; if (!Number.isFinite(actual) || value['actualNumeric'] == null) return false; return (min != null && actual < Number(min)) || (max != null && actual > Number(max)); }
 function label(value: string): string { return value.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()); }
-const styles: Record<string, CSSProperties> = { exception: { color: colors.status.error, fontWeight: 700 }, hash: { display: 'block', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis' }, heading: { color: colors.text.primary, margin: 0 }, ok: { color: colors.text.muted }, summary: { display: 'grid', gap: spacing.space3, gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' } };
+const styles: Record<string, CSSProperties> = { exception: { color: colors.status.error, fontWeight: 700 }, hash: { display: 'block', maxWidth: 240, overflow: 'hidden', textOverflow: 'ellipsis' }, heading: { color: colors.text.primary, margin: 0 }, importRow: { alignItems: 'end', display: 'flex', flexWrap: 'wrap', gap: spacing.space3 }, ok: { color: colors.text.muted }, summary: { display: 'grid', gap: spacing.space3, gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' } };

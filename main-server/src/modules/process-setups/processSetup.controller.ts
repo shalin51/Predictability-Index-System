@@ -17,6 +17,7 @@ export class ProcessSetupController {
   list(req: Request, res: Response): void { void req; respondJson(res, () => this.service.listSetups(), { errorStatus: this.status }); }
   detail(req: Request, res: Response): void { respondJson(res, () => this.service.setupDetail(req.params['id'] ?? ''), { errorStatus: this.status }); }
   runDetail(req: Request, res: Response): void { respondJson(res, () => this.service.runProcessSetup(req.params['id'] ?? ''), { errorStatus: this.status }); }
+  importRunValues(req: Request, res: Response): void { respondJson(res, () => this.service.importRunValues(req.params['id'] ?? '', String(req.body?.['sourceRunId'] ?? ''), this.actor(req)), { errorStatus: this.status }); }
   updateRunValues(req: Request, res: Response): void { respondJson(res, () => this.service.updateRunValues(req.params['id'] ?? '', req.body as Record<string, unknown>, this.actor(req)), { errorStatus: this.status }); }
   private actor(req: Request): string { return (req.headers['x-user-id'] as string) || 'anonymous'; }
   private status(error: Error): number { return resolveErrorStatus(error, { ConflictError: 409, NotFoundError: 404, ValidationError: 400 }, 500); }

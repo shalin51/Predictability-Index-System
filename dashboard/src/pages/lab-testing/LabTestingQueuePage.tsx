@@ -18,12 +18,10 @@ const defaultFilters = {
   moldId: '',
   search: '',
   status: 'all',
-  targetBenchmarkId: '',
 };
 
 export function LabTestingQueuePage({ onOpen }: { onOpen: (id: string) => void }) {
   const [records, setRecords] = useState<LabTestingQueueRecord[]>([]);
-  const [benchmarks, setBenchmarks] = useState<LibraryRecord[]>([]);
   const [machines, setMachines] = useState<LibraryRecord[]>([]);
   const [molds, setMolds] = useState<LibraryRecord[]>([]);
   const [filters, setFilters] = useState(defaultFilters);
@@ -38,9 +36,8 @@ export function LabTestingQueuePage({ onOpen }: { onOpen: (id: string) => void }
 
   useEffect(load, [filters]);
   useEffect(() => {
-    void Promise.all([listLibraryOptions('benchmarks'), listLibraryOptions('machines'), listLibraryOptions('molds')])
-      .then(([benchmarkOptions, machineOptions, moldOptions]) => {
-        setBenchmarks(benchmarkOptions);
+    void Promise.all([listLibraryOptions('machines'), listLibraryOptions('molds')])
+      .then(([machineOptions, moldOptions]) => {
         setMachines(machineOptions);
         setMolds(moldOptions);
       })
@@ -65,10 +62,6 @@ export function LabTestingQueuePage({ onOpen }: { onOpen: (id: string) => void }
             <option value="testing">Testing</option>
             <option value="completed">Completed</option>
             <option value="scored">Scored</option>
-          </select>
-          <select onChange={(event) => setFilters((current) => ({ ...current, targetBenchmarkId: event.target.value }))} style={{ ...controlStyles.input, ...labStyles.filterControl }} value={filters.targetBenchmarkId}>
-            <option value="">Benchmark</option>
-            {benchmarks.map((item) => <option key={item.id} value={item.id}>{String(item['benchmarkName'] ?? item['label'] ?? item.id)}</option>)}
           </select>
           <input onChange={(event) => setFilters((current) => ({ ...current, dateProduced: event.target.value }))} style={{ ...controlStyles.input, ...labStyles.filterControl }} type="date" value={filters.dateProduced} />
           <select onChange={(event) => setFilters((current) => ({ ...current, machineId: event.target.value }))} style={{ ...controlStyles.input, ...labStyles.filterControl }} value={filters.machineId}>

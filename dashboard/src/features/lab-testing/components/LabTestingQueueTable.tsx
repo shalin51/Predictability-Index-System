@@ -12,7 +12,7 @@ export function LabTestingQueueTable({ onOpen, records }: { onOpen: (id: string)
         <thead>
           <tr>
             {[
-              ['runCode', 'Run Code'], ['formulation', 'Formulation'], ['targetBenchmark', 'Target Benchmark'], ['status', 'Status'], ['completedResults', 'Completed Results'], ['missingRequiredMetrics', 'Missing Required Metrics'],
+              ['runCode', 'Run Code'], ['formulation', 'Formulation'], ['targetBenchmark', 'Benchmarks'], ['status', 'Status'], ['completedResults', 'Completed Results'], ['missingRequiredMetrics', 'Missing Required Metrics'],
             ].map(([key, label]) => (
               <th key={key} style={labStyles.th}><SortButton column={key} onSort={table.toggleSort} sort={table.sort}>{label}</SortButton></th>
             ))}

@@ -13,7 +13,7 @@ describe('data transfer workbook contract', () => {
         if (column.type === 'number') return [column.key, 1];
         if (column.type === 'boolean') return [column.key, true];
         if (column.type === 'date') return [column.key, '2026-08-19T00:00:00.000Z'];
-        return [column.key, `${column.key}-value`];
+        return [column.key, column.defaultValue ?? column.allowedValues?.[0] ?? `${column.key}-value`];
       }));
       const bytes = createTransferWorkbook(definition, { [firstSheet!.name]: [sample] });
       const parsed = parseTransferWorkbook(bytes, definition);
@@ -67,6 +67,20 @@ describe('data transfer workbook contract', () => {
     expect(fieldRows.length).toBe(transferDefinitions['machines']!.sheets[0]!.columns.length);
   });
 
+  it('lists and enforces each field-specific allowed value set', () => {
+    const definition = transferDefinitions['formulations']!;
+    const bytes = createTransferWorkbook(definition, {});
+    const wb = XLSX.read(bytes, { type: 'buffer' });
+    const instructions = XLSX.utils.sheet_to_json<unknown[]>(wb.Sheets[instructionTabName('Formulations')]!, { header: 1, defval: null });
+    expect(instructions.flat().join(' ')).toContain('draft, approved, molded, testing, scored, archived');
+
+    const invalid = createTransferWorkbook(definition, {
+      Formulations: [{ formulationCode: 'F-001', versionNo: 1, status: 'active', notes: '' }],
+      Components: [],
+    });
+    expect(() => parseTransferWorkbook(invalid, definition)).toThrow(/Status must be one of: draft/);
+  });
+
   it('rejects a workbook missing the first import_ tab', () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Col']]), 'wrong_sheet');
@@ -99,4 +113,3 @@ describe('data transfer workbook contract', () => {
     }
   });
 });
-

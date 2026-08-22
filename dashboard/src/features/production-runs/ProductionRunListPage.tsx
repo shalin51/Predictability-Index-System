@@ -18,18 +18,14 @@ const defaultFilters: ProductionRunFiltersState = {
   dateProducedTo: '',
   formulationId: '',
   machineId: '',
-  moldId: '',
   search: '',
   status: 'all',
-  targetBenchmarkId: '',
 };
 
 export function ProductionRunListPage({ onCreate, onImport, onOpen }: { onCreate: () => void; onImport?: () => void; onOpen: (id: string) => void }) {
   const [records, setRecords] = useState<ProductionRunRecord[]>([]);
-  const [benchmarks, setBenchmarks] = useState<LibraryRecord[]>([]);
   const [formulations, setFormulations] = useState<LibraryRecord[]>([]);
   const [machines, setMachines] = useState<LibraryRecord[]>([]);
-  const [molds, setMolds] = useState<LibraryRecord[]>([]);
   const [filters, setFilters] = useState(defaultFilters);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -43,15 +39,11 @@ export function ProductionRunListPage({ onCreate, onImport, onOpen }: { onCreate
   useEffect(load, [filters]);
   useEffect(() => {
     void Promise.all([
-      listLibraryOptions('benchmarks'),
       listApprovedFormulationOptions(),
       listLibraryOptions('machines'),
-      listLibraryOptions('molds'),
-    ]).then(([benchmarkOptions, formulationOptions, machineOptions, moldOptions]) => {
-      setBenchmarks(benchmarkOptions);
+    ]).then(([formulationOptions, machineOptions]) => {
       setFormulations(formulationOptions);
       setMachines(machineOptions);
-      setMolds(moldOptions);
     }).catch(() => undefined);
   }, []);
 
@@ -70,11 +62,9 @@ export function ProductionRunListPage({ onCreate, onImport, onOpen }: { onCreate
         </div>
         <Divider />
         <ProductionRunFilters
-          benchmarks={benchmarks}
           filters={filters}
           formulations={formulations}
           machines={machines}
-          molds={molds}
           onChange={(key, value) => setFilters((current) => ({ ...current, [key]: value }))}
         />
         {error && <MessageBanner tone="danger">{error}</MessageBanner>}

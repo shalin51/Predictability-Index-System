@@ -116,7 +116,7 @@ describe('parseTransferWorkbookSafe', () => {
   it('handles multiple sheets correctly (formulations)', () => {
     const definition = transferDefinitions['formulations']!;
     const bytes = createTransferWorkbook(definition, {
-      Formulations: [{ formulationCode: 'F001', versionNo: 1, experimentName: 'Test', family: '', targetBenchmarkCode: '', status: 'draft', notes: '' }],
+      Formulations: [{ formulationCode: 'F001', formulationName: 'Test formulation', versionNo: 1, status: 'draft', notes: '' }],
       Components: [],
     });
     const result = parseTransferWorkbookSafe(bytes, definition);

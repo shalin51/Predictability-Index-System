@@ -1,12 +1,14 @@
 import { ConflictError, NotFoundError, ValidationError } from '../../errors/app-error';
 import { getPool } from '../../infrastructure/database/pg-pool';
+import { COMPARISON_MODES, CRITICALITY_LEVELS, RECORD_STATUSES } from '../../constants/domain.constants';
 import type { AuditService } from '../audit/audit.service';
 import { getLibraryConfig } from './library.config';
 import { LibraryRepository } from './library.repository';
 import type { LibraryCollectionResponse, LibraryEntityConfig, LibraryListQuery, LibraryRecord } from './library.types';
 
-const statuses = new Set(['active', 'inactive', 'archived']);
-const comparisonModes = new Set(['target_range', 'max_cap', 'min_floor']);
+const statuses = new Set<string>(RECORD_STATUSES);
+const comparisonModes = new Set<string>(COMPARISON_MODES);
+const criticalityLevels = new Set<string>(CRITICALITY_LEVELS);
 
 export class LibraryService {
   constructor(
@@ -137,6 +139,9 @@ export class LibraryService {
     }
     if (payload['comparisonMode'] != null && !comparisonModes.has(String(payload['comparisonMode']))) {
       throw new ValidationError('comparisonMode must be target_range, max_cap, or min_floor');
+    }
+    if (payload['criticality'] != null && !criticalityLevels.has(String(payload['criticality']))) {
+      throw new ValidationError('criticality must be low, medium, high, or critical');
     }
   }
 

@@ -7,13 +7,12 @@ export class RunSummaryRepository {
     const result = await getPool().query(
       `SELECT pr.id, pr.run_code AS "runCode", pr.status::text AS "labTestingStatus",
               CONCAT(f.formulation_code, ' V', f.version_no) AS formulation,
-              bp.benchmark_name AS "targetBenchmark",
+              'All active benchmarks' AS "targetBenchmark",
               COALESCE(summary.summary_count, 0)::int AS "summaryCount",
               summary.last_generated_at AS "lastGeneratedAt",
               lab.latest_lab_update_at AS "latestLabUpdateAt"
        FROM production_runs pr
        JOIN formulations f ON f.id = pr.formulation_id
-       LEFT JOIN benchmark_profiles bp ON bp.id = f.target_benchmark_id
        LEFT JOIN (
          SELECT production_run_id, COUNT(*) AS summary_count, MAX(generated_at) AS last_generated_at
          FROM run_metric_summaries

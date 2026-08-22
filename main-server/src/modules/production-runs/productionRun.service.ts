@@ -58,6 +58,7 @@ export class ProductionRunService {
 
     const payload = normalizeProductionRunInput(input);
     validateProductionRunInput(payload, true);
+    if (payload.formulationId) await this.validateApprovedFormulation(payload.formulationId);
     if (payload.runCode && await this.repo.existsByRunCode(payload.runCode, id)) throw new ConflictError('Run code must be unique');
     if (before['status'] === 'testing' && !payload.auditReason) {
       throw new ValidationError('Audit reason is required to change manufacturing parameters after testing starts');
@@ -79,7 +80,17 @@ export class ProductionRunService {
   async updateStatus(id: string, status: ProductionRunStatus, changedBy: string): Promise<ProductionRunRecord> {
     const before = await this.repo.findById(id);
     if (!before) throw new NotFoundError(`Production Run ${id}`);
-    nextProductionRunStatus(before['status'] as ProductionRunStatus, status);
+    const currentStatus = before['status'] as ProductionRunStatus;
+    const allowedBackwards: Partial<Record<ProductionRunStatus, ProductionRunStatus>> = {
+      molded: 'planned',
+      ready_for_testing: 'curing',
+      completed: 'testing',
+    };
+    if (allowedBackwards[currentStatus] !== status) nextProductionRunStatus(currentStatus, status);
+    if (status === 'ready_for_testing' && await this.sampleRepo.countByRun(id) === 0) {
+      const startingSampleCode = await this.sampleRepo.nextAvailableStartingCode(`${before['runCode']}-S01`);
+      await this.sampleRepo.generate(id, { count: 5, startingSampleCode });
+    }
     const record = await this.repo.updateStatus(id, status);
     if (!record) throw new NotFoundError(`Production Run ${id}`);
     await this.auditService.log({
@@ -88,7 +99,7 @@ export class ProductionRunService {
       action: 'UPDATE',
       changedBy,
       oldValues: before,
-      newValues: record,
+      newValues: { ...record, samplesGenerated: status === 'ready_for_testing' ? await this.sampleRepo.countByRun(id) : undefined },
     });
     return this.detail(id);
   }

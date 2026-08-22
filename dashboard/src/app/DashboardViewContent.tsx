@@ -41,6 +41,7 @@ interface DashboardViewContentProps {
   reportMode?: DashboardRouteState['reportMode'];
   reportRunId?: string;
   navigate: (route: DashboardRouteState, options?: { replace?: boolean; skipConfirm?: boolean }) => boolean;
+  goBack: (fallback: DashboardRouteState) => void;
 }
 
 /** Maps an import resource to the dashboard route where its data is visible. */
@@ -79,6 +80,7 @@ export function DashboardViewContent({
   reportId,
   reportMode,
   reportRunId,
+  goBack,
   navigate,
 }: DashboardViewContentProps) {
   if (view === 'exports') {
@@ -181,9 +183,8 @@ export function DashboardViewContent({
       return (
         <FormulationDetailPage
           id={formulationId}
-          onBack={() => navigate({ formulationMode: 'list', view: 'formulations' })}
+          onBack={() => goBack({ formulationMode: 'list', view: 'formulations' })}
           onCreateProductionRun={() => navigate({ productionRunMode: 'new', view: 'production-runs' })}
-          onOpen={(id) => navigate({ formulationId: id, formulationMode: 'detail', view: 'formulations' })}
           onOpenLabRun={(id) => navigate({ labRunId: id, labTestingMode: 'detail', view: 'lab-testing' })}
           onOpenProductionRun={(id) => navigate({ productionRunId: id, productionRunMode: 'detail', view: 'production-runs' })}
         />
@@ -209,21 +210,11 @@ export function DashboardViewContent({
         />
       );
     }
-    if (productionRunMode === 'duplicate' && productionRunId) {
-      return (
-        <CreateProductionRunWizard
-          duplicateSourceId={productionRunId}
-          onCancel={() => navigate({ productionRunId, productionRunMode: 'detail', view: 'production-runs' })}
-          onSaved={(id) => navigate({ productionRunId: id, productionRunMode: 'detail', view: 'production-runs' })}
-        />
-      );
-    }
     if (productionRunMode === 'detail' && productionRunId) {
       return (
         <ProductionRunDetailPage
           id={productionRunId}
-          onBack={() => navigate({ productionRunMode: 'list', view: 'production-runs' })}
-          onDuplicate={(id) => navigate({ productionRunId: id, productionRunMode: 'duplicate', view: 'production-runs' })}
+          onBack={() => goBack({ productionRunMode: 'list', view: 'production-runs' })}
           onOpenFormulation={(id) => navigate({ formulationId: id, formulationMode: 'detail', view: 'formulations' })}
           onOpenLabRun={(runId) => navigate({ labRunId: runId, labTestingMode: 'detail', view: 'lab-testing' })}
           onOpenReport={(runId) => navigate({ reportMode: 'run', reportRunId: runId, view: 'reports' })}
@@ -244,7 +235,7 @@ export function DashboardViewContent({
       return (
         <LabTestingRunPage
           id={labRunId}
-          onBack={() => navigate({ labTestingMode: 'list', view: 'lab-testing' })}
+          onBack={() => goBack({ labTestingMode: 'list', view: 'lab-testing' })}
           onOpenFormulation={(id) => navigate({ formulationId: id, formulationMode: 'detail', view: 'formulations' })}
           onOpenProductionRun={(id) => navigate({ productionRunId: id, productionRunMode: 'detail', view: 'production-runs' })}
         />
@@ -255,10 +246,10 @@ export function DashboardViewContent({
 
   if (view === 'reports') {
     if (reportMode === 'detail' && reportId) {
-      return <ReportDetailPage reportId={reportId} onBack={() => navigate({ reportMode: 'list', view: 'reports' })} />;
+      return <ReportDetailPage reportId={reportId} onBack={() => goBack({ reportMode: 'list', view: 'reports' })} />;
     }
     if (reportMode === 'run' && reportRunId) {
-      return <ReportDetailPage productionRunId={reportRunId} onBack={() => navigate({ productionRunId: reportRunId, productionRunMode: 'detail', view: 'production-runs' })} />;
+      return <ReportDetailPage productionRunId={reportRunId} onBack={() => goBack({ productionRunId: reportRunId, productionRunMode: 'detail', view: 'production-runs' })} />;
     }
     return <ReportListPage
       onOpen={(id) => navigate({ reportId: id, reportMode: 'detail', view: 'reports' })}

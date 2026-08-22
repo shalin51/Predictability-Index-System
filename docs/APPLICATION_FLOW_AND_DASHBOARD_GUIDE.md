@@ -165,15 +165,13 @@ Do not enter scoring rules with arbitrary or incomplete targets. A metric withou
 
 ## Formulations: create and approve a recipe
 
-Open **Formulations** to filter records by text, status, benchmark, material, and created date. The list displays formulation code, version, family, target benchmark, status, component total, and last update.
+Open **Formulations** to filter records by text, status, benchmark, material, and created date. The list displays formulation code, version, target benchmark, status, component total, and last update.
 
 ### Create a formulation
 
 Select **New Formulation**. The wizard has three steps; the tabs can be used to move between them.
 
 1. **Basic Info**
-   - Choose an existing experiment or supply a quick experiment name.
-   - Choose an existing formulation family or supply a quick family name. A family is required.
    - Enter a formulation code or leave it blank for automatic generation.
    - Choose a target benchmark. It is required.
    - Add notes as needed.
@@ -385,7 +383,7 @@ Use **Save** to persist any setting. Profile-menu theme changes are applied to t
 
 | Symptom | Likely cause | Resolution |
 | --- | --- | --- |
-| Cannot approve a formulation | Component total is not 100%, or required family/benchmark/components are missing. | Complete the required fields and make the total exactly 100%. |
+| Cannot approve a formulation | Component total is not 100%, or required benchmark/components are missing. | Complete the required fields and make the total exactly 100%. |
 | Cannot create a production run | The selected formulation is not approved, required equipment/date is missing, or a run/sample code already exists. | Approve the formulation; fill required fields; use unique codes. |
 | Cannot advance a run | The requested status skips the sequence. | Use the next displayed status action only. |
 | Cannot change parameters after testing begins | No audit reason was supplied. | Provide the audit reason with the update. |

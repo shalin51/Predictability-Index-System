@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Card, Divider } from '../../components/ui/Card';
+import { controlStyles } from '../../components/ui/controls';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
 import {
   completeLabTesting,
+  generateSamples,
   getLabTestingResults,
   saveEnvironmentalResult,
   saveObservation,
@@ -87,7 +89,7 @@ export function LabTestingRunPage({
   }
 
   const run = data.run;
-  const disabledComplete = run.missingRequiredMetrics > 0;
+  const disabledComplete = data.samples.length === 0 || run.missingRequiredMetrics > 0;
   const resultCount = (category: LabMetric['category'], sampleId?: string) => {
     const metricIds = new Set(data.metrics.filter((metric) => metric.category === category).map((metric) => metric.id));
     return [...data.numericResults, ...data.environmentalResults, ...data.subjectiveRatings]
@@ -137,7 +139,7 @@ export function LabTestingRunPage({
           onBack={onBack}
           onComplete={() => {
             if (disabledComplete) {
-              setError(`Cannot complete testing with ${run.missingRequiredMetrics} required metrics missing`);
+              setError(data.samples.length === 0 ? 'Cannot complete testing without samples' : `Cannot complete testing with ${run.missingRequiredMetrics} required metrics missing`);
               return;
             }
             void completeLabTesting(id).then(() => { setMessage('Testing completed'); load(); }).catch((err: Error) => setError(err.message));
@@ -150,9 +152,15 @@ export function LabTestingRunPage({
         <Divider />
         {error && <MessageBanner tone="danger">{error}</MessageBanner>}
         {message && <MessageBanner tone="success">{message}</MessageBanner>}
-        {data.samples.length === 0 && <EmptyState>No samples on this run.</EmptyState>}
+        {data.samples.length === 0 && (
+          <EmptyState>
+            No samples on this run.
+            {(run.status === 'ready_for_testing' || run.status === 'testing') && <div style={labStyles.actions}><button onClick={() => void generateSamples(id, { count: 5, startingSampleCode: `${run.runCode}-S01` }).then(() => { setMessage('Samples generated'); load(); }).catch((err: Error) => setError(err.message))} style={controlStyles.primaryButton} type="button">Generate Samples</button></div>}
+          </EmptyState>
+        )}
         {data.samples.length > 0 && (
           <>
+            <p style={labStyles.muted}>Enter test results for each sample below. Values save when you leave a field.</p>
             <LabResultSampleAccordion sections={sampleSections} />
             <MissingRequiredMetricsPanel metrics={data.metrics} results={data.numericResults} samples={data.samples} />
           </>

@@ -5,18 +5,26 @@ import { runStyles } from '../productionRunUi';
 export function ManufacturingParametersForm({
   machines,
   molds,
+  formulations = [],
   onChange,
   readOnly = false,
   value,
 }: {
   machines: LibraryRecord[];
   molds: LibraryRecord[];
+  formulations?: LibraryRecord[];
   onChange: (patch: Partial<ProductionRunPayload>) => void;
   readOnly?: boolean;
   value: ProductionRunPayload;
 }) {
   return (
     <div style={runStyles.formGrid}>
+      {formulations.length > 0 && <label style={controlStyles.field}>
+        <span style={controlStyles.fieldLabel}>Formulation</span>
+        <select disabled={readOnly} onChange={(event) => onChange({ formulationId: event.target.value })} style={controlStyles.input} value={value.formulationId}>
+          {formulations.map((item) => <option key={item.id} value={item.id}>{String(item['label'])}</option>)}
+        </select>
+      </label>}
       <label style={controlStyles.field}>
         <span style={controlStyles.fieldLabel}>Machine Used</span>
         <select disabled={readOnly} onChange={(event) => onChange({ machineId: event.target.value })} style={controlStyles.input} value={value.machineId}>
@@ -31,6 +39,7 @@ export function ManufacturingParametersForm({
           {molds.map((item) => <option key={item.id} value={item.id}>{String(item['code'] ?? item['label'])}</option>)}
         </select>
       </label>
+      <TextField label="Approved By" onChange={(approvedBy) => onChange({ approvedBy })} readOnly={readOnly} value={value.approvedBy ?? ''} />
       <NumberField label="Injection Pressure" onChange={(injectionPressure) => onChange({ injectionPressure })} readOnly={readOnly} value={value.injectionPressure} />
       <TextField label="Injection Pressure Unit" onChange={(injectionPressureUnit) => onChange({ injectionPressureUnit })} readOnly={readOnly} value={value.injectionPressureUnit ?? 'psi'} />
       <NumberField label="Melt Temperature" onChange={(meltTemperature) => onChange({ meltTemperature })} readOnly={readOnly} value={value.meltTemperature} />

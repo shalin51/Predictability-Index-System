@@ -31,6 +31,7 @@ export function createProductionRunProcessSetupRouter() {
   const router = Router();
   const controller = createProcessSetupController();
   router.get('/:id/process-setup', (req, res) => controller.runDetail(req, res));
+  router.post('/:id/process-values/import', (req, res) => controller.importRunValues(req, res));
   router.patch('/:id/process-values', (req, res) => controller.updateRunValues(req, res));
   return router;
 }

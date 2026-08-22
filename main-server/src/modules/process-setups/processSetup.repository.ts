@@ -196,6 +196,39 @@ export class ProcessSetupRepository {
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
   }
 
+  async importRunValues(runId: string, sourceRunId: string): Promise<void> {
+    const client = await getPool().connect();
+    try {
+      await client.query('BEGIN');
+      const source = await client.query<{ processSetupRevisionId: string | null }>(`SELECT process_setup_revision_id AS "processSetupRevisionId" FROM production_runs WHERE id = $1 FOR UPDATE`, [sourceRunId]);
+      const revisionId = source.rows[0]?.processSetupRevisionId;
+      if (!revisionId) throw new Error('SOURCE_PROCESS_SETUP_NOT_FOUND');
+      await client.query(`UPDATE production_runs SET process_setup_revision_id = $2, updated_at = now() WHERE id = $1`, [runId, revisionId]);
+      await client.query(`DELETE FROM production_run_process_values WHERE production_run_id = $1`, [runId]);
+      await client.query(
+        `INSERT INTO production_run_process_values
+          (production_run_id, setup_parameter_id, parameter_definition_id, position_type, position_index, position_label,
+           setpoint_numeric, setpoint_text, setpoint_date, actual_numeric, actual_text, actual_date, unit, tolerance_min, tolerance_max, notes, source_import_id)
+         SELECT $1, setup_parameter_id, parameter_definition_id, position_type, position_index, position_label,
+                setpoint_numeric, setpoint_text, setpoint_date, actual_numeric, actual_text, actual_date, unit, tolerance_min, tolerance_max, notes, source_import_id
+         FROM production_run_process_values WHERE production_run_id = $2`,
+        [runId, sourceRunId]
+      );
+      await client.query(
+        `INSERT INTO production_run_process_values
+          (production_run_id, setup_parameter_id, parameter_definition_id, position_type, position_index, position_label,
+           setpoint_numeric, setpoint_text, setpoint_date, unit, tolerance_min, tolerance_max, notes)
+         SELECT $1, p.id, p.parameter_definition_id, p.position_type, p.position_index, p.position_label,
+                p.value_numeric, p.value_text, p.value_date, p.unit, p.tolerance_min, p.tolerance_max, p.notes
+         FROM process_setup_revision_parameters p
+         WHERE p.process_setup_revision_id = $2
+         ON CONFLICT DO NOTHING`,
+        [runId, revisionId]
+      );
+      await client.query('COMMIT');
+    } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+  }
+
   async runState(runId: string): Promise<{ status: string } | null> {
     const result = await getPool().query<{ status: string }>(`SELECT status::text AS status FROM production_runs WHERE id = $1`, [runId]);
     return result.rows[0] ?? null;

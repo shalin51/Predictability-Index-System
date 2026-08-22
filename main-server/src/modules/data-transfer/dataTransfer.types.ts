@@ -1,6 +1,8 @@
 export type TransferValueType = 'boolean' | 'date' | 'number' | 'text';
 
 export interface TransferColumn {
+  allowedValues?: readonly string[];
+  defaultValue?: string;
   header: string;
   key: string;
   required?: boolean;

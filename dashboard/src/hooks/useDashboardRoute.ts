@@ -11,6 +11,10 @@ interface NavigateOptions {
   skipConfirm?: boolean;
 }
 
+interface DashboardHistoryState {
+  dashboardHistoryIndex?: number;
+}
+
 export function useDashboardRoute(defaultView: DashboardView) {
   const initialRouteRef = useRef<DashboardRouteState>(
     typeof window === 'undefined'
@@ -34,6 +38,7 @@ export function useDashboardRoute(defaultView: DashboardView) {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [importResource, setImportResource] = useState<DashboardRouteState['importResource']>(() => initialRouteRef.current.importResource);
   const currentPathRef = useRef(buildDashboardPath(initialRouteRef.current));
+  const historyIndexRef = useRef<number>(typeof window === 'undefined' ? 0 : (window.history.state as DashboardHistoryState | null)?.dashboardHistoryIndex ?? 0);
   const hasUnsavedChangesRef = useRef(false);
 
   useEffect(() => {
@@ -85,11 +90,12 @@ export function useDashboardRoute(defaultView: DashboardView) {
     const nextUrl = `${nextPath}${window.location.search}`;
 
     if (replace) {
-      window.history.replaceState(null, '', nextUrl);
+      window.history.replaceState({ ...(window.history.state ?? {}), dashboardHistoryIndex: historyIndexRef.current }, '', nextUrl);
       return;
     }
 
-    window.history.pushState(null, '', nextUrl);
+    historyIndexRef.current += 1;
+    window.history.pushState({ dashboardHistoryIndex: historyIndexRef.current }, '', nextUrl);
   }, []);
 
   const navigate = useCallback((route: DashboardRouteState, options?: NavigateOptions) => {
@@ -101,6 +107,14 @@ export function useDashboardRoute(defaultView: DashboardView) {
     return true;
   }, [commitRoute, confirmLeave]);
 
+  const goBack = useCallback((fallback: DashboardRouteState) => {
+    if (typeof window !== 'undefined' && historyIndexRef.current > 0) {
+      window.history.back();
+      return;
+    }
+    navigate(fallback);
+  }, [navigate]);
+
   useEffect(() => {
     if (typeof window === 'undefined') {
       return;
@@ -111,7 +125,7 @@ export function useDashboardRoute(defaultView: DashboardView) {
     currentPathRef.current = canonicalPath;
 
     if (window.location.pathname !== canonicalPath || window.location.hash) {
-      window.history.replaceState(null, '', `${canonicalPath}${window.location.search}`);
+      window.history.replaceState({ ...(window.history.state ?? {}), dashboardHistoryIndex: historyIndexRef.current }, '', `${canonicalPath}${window.location.search}`);
     }
 
     const handleLocationChange = () => {
@@ -138,9 +152,10 @@ export function useDashboardRoute(defaultView: DashboardView) {
       setReportRunId(nextRoute.reportRunId);
       setImportResource(nextRoute.importResource);
       currentPathRef.current = buildDashboardPath(nextRoute);
+      historyIndexRef.current = (window.history.state as DashboardHistoryState | null)?.dashboardHistoryIndex ?? 0;
 
       if (window.location.pathname !== currentPathRef.current || window.location.hash) {
-        window.history.replaceState(null, '', `${currentPathRef.current}${window.location.search}`);
+        window.history.replaceState({ ...(window.history.state ?? {}), dashboardHistoryIndex: historyIndexRef.current }, '', `${currentPathRef.current}${window.location.search}`);
       }
     };
 
@@ -170,6 +185,7 @@ export function useDashboardRoute(defaultView: DashboardView) {
     hasUnsavedChanges,
     formulationId,
     formulationMode,
+    goBack,
     importResource,
     labRunId,
     labTestingMode,

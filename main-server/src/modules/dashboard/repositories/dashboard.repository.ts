@@ -282,8 +282,6 @@ export class DashboardRepository {
         UNION ALL SELECT 'production_run_material_lots',             COUNT(*), 'Manufacturing'  FROM production_run_material_lots
         UNION ALL SELECT 'material_drying_events',                   COUNT(*), 'Manufacturing'  FROM material_drying_events
         UNION ALL SELECT 'process_setup_revision_log_entries',       COUNT(*), 'Manufacturing'  FROM process_setup_revision_log_entries
-        UNION ALL SELECT 'experiments',                              COUNT(*), 'Workflow'       FROM experiments
-        UNION ALL SELECT 'formulation_families',                     COUNT(*), 'Workflow'       FROM formulation_families
         UNION ALL SELECT 'formulations',                             COUNT(*), 'Workflow'       FROM formulations
         UNION ALL SELECT 'formulation_components',                   COUNT(*), 'Workflow'       FROM formulation_components
         UNION ALL SELECT 'production_runs',                          COUNT(*), 'Workflow'       FROM production_runs

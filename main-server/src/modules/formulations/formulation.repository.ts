@@ -3,7 +3,6 @@ import { getPool } from '../../infrastructure/database/pg-pool';
 import type {
   FormulationComponentInput,
   FormulationListQuery,
-  FormulationOptions,
   FormulationRecord,
   FormulationSaveInput,
 } from './formulation.types';
@@ -17,19 +16,13 @@ export class FormulationRepository {
       params.push(`%${query.search.toLowerCase()}%`);
       clauses.push(`(
         LOWER(f.formulation_code) LIKE $${params.length}
-        OR LOWER(COALESCE(ff.family_name, '')) LIKE $${params.length}
-        OR LOWER(COALESCE(bp.benchmark_name, '')) LIKE $${params.length}
+        OR LOWER(COALESCE(f.formulation_name, '')) LIKE $${params.length}
       )`);
     }
 
     if (query.status && query.status !== 'all') {
       params.push(query.status);
       clauses.push(`f.status::text = $${params.length}`);
-    }
-
-    if (query.targetBenchmarkId) {
-      params.push(query.targetBenchmarkId);
-      clauses.push(`f.target_benchmark_id = $${params.length}`);
     }
 
     if (query.materialId) {
@@ -53,7 +46,7 @@ export class FormulationRepository {
     const result = await getPool().query(
       `${this.baseSelect()}
        ${clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''}
-       GROUP BY f.id, e.experiment_name, ff.family_name, bp.benchmark_name, bp.benchmark_code
+       GROUP BY f.id
        ORDER BY f.updated_at DESC`,
       params
     );
@@ -64,7 +57,7 @@ export class FormulationRepository {
     const result = await getPool().query(
       `${this.baseSelect()}
        WHERE f.id = $1
-       GROUP BY f.id, e.experiment_name, ff.family_name, bp.benchmark_name, bp.benchmark_code`,
+       GROUP BY f.id`,
       [id]
     );
     const record = result.rows[0] as FormulationRecord | undefined;
@@ -80,17 +73,15 @@ export class FormulationRepository {
 
   async create(input: FormulationSaveInput): Promise<FormulationRecord> {
     const id = await this.withTransaction(async (client) => {
-      const familyId = await this.resolveFamily(client, input);
-      const experimentId = await this.resolveExperiment(client, input);
       const formulationCode = input.formulationCode || await this.nextCode(client);
       const status = input.approve ? 'approved' : 'draft';
 
       const inserted = await client.query<{ id: string }>(
         `INSERT INTO formulations
-          (formulation_code, version_no, experiment_id, family_id, target_benchmark_id, status, notes)
-         VALUES ($1, 1, $2, $3, $4, $5::formulation_status, $6)
+          (formulation_code, formulation_name, version_no, status, notes, approved_by)
+         VALUES ($1, $2, 1, $3::formulation_status, $4, $5)
          RETURNING id`,
-        [formulationCode, experimentId, familyId, input.targetBenchmarkId, status, input.notes]
+        [formulationCode, input.formulationName || null, status, input.notes, input.approve ? input.approvedBy : null]
       );
 
       const id = inserted.rows[0]?.id ?? '';
@@ -102,28 +93,24 @@ export class FormulationRepository {
 
   async update(id: string, input: FormulationSaveInput): Promise<FormulationRecord | null> {
     await this.withTransaction(async (client) => {
-      const familyId = await this.resolveFamily(client, input);
-      const experimentId = await this.resolveExperiment(client, input);
       await client.query(
         `UPDATE formulations
          SET formulation_code = COALESCE(NULLIF($2, ''), formulation_code),
-             experiment_id = $3,
-             family_id = $4,
-             target_benchmark_id = $5,
-             notes = $6,
+             formulation_name = NULLIF($3, ''),
+             notes = $4,
              updated_at = now()
          WHERE id = $1`,
-        [id, input.formulationCode ?? '', experimentId, familyId, input.targetBenchmarkId, input.notes]
+        [id, input.formulationCode ?? '', input.formulationName ?? '', input.notes]
       );
       await this.replaceComponents(client, id, input.components);
     });
     return this.findById(id);
   }
 
-  async approve(id: string): Promise<FormulationRecord | null> {
+  async approve(id: string, approvedBy: string): Promise<FormulationRecord | null> {
     await getPool().query(
-      `UPDATE formulations SET status = 'approved', updated_at = now() WHERE id = $1 AND status = 'draft'`,
-      [id]
+      `UPDATE formulations SET status = 'approved', approved_by = $2, updated_at = now() WHERE id = $1 AND status = 'draft'`,
+      [id, approvedBy]
     );
     return this.findById(id);
   }
@@ -149,15 +136,13 @@ export class FormulationRepository {
 
       const inserted = await client.query<{ id: string }>(
         `INSERT INTO formulations
-          (formulation_code, version_no, experiment_id, family_id, target_benchmark_id, status, notes)
-         VALUES ($1, $2, $3, $4, $5, 'draft', $6)
+          (formulation_code, formulation_name, version_no, status, notes)
+         VALUES ($1, $2, $3, 'draft', $4)
          RETURNING id`,
         [
           row['formulation_code'],
+          row['formulation_name'],
           nextVersion.rows[0]?.version_no ?? 1,
-          row['experiment_id'],
-          row['family_id'],
-          row['target_benchmark_id'],
           row['notes'],
         ]
       );
@@ -177,27 +162,6 @@ export class FormulationRepository {
     return duplicatedId ? this.findById(duplicatedId) : null;
   }
 
-  async options(): Promise<FormulationOptions> {
-    const [experiments, families] = await Promise.all([
-      getPool().query(
-        `SELECT id, experiment_name AS label, experiment_code AS code
-         FROM experiments
-         WHERE status = 'active'
-         ORDER BY experiment_name`
-      ),
-      getPool().query(
-        `SELECT id, family_name AS label
-         FROM formulation_families
-         WHERE status = 'active'
-         ORDER BY family_name`
-      ),
-    ]);
-    return {
-      experiments: experiments.rows as FormulationRecord[],
-      families: families.rows as FormulationRecord[],
-    };
-  }
-
   async audit(id: string): Promise<FormulationRecord[]> {
     const result = await getPool().query(
       `SELECT id, action, changed_by AS "changedBy", old_values AS "oldValues", new_values AS "newValues", created_at AS "createdAt"
@@ -209,13 +173,8 @@ export class FormulationRepository {
     return result.rows as FormulationRecord[];
   }
 
-  async validateReferences(components: FormulationComponentInput[], targetBenchmarkId: string | null | undefined): Promise<string[]> {
+  async validateReferences(components: FormulationComponentInput[]): Promise<string[]> {
     const warnings: string[] = [];
-    if (targetBenchmarkId) {
-      const benchmark = await getPool().query('SELECT 1 FROM benchmark_profiles WHERE id = $1 AND status = $2 LIMIT 1', [targetBenchmarkId, 'active']);
-      if ((benchmark.rowCount ?? 0) === 0) warnings.push('Target benchmark is inactive or missing');
-    }
-
     for (const component of components) {
       const lotId = component.materialLotId;
       if (!lotId) continue;
@@ -278,32 +237,6 @@ export class FormulationRepository {
     }
   }
 
-  private async resolveExperiment(client: PoolClient, input: FormulationSaveInput): Promise<string | null> {
-    if (input.experimentId) return input.experimentId;
-    if (!input.experimentName) return null;
-    const result = await client.query<{ id: string }>(
-      `INSERT INTO experiments (experiment_name)
-       VALUES ($1)
-       ON CONFLICT (experiment_name) DO UPDATE SET updated_at = now()
-       RETURNING id`,
-      [input.experimentName]
-    );
-    return result.rows[0]?.id ?? null;
-  }
-
-  private async resolveFamily(client: PoolClient, input: FormulationSaveInput): Promise<string | null> {
-    if (input.familyId) return input.familyId;
-    if (!input.formulationFamily) return null;
-    const result = await client.query<{ id: string }>(
-      `INSERT INTO formulation_families (family_name)
-       VALUES ($1)
-       ON CONFLICT (family_name) DO UPDATE SET updated_at = now()
-       RETURNING id`,
-      [input.formulationFamily]
-    );
-    return result.rows[0]?.id ?? null;
-  }
-
   private async nextCode(client: PoolClient): Promise<string> {
     const year = new Date().getFullYear();
     const result = await client.query<{ next_value: string }>(
@@ -331,18 +264,11 @@ export class FormulationRepository {
   }
 
   private baseSelect(): string {
-    return `SELECT f.id, f.formulation_code AS "formulationCode", f.version_no AS "versionNo",
+    return `SELECT f.id, f.formulation_code AS "formulationCode", f.formulation_name AS "formulationName", f.version_no AS "versionNo",
                    CONCAT('V', f.version_no) AS version,
-                   f.experiment_id AS "experimentId", e.experiment_name AS "experimentName",
-                   f.family_id AS "familyId", ff.family_name AS family,
-                   f.target_benchmark_id AS "targetBenchmarkId",
-                   bp.benchmark_name AS "targetBenchmark", bp.benchmark_code AS "targetBenchmarkCode",
                    f.status::text AS status, COALESCE(SUM(fc.percent_composition), 0)::float AS "componentsTotal",
                    f.notes, f.created_at AS "createdAt", f.updated_at AS "updatedAt"
             FROM formulations f
-            LEFT JOIN experiments e ON e.id = f.experiment_id
-            LEFT JOIN formulation_families ff ON ff.id = f.family_id
-            LEFT JOIN benchmark_profiles bp ON bp.id = f.target_benchmark_id
             LEFT JOIN formulation_components fc ON fc.formulation_id = f.id`;
   }
 }

@@ -29,7 +29,6 @@ export const routes: RouteDefinition[] = [
   { method: 'POST', path: '/library/:resource', handler: (req, res) => controllers.library.create(req, res) },
   { method: 'PUT', path: '/library/:resource/:id', handler: (req, res) => controllers.library.update(req, res) },
   { method: 'PUT', path: '/library/:resource/:id/archive', handler: (req, res) => controllers.library.archive(req, res) },
-  { method: 'GET', path: '/formulations/options', handler: (req, res) => controllers.formulations.options(req, res) },
   { method: 'GET', path: '/formulations', handler: (req, res) => controllers.formulations.list(req, res) },
   { method: 'POST', path: '/formulations', handler: (req, res) => controllers.formulations.create(req, res) },
   { method: 'GET', path: '/formulations/:id', handler: (req, res) => controllers.formulations.detail(req, res) },

@@ -5,7 +5,7 @@ import type { ReportListQuery, ReportRecord, ReportSnapshot } from '../report.ty
 export class ReportRepository {
   async exportAllDataset(): Promise<Record<string, ReportRecord[]>> {
     const [formulations, materials, suppliers, definitions, properties, supplierMaterials, lots, components, runs, machines, machineCapabilities, molds, moldZones, parameterDefinitions, setupRevisions, setupParameters, runValues, runLots, runNotes, samples, testMethods, testConditions, sampleResults, environmentalResults, observations, ratings, benchmarks, benchmarkTargets] = await Promise.all([
-      getPool().query(`SELECT id, formulation_code AS "formulationCode", version_no AS "version", status::text AS status, target_benchmark_id AS "targetBenchmarkId", notes, created_at AS "createdAt", updated_at AS "updatedAt" FROM formulations ORDER BY formulation_code, version_no`),
+      getPool().query(`SELECT id, formulation_code AS "formulationCode", formulation_name AS "formulationName", version_no AS "version", status::text AS status, notes, created_at AS "createdAt", updated_at AS "updatedAt" FROM formulations ORDER BY formulation_code, version_no`),
       getPool().query(`SELECT id, material_code AS "materialCode", material_name AS "materialName", material_type AS "materialType", supplier_id AS "supplierId", product_grade AS "productGrade", chemistry, role_in_blend AS "roleInBlend", default_unit AS "defaultUnit", material_lot AS "defaultLot", source_file AS "sourceFile", source_revision_date AS "sourceRevisionDate", status::text AS status, notes FROM materials ORDER BY material_code`),
       getPool().query(`SELECT id, supplier_code AS "supplierCode", supplier_name AS "supplierName", supplier_type AS "supplierType", contact_info AS "contactInfo", status::text AS status, notes FROM suppliers ORDER BY supplier_name`),
       getPool().query(`SELECT id, property_key AS "propertyKey", canonical_name AS "propertyName", category, value_type AS "valueType", common_units AS "commonUnits", condition_dimensions AS "conditionDimensions", status::text AS status FROM material_property_definitions ORDER BY property_key`),
@@ -76,7 +76,7 @@ export class ReportRepository {
       WHERE fc.formulation_id = $1
       ORDER BY fc.sort_order, fc.created_at`;
     const [formulations, components] = await Promise.all([
-      getPool().query(`SELECT id, formulation_code AS "formulationCode", version_no AS "version", status::text AS status, target_benchmark_id AS "targetBenchmarkId", notes, created_at AS "createdAt", updated_at AS "updatedAt" FROM formulations WHERE id = $1`, [formulationId]),
+      getPool().query(`SELECT id, formulation_code AS "formulationCode", formulation_name AS "formulationName", version_no AS "version", status::text AS status, notes, created_at AS "createdAt", updated_at AS "updatedAt" FROM formulations WHERE id = $1`, [formulationId]),
       getPool().query(componentSql, [formulationId]),
     ]);
     const materialIds = components.rows.map((row) => row.materialId).filter(Boolean);
@@ -161,7 +161,7 @@ export class ReportRepository {
               pr.date_produced AS "dateProduced",
               CONCAT(f.formulation_code, ' V', f.version_no) AS formulation,
               f.id AS "formulationId", f.formulation_code AS "formulationCode", f.version_no AS "formulationVersion",
-              bp.benchmark_name AS "targetBenchmark",
+              'All active benchmarks' AS "targetBenchmark",
               m.machine_code AS machine, mo.mold_code AS mold,
               pr.injection_pressure::float AS "injectionPressure", pr.injection_pressure_unit AS "injectionPressureUnit",
               pr.melt_temperature::float AS "meltTemperature", pr.melt_temperature_unit AS "meltTemperatureUnit",
@@ -170,7 +170,6 @@ export class ReportRepository {
               pr.cure_hours_before_test::float AS "cureHoursBeforeTest"
        FROM production_runs pr
        JOIN formulations f ON f.id = pr.formulation_id
-       LEFT JOIN benchmark_profiles bp ON bp.id = f.target_benchmark_id
        JOIN machines m ON m.id = pr.machine_id
        JOIN molds mo ON mo.id = pr.mold_id
        WHERE pr.id = $1`,

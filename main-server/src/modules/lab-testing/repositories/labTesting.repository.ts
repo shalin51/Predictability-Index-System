@@ -2,6 +2,14 @@ import { getPool } from '../../../infrastructure/database/pg-pool';
 import type { LabTestingQueueQuery, LabTestingRecord } from '../labTesting.types';
 
 export class LabTestingRepository {
+  async sampleCount(runId: string): Promise<number> {
+    const result = await getPool().query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM samples WHERE production_run_id = $1 AND status <> 'archived'`,
+      [runId]
+    );
+    return Number(result.rows[0]?.count ?? 0);
+  }
+
   async queue(query: LabTestingQueueQuery): Promise<LabTestingRecord[]> {
     const params: unknown[] = [];
     const clauses = [`pr.status IN ('ready_for_testing', 'testing', 'completed', 'scored')`];
@@ -11,16 +19,11 @@ export class LabTestingRepository {
       clauses.push(`(
         LOWER(pr.run_code) LIKE $${params.length}
         OR LOWER(f.formulation_code) LIKE $${params.length}
-        OR LOWER(COALESCE(bp.benchmark_name, '')) LIKE $${params.length}
       )`);
     }
     if (query.status && query.status !== 'all') {
       params.push(query.status);
       clauses.push(`pr.status::text = $${params.length}`);
-    }
-    if (query.targetBenchmarkId) {
-      params.push(query.targetBenchmarkId);
-      clauses.push(`f.target_benchmark_id = $${params.length}`);
     }
     if (query.dateProduced) {
       params.push(query.dateProduced);
@@ -236,8 +239,7 @@ export class LabTestingRepository {
             )
             SELECT pr.id, pr.run_code AS "runCode", pr.formulation_id AS "formulationId",
                    CONCAT(f.formulation_code, ' V', f.version_no) AS formulation,
-                   f.target_benchmark_id AS "targetBenchmarkId",
-                   bp.benchmark_name AS "targetBenchmark",
+                   'All active benchmarks' AS "targetBenchmark",
                    pr.status::text AS status,
                    COALESCE(progress.sample_count, 0) AS "sampleCount",
                    COALESCE(progress.completed_results, 0) AS "completedResults",
@@ -249,7 +251,6 @@ export class LabTestingRepository {
                    pr.updated_at AS "updatedAt"
             FROM production_runs pr
             JOIN formulations f ON f.id = pr.formulation_id
-            LEFT JOIN benchmark_profiles bp ON bp.id = f.target_benchmark_id
             JOIN machines m ON m.id = pr.machine_id
             JOIN molds mo ON mo.id = pr.mold_id
             LEFT JOIN progress ON progress.production_run_id = pr.id

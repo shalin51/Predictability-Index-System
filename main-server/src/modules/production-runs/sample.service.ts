@@ -16,11 +16,12 @@ export class SampleService {
   }
 
   async generate(productionRunId: string, input: SampleGenerationInput, changedBy: string): Promise<ProductionRunRecord[]> {
-    for (const sample of buildSamples(input)) {
+    const payload = { ...input, startingSampleCode: await this.repo.nextAvailableStartingCode(input.startingSampleCode) };
+    for (const sample of buildSamples(payload)) {
       validateSampleInput(sample);
       if (await this.repo.existsByCode(sample.sampleCode)) throw new ConflictError(`Sample code ${sample.sampleCode} must be unique`);
     }
-    const samples = await this.repo.generate(productionRunId, input);
+    const samples = await this.repo.generate(productionRunId, payload);
     await this.auditService.log({
       tableName: 'production_runs',
       recordId: productionRunId,
@@ -48,6 +49,9 @@ export class SampleService {
   }
 
   async archive(id: string, changedBy: string): Promise<ProductionRunRecord> {
+    const runStatus = await this.repo.productionRunStatus(id);
+    if (runStatus == null) throw new NotFoundError(`Sample ${id}`);
+    if (['completed', 'scored', 'archived'].includes(runStatus)) throw new ConflictError('Samples cannot be deleted after the run is completed');
     const record = await this.repo.archive(id);
     if (!record) throw new NotFoundError(`Sample ${id}`);
     await this.auditService.log({

@@ -2,6 +2,14 @@ import { getPool } from '../../infrastructure/database/pg-pool';
 import type { ProductionRunRecord, SampleGenerationInput, SampleInput } from './productionRun.types';
 
 export class SampleRepository {
+  async countByRun(productionRunId: string): Promise<number> {
+    const result = await getPool().query<{ count: string }>(
+      `SELECT COUNT(*)::text AS count FROM samples WHERE production_run_id = $1 AND status <> 'archived'`,
+      [productionRunId]
+    );
+    return Number(result.rows[0]?.count ?? 0);
+  }
+
   async listByRun(productionRunId: string): Promise<ProductionRunRecord[]> {
     const result = await getPool().query(
       `SELECT id, production_run_id AS "productionRunId", sample_code AS "sampleCode",
@@ -25,6 +33,19 @@ export class SampleRepository {
       );
     }
     return this.listByRun(productionRunId);
+  }
+
+  async nextAvailableStartingCode(startingCode: string): Promise<string> {
+    const match = startingCode.match(/^(.*?)(\d+)$/);
+    if (!match) return startingCode;
+    const prefix = match[1] ?? '';
+    const width = (match[2] ?? '1').length;
+    const result = await getPool().query<{ sample_code: string }>(`SELECT sample_code FROM samples WHERE sample_code LIKE $1`, [`${prefix}%`]);
+    const max = result.rows.reduce((highest, row) => {
+      const suffix = row.sample_code.slice(prefix.length);
+      return /^\d+$/.test(suffix) ? Math.max(highest, Number(suffix)) : highest;
+    }, 0);
+    return `${prefix}${String(max + 1).padStart(width, '0')}`;
   }
 
   async update(id: string, input: SampleInput): Promise<ProductionRunRecord | null> {
@@ -54,6 +75,11 @@ export class SampleRepository {
       [id]
     );
     return (result.rows[0] as ProductionRunRecord | undefined) ?? null;
+  }
+
+  async productionRunStatus(id: string): Promise<string | null> {
+    const result = await getPool().query<{ status: string }>(`SELECT pr.status::text AS status FROM samples s JOIN production_runs pr ON pr.id = s.production_run_id WHERE s.id = $1`, [id]);
+    return result.rows[0]?.status ?? null;
   }
 
   async existsByCode(sampleCode: string, excludeId?: string): Promise<boolean> {

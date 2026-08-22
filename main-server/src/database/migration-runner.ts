@@ -80,8 +80,6 @@ export async function resetDatabase(client: Client): Promise<void> {
       tenants,
       formulation_components,
       formulation_versions,
-      formulation_families,
-      experiments,
       material_lots,
       supplier_materials,
       molds,

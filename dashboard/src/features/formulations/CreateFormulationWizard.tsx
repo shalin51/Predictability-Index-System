@@ -6,11 +6,9 @@ import { DashboardPage, MessageBanner } from '../../components/ui/Page';
 import {
   createFormulation,
   duplicateFormulation,
-  listFormulationOptions,
   listFormulations,
   listLibraryOptions,
   type FormulationComponentPayload,
-  type FormulationOptions,
   type FormulationPayload,
   type FormulationRecord,
   type LibraryRecord,
@@ -30,12 +28,11 @@ const emptyComponent: FormulationComponentPayload = {
 export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () => void; onSaved: (id: string) => void }) {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<FormulationPayload>({ components: [{ ...emptyComponent }], notes: '' });
-  const [benchmarks, setBenchmarks] = useState<LibraryRecord[]>([]);
   const [materials, setMaterials] = useState<LibraryRecord[]>([]);
   const [suppliers, setSuppliers] = useState<LibraryRecord[]>([]);
   const [lots, setLots] = useState<LibraryRecord[]>([]);
-  const [options, setOptions] = useState<FormulationOptions>({ experiments: [], families: [] });
   const [duplicateSourceId, setDuplicateSourceId] = useState('');
+  const [approvedBy, setApprovedBy] = useState('');
   const [formulations, setFormulations] = useState<FormulationRecord[]>([]);
   const [error, setError] = useState('');
   const total = useMemo(() => form.components.reduce((sum, component) => sum + Number(component.percentComposition || 0), 0), [form.components]);
@@ -43,18 +40,14 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
 
   useEffect(() => {
     void Promise.all([
-      listLibraryOptions('benchmarks'),
       listLibraryOptions('materials'),
       listLibraryOptions('suppliers'),
       listLibraryOptions('material-lots'),
-      listFormulationOptions(),
       listFormulations(),
-    ]).then(([benchmarkOptions, materialOptions, supplierOptions, lotOptions, formulationOptions, formulationRecords]) => {
-      setBenchmarks(benchmarkOptions);
+    ]).then(([materialOptions, supplierOptions, lotOptions, formulationRecords]) => {
       setMaterials(materialOptions);
       setSuppliers(supplierOptions);
       setLots(lotOptions);
-      setOptions(formulationOptions);
       setFormulations(formulationRecords);
     }).catch((err: Error) => setError(err.message));
   }, []);
@@ -62,7 +55,12 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
   const save = async (approve: boolean) => {
     try {
       setError('');
-      const record = await createFormulation({ ...form, approve });
+      if (approve && !window.confirm('Approve this formulation? Once approved, it cannot be edited or unapproved.')) return;
+      if (approve && !approvedBy.trim()) {
+        setError('Approved By is required when approving a formulation');
+        return;
+      }
+      const record = await createFormulation({ ...form, approve, approvedBy });
       onSaved(record.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
@@ -100,30 +98,16 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
         {step === 0 && (
           <div style={formulationStyles.formGrid}>
             <label style={controlStyles.field}>
-              <span style={controlStyles.fieldLabel}>Experiment</span>
-              <select onChange={(event) => setForm((current) => ({ ...current, experimentId: event.target.value, experimentName: '' }))} style={controlStyles.input} value={form.experimentId ?? ''}>
-                <option value="">Create quick</option>
-                {options.experiments.map((item) => <option key={item.id} value={item.id}>{String(item['label'])}</option>)}
-              </select>
-            </label>
-            <label style={controlStyles.field}>
-              <span style={controlStyles.fieldLabel}>Quick Experiment</span>
-              <input onChange={(event) => setForm((current) => ({ ...current, experimentId: '', experimentName: event.target.value }))} style={controlStyles.input} value={form.experimentName ?? ''} />
-            </label>
-            <label style={controlStyles.field}>
-              <span style={controlStyles.fieldLabel}>Formulation Family</span>
-              <select onChange={(event) => setForm((current) => ({ ...current, familyId: event.target.value, formulationFamily: '' }))} style={controlStyles.input} value={form.familyId ?? ''}>
-                <option value="">Create quick</option>
-                {options.families.map((item) => <option key={item.id} value={item.id}>{String(item['label'])}</option>)}
-              </select>
-            </label>
-            <label style={controlStyles.field}>
-              <span style={controlStyles.fieldLabel}>Quick Family</span>
-              <input onChange={(event) => setForm((current) => ({ ...current, familyId: '', formulationFamily: event.target.value }))} style={controlStyles.input} value={form.formulationFamily ?? ''} />
+              <span style={controlStyles.fieldLabel}>Formulation Name</span>
+              <input onChange={(event) => setForm((current) => ({ ...current, formulationName: event.target.value }))} style={controlStyles.input} value={form.formulationName ?? ''} />
             </label>
             <label style={controlStyles.field}>
               <span style={controlStyles.fieldLabel}>Formulation Code</span>
               <input onChange={(event) => setForm((current) => ({ ...current, formulationCode: event.target.value }))} placeholder="Auto if blank" style={controlStyles.input} value={form.formulationCode ?? ''} />
+            </label>
+            <label style={controlStyles.field}>
+              <span style={controlStyles.fieldLabel}>Approved By</span>
+              <input onChange={(event) => setApprovedBy(event.target.value)} placeholder="Required when approving" style={controlStyles.input} value={approvedBy} />
             </label>
             <label style={controlStyles.field}>
               <span style={controlStyles.fieldLabel}>Duplicate Existing Formulation</span>
@@ -136,13 +120,6 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
             <label style={controlStyles.field}>
               <span style={controlStyles.fieldLabel}>Version No</span>
               <input disabled style={controlStyles.input} value="1" />
-            </label>
-            <label style={controlStyles.field}>
-              <span style={controlStyles.fieldLabel}>Target Benchmark</span>
-              <select onChange={(event) => setForm((current) => ({ ...current, targetBenchmarkId: event.target.value }))} style={controlStyles.input} value={form.targetBenchmarkId ?? ''}>
-                <option value="">Select</option>
-                {benchmarks.map((item) => <option key={item.id} value={item.id}>{String(item['label'])}</option>)}
-              </select>
             </label>
             <label style={controlStyles.field}>
               <span style={controlStyles.fieldLabel}>Notes</span>
@@ -163,7 +140,8 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
           <div style={formulationStyles.stack}>
             <div style={formulationStyles.panel}>
               <div>Formulation Code: {form.formulationCode || 'Auto-generated'}</div>
-              <div>Target Benchmark: {String(benchmarks.find((item) => item.id === form.targetBenchmarkId)?.['label'] ?? '-')}</div>
+              <div>Formulation Name: {form.formulationName || '-'}</div>
+              <div>Benchmarks: All active benchmarks</div>
               <div>Component Total: <span style={{ ...formulationStyles.badge, ...totalTone(total) }}>{formatValue(total)}%</span></div>
             </div>
             <FormulationComponentsEditor components={form.components} lots={lots} materials={materials} onChange={() => undefined} readOnly suppliers={suppliers} />

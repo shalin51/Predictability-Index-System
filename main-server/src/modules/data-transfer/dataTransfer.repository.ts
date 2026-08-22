@@ -115,16 +115,15 @@ export class DataTransferRepository {
     return this.withTransaction(async (client) => {
       const result = this.result(formulations.length + components.length);
       for (const row of formulations) {
-        const experimentId = row['experimentName'] ? await this.upsertNamed(client, 'experiments', 'experiment_name', String(row['experimentName'])) : null;
-        const familyId = row['family'] ? await this.upsertNamed(client, 'formulation_families', 'family_name', String(row['family'])) : null;
-        const benchmarkId = row['targetBenchmarkCode'] ? await this.resolve(client, 'benchmark_profiles', 'benchmark_code', String(row['targetBenchmarkCode'])) : null;
+        if (row['status'] === 'approved' && !value(row, 'approvedBy')) {
+          throw new ValidationError(`Approved formulation ${String(row['formulationCode'])} requires Approved By`);
+        }
         const saved = await client.query<{ id: string; inserted: boolean }>(
-          `INSERT INTO formulations (formulation_code, version_no, experiment_id, family_id, target_benchmark_id, status, notes)
-           VALUES ($1,$2,$3,$4,$5,$6::formulation_status,$7)
-           ON CONFLICT (formulation_code, version_no) DO UPDATE SET experiment_id=EXCLUDED.experiment_id, family_id=EXCLUDED.family_id,
-             target_benchmark_id=EXCLUDED.target_benchmark_id, status=EXCLUDED.status, notes=EXCLUDED.notes, updated_at=now()
+          `INSERT INTO formulations (formulation_code, formulation_name, version_no, status, approved_by, notes)
+           VALUES ($1,$2,$3,$4::formulation_status,$5,$6)
+           ON CONFLICT (formulation_code, version_no) DO UPDATE SET formulation_name=EXCLUDED.formulation_name, status=EXCLUDED.status, approved_by=EXCLUDED.approved_by, notes=EXCLUDED.notes, updated_at=now()
            RETURNING id, (xmax = 0) AS inserted`,
-          [row['formulationCode'], row['versionNo'], experimentId, familyId, benchmarkId, row['status'] || 'draft', value(row, 'notes')]
+          [row['formulationCode'], value(row, 'formulationName'), row['versionNo'], row['status'] || 'draft', value(row, 'approvedBy'), value(row, 'notes')]
         );
         if (saved.rows[0]?.inserted) result.created += 1; else result.updated += 1;
       }
@@ -163,21 +162,21 @@ export class DataTransferRepository {
           `INSERT INTO production_runs
             (run_code, formulation_id, date_produced, machine_id, mold_id, injection_pressure, injection_pressure_unit,
              melt_temperature, melt_temperature_unit, cooling_time, cooling_time_unit, cycle_time, cycle_time_unit,
-             cure_hours_before_test, job_name, part_number, operator_name, shift_code, status)
+             cure_hours_before_test, job_name, part_number, operator_name, shift_code, status, approved_by)
            VALUES ($1,$2,$3,$4,$5,$6,COALESCE($7,'psi'),$8,COALESCE($9,'C'),$10,COALESCE($11,'sec'),$12,COALESCE($13,'sec'),
-             COALESCE($14,72),$15,$16,$17,$18,$19::production_run_status)
+             COALESCE($14,72),$15,$16,$17,$18,$19::production_run_status,$20)
            ON CONFLICT (run_code) DO UPDATE SET formulation_id=EXCLUDED.formulation_id, date_produced=EXCLUDED.date_produced,
              machine_id=EXCLUDED.machine_id, mold_id=EXCLUDED.mold_id, injection_pressure=EXCLUDED.injection_pressure,
              injection_pressure_unit=EXCLUDED.injection_pressure_unit, melt_temperature=EXCLUDED.melt_temperature,
              melt_temperature_unit=EXCLUDED.melt_temperature_unit, cooling_time=EXCLUDED.cooling_time,
              cooling_time_unit=EXCLUDED.cooling_time_unit, cycle_time=EXCLUDED.cycle_time, cycle_time_unit=EXCLUDED.cycle_time_unit,
              cure_hours_before_test=EXCLUDED.cure_hours_before_test, job_name=EXCLUDED.job_name, part_number=EXCLUDED.part_number,
-             operator_name=EXCLUDED.operator_name, shift_code=EXCLUDED.shift_code, status=EXCLUDED.status, updated_at=now()
+             operator_name=EXCLUDED.operator_name, shift_code=EXCLUDED.shift_code, status=EXCLUDED.status, approved_by=EXCLUDED.approved_by, updated_at=now()
            RETURNING (xmax = 0) AS inserted`,
           [row['runCode'], formulationId, row['dateProduced'], machineId, moldId, value(row, 'injectionPressure'), value(row, 'injectionPressureUnit'),
             value(row, 'meltTemperature'), value(row, 'meltTemperatureUnit'), value(row, 'coolingTime'), value(row, 'coolingTimeUnit'),
             value(row, 'cycleTime'), value(row, 'cycleTimeUnit'), value(row, 'cureHoursBeforeTest'), value(row, 'jobName'), value(row, 'partNumber'),
-            value(row, 'operatorName'), value(row, 'shiftCode'), row['status'] || 'planned']
+            value(row, 'operatorName'), value(row, 'shiftCode'), row['status'] || 'planned', value(row, 'approvedBy')]
         );
         if (saved.rows[0]?.inserted) result.created += 1; else result.updated += 1;
       }
@@ -273,10 +272,8 @@ export class DataTransferRepository {
 
   private async exportFormulations(): Promise<TransferRows> {
     return {
-      Formulations: await this.rows(`SELECT f.formulation_code AS "formulationCode", f.version_no AS "versionNo", e.experiment_name AS "experimentName",
-        ff.family_name AS family, bp.benchmark_code AS "targetBenchmarkCode", f.status::text AS status, f.notes
-        FROM formulations f LEFT JOIN experiments e ON e.id=f.experiment_id LEFT JOIN formulation_families ff ON ff.id=f.family_id
-        LEFT JOIN benchmark_profiles bp ON bp.id=f.target_benchmark_id ORDER BY f.formulation_code,f.version_no`),
+      Formulations: await this.rows(`SELECT f.formulation_code AS "formulationCode", f.formulation_name AS "formulationName", f.version_no AS "versionNo", f.status::text AS status, f.notes
+        FROM formulations f ORDER BY f.formulation_code,f.version_no`),
       Components: await this.rows(`SELECT f.formulation_code AS "formulationCode", f.version_no AS "versionNo", m.material_code AS "materialCode",
         s.supplier_code AS "supplierCode", ml.lot_number AS "lotNumber", fc.percent_composition::float AS "percentComposition", fc.basis, fc.sort_order AS "sortOrder"
         FROM formulation_components fc JOIN formulations f ON f.id=fc.formulation_id JOIN materials m ON m.id=fc.material_id
@@ -292,7 +289,7 @@ export class DataTransferRepository {
         pr.injection_pressure_unit AS "injectionPressureUnit", pr.melt_temperature::float AS "meltTemperature", pr.melt_temperature_unit AS "meltTemperatureUnit",
         pr.cooling_time::float AS "coolingTime", pr.cooling_time_unit AS "coolingTimeUnit", pr.cycle_time::float AS "cycleTime",
         pr.cycle_time_unit AS "cycleTimeUnit", pr.cure_hours_before_test::float AS "cureHoursBeforeTest", pr.job_name AS "jobName",
-        pr.part_number AS "partNumber", pr.operator_name AS "operatorName", pr.shift_code AS "shiftCode", pr.status::text AS status
+        pr.part_number AS "partNumber", pr.operator_name AS "operatorName", pr.shift_code AS "shiftCode", pr.status::text AS status, pr.approved_by AS "approvedBy"
         FROM production_runs pr JOIN formulations f ON f.id=pr.formulation_id JOIN machines m ON m.id=pr.machine_id JOIN molds mo ON mo.id=pr.mold_id
         ORDER BY pr.date_produced DESC,pr.run_code`),
       Samples: await this.rows(`SELECT pr.run_code AS "runCode", s.sample_code AS "sampleCode", s.cavity_number AS "cavityNumber", s.status::text AS status
@@ -346,11 +343,6 @@ export class DataTransferRepository {
       WHERE ml.lot_number=$1 AND sm.material_id=$2 AND sm.supplier_id=$3 LIMIT 1`, [lotNumber, materialId, supplierId]);
     if (!result.rows[0]?.id) throw new ValidationError(`Unknown material lot: ${lotNumber}`);
     return result.rows[0].id;
-  }
-
-  private async upsertNamed(client: PoolClient, table: string, column: string, name: string): Promise<string> {
-    const result = await client.query<{ id: string }>(`INSERT INTO ${table} (${column}) VALUES ($1) ON CONFLICT (${column}) DO UPDATE SET updated_at=now() RETURNING id`, [name]);
-    return result.rows[0]?.id ?? '';
   }
 
   private async rows(sql: string): Promise<Row[]> {

@@ -1,4 +1,5 @@
 import { controlStyles } from '../../../components/ui/controls';
+import { DateRangePicker } from '../../../components/ui/DateRangePicker';
 import type { LibraryRecord } from '../../../services/api';
 import { runStyles, statusLabels } from '../productionRunUi';
 
@@ -7,25 +8,19 @@ export interface ProductionRunFiltersState {
   dateProducedTo: string;
   formulationId: string;
   machineId: string;
-  moldId: string;
   search: string;
   status: string;
-  targetBenchmarkId: string;
 }
 
 export function ProductionRunFilters({
-  benchmarks,
   filters,
   formulations,
   machines,
-  molds,
   onChange,
 }: {
-  benchmarks: LibraryRecord[];
   filters: ProductionRunFiltersState;
   formulations: LibraryRecord[];
   machines: LibraryRecord[];
-  molds: LibraryRecord[];
   onChange: (key: keyof ProductionRunFiltersState, value: string) => void;
 }) {
   return (
@@ -43,22 +38,14 @@ export function ProductionRunFilters({
         <option value="">Machine</option>
         {machines.map((item) => <option key={item.id} value={item.id}>{String(item['code'] ?? item['label'])}</option>)}
       </select>
-      <select onChange={(event) => onChange('moldId', event.target.value)} style={controlStyles.input} value={filters.moldId}>
-        <option value="">Mold</option>
-        {molds.map((item) => <option key={item.id} value={item.id}>{String(item['code'] ?? item['label'])}</option>)}
-      </select>
-      <select onChange={(event) => onChange('targetBenchmarkId', event.target.value)} style={controlStyles.input} value={filters.targetBenchmarkId}>
-        <option value="">Benchmark</option>
-        {benchmarks.map((item) => <option key={item.id} value={item.id}>{String(item['label'])}</option>)}
-      </select>
-      <label style={controlStyles.field}>
-        <span style={controlStyles.fieldLabel}>Produced from</span>
-        <input onChange={(event) => onChange('dateProducedFrom', event.target.value)} style={controlStyles.input} type="date" value={filters.dateProducedFrom} />
-      </label>
-      <label style={controlStyles.field}>
-        <span style={controlStyles.fieldLabel}>Produced to</span>
-        <input onChange={(event) => onChange('dateProducedTo', event.target.value)} style={controlStyles.input} type="date" value={filters.dateProducedTo} />
-      </label>
+      <DateRangePicker
+        label="Date produced"
+        onChange={({ from, to }) => {
+          onChange('dateProducedFrom', from);
+          onChange('dateProducedTo', to);
+        }}
+        value={{ from: filters.dateProducedFrom, to: filters.dateProducedTo }}
+      />
     </div>
   );
 }

@@ -1,6 +1,10 @@
 import type { TransferColumn, TransferDefinition } from './dataTransfer.types';
+import {
+  COMPARISON_MODES, CRITICALITY_LEVELS, FORMULATION_BASES, FORMULATION_STATUSES,
+  POSITION_TYPES, PRODUCTION_RUN_STATUSES, RECORD_STATUSES, SAMPLE_STATUSES,
+} from '../../constants/domain.constants';
 
-const text = (key: string, header: string, required = false): TransferColumn => ({ header, key, required, type: 'text' });
+const text = (key: string, header: string, required = false, options: Partial<TransferColumn> = {}): TransferColumn => ({ header, key, required, type: 'text', ...options });
 const number = (key: string, header: string, required = false): TransferColumn => ({ header, key, required, type: 'number' });
 const boolean = (key: string, header: string): TransferColumn => ({ header, key, type: 'boolean' });
 const date = (key: string, header: string, required = false): TransferColumn => ({ header, key, required, type: 'date' });
@@ -11,7 +15,7 @@ export const transferDefinitions: Record<string, TransferDefinition> = {
       text('materialCode', 'Material Code', true), text('materialName', 'Material Name', true), text('materialSupplierCode', 'Supplier Code'),
       text('materialLot', 'Material Lot'), text('productGrade', 'Product Grade', true), text('chemistry', 'Chemistry'),
       text('roleInBlend', 'Role In Blend'), text('sourceFile', 'Source File'), date('sourceRevisionDate', 'Source Revision Date'),
-      text('status', 'Status'), text('notes', 'Notes'),
+      text('status', 'Status', false, { allowedValues: RECORD_STATUSES, defaultValue: 'active' }), text('notes', 'Notes'),
     ] }],
   },
   'material-properties': {
@@ -27,62 +31,61 @@ export const transferDefinitions: Record<string, TransferDefinition> = {
     filename: 'material-suppliers', resource: 'material-suppliers', sheets: [{ name: 'Suppliers', columns: [
       text('supplierCode', 'Supplier Code', true), text('supplierName', 'Supplier Name', true), text('supplierRole', 'Supplier Role'),
       text('contactName', 'Contact Name'), text('contactEmail', 'Contact Email'), text('contactPhone', 'Contact Phone'),
-      text('address', 'Address'), text('website', 'Website'), text('contactInfo', 'Contact Info'), text('supplierNotes', 'Notes'), text('status', 'Status'),
+      text('address', 'Address'), text('website', 'Website'), text('contactInfo', 'Contact Info'), text('supplierNotes', 'Notes'), text('status', 'Status', false, { allowedValues: RECORD_STATUSES, defaultValue: 'active' }),
     ] }],
   },
   machines: {
     filename: 'machines', resource: 'machines', sheets: [{ name: 'Machines', columns: [
       text('machineCode', 'Machine Code', true), text('machineName', 'Machine Name', true), text('manufacturer', 'Manufacturer'),
       text('machineType', 'Machine Type'), text('modelNumber', 'Model Number'), text('serialNumber', 'Serial Number'),
-      text('location', 'Location'), text('status', 'Status'),
+      text('location', 'Location'), text('status', 'Status', false, { allowedValues: RECORD_STATUSES, defaultValue: 'active' }),
     ] }],
   },
   'machine-parameters': {
     filename: 'machine-parameters', resource: 'machine-parameters', sheets: [{ name: 'Machine Parameters', columns: [
       text('machineCode', 'Machine Code', true), text('parameterKey', 'Parameter Key', true), text('displayName', 'Display Name', true),
-      text('sectionKey', 'Section', true), text('positionType', 'Position Type'), number('positionIndex', 'Position Index'),
+      text('sectionKey', 'Section', true), text('positionType', 'Position Type', false, { allowedValues: POSITION_TYPES, defaultValue: 'single' }), number('positionIndex', 'Position Index'),
       text('positionLabel', 'Position Label'), number('minimumValue', 'Minimum Value'), number('maximumValue', 'Maximum Value'),
-      text('unit', 'Unit'), number('sortOrder', 'Sort Order'), text('notes', 'Notes'), text('status', 'Status'),
+      text('unit', 'Unit'), number('sortOrder', 'Sort Order'), text('notes', 'Notes'), text('status', 'Status', false, { allowedValues: RECORD_STATUSES, defaultValue: 'active' }),
     ] }],
   },
   molds: {
     filename: 'molds', resource: 'molds', sheets: [{ name: 'Molds', columns: [
       text('moldCode', 'Mold Code', true), text('moldName', 'Mold Name'), text('moldType', 'Mold Type'), text('manufacturer', 'Manufacturer'),
       number('cavityCount', 'Cavity Count'), text('hotRunnerController', 'Hot Runner Controller'), number('zoneCount', 'Zone Count'),
-      text('description', 'Description'), text('status', 'Status'),
+      text('description', 'Description'), text('status', 'Status', false, { allowedValues: RECORD_STATUSES, defaultValue: 'active' }),
     ] }],
   },
   'mold-zones': {
     filename: 'mold-zones', resource: 'mold-zones', sheets: [{ name: 'Mold Zones', columns: [
       text('moldCode', 'Mold Code', true), number('zoneNumber', 'Zone Number', true), text('zoneName', 'Zone Name'), text('zoneType', 'Zone Type'),
       number('minimumTemperature', 'Minimum Temperature'), number('maximumTemperature', 'Maximum Temperature'),
-      text('temperatureUnit', 'Temperature Unit'), text('notes', 'Notes'), text('status', 'Status'),
+      text('temperatureUnit', 'Temperature Unit'), text('notes', 'Notes'), text('status', 'Status', false, { allowedValues: RECORD_STATUSES, defaultValue: 'active' }),
     ] }],
   },
   benchmarks: {
     filename: 'benchmarks', resource: 'benchmarks', sheets: [{ name: 'Benchmarks', columns: [
       text('benchmarkCode', 'Benchmark Code', true), text('benchmarkName', 'Benchmark Name', true), number('profileVersion', 'Profile Version', true),
-      text('ballBrand', 'Ball Brand', true), text('ballModel', 'Ball Model', true), text('status', 'Status'), text('notes', 'Notes'),
+      text('ballBrand', 'Ball Brand', true), text('ballModel', 'Ball Model', true), text('status', 'Status', false, { allowedValues: RECORD_STATUSES, defaultValue: 'active' }), text('notes', 'Notes'),
     ] }],
   },
   'scoring-rules': {
     filename: 'benchmark-properties', resource: 'scoring-rules', sheets: [{ name: 'Benchmark Properties', columns: [
       text('benchmarkCode', 'Benchmark Code', true), number('profileVersion', 'Profile Version', true), text('metricKey', 'Metric Key', true),
       number('targetMean', 'Target Mean'), number('minAcceptable', 'Minimum Acceptable'), number('maxAcceptable', 'Maximum Acceptable'),
-      number('targetStdDev', 'Target Std Dev'), text('comparisonMode', 'Comparison Mode'), number('weight', 'Weight'),
-      text('criticality', 'Criticality'), boolean('requiredForPass', 'Required For Pass'),
+      number('targetStdDev', 'Target Std Dev'), text('comparisonMode', 'Comparison Mode', false, { allowedValues: COMPARISON_MODES, defaultValue: 'target_range' }), number('weight', 'Weight'),
+      text('criticality', 'Criticality', false, { allowedValues: CRITICALITY_LEVELS, defaultValue: 'medium' }), boolean('requiredForPass', 'Required For Pass'),
     ] }],
   },
   formulations: {
     filename: 'formulations', resource: 'formulations', sheets: [
       { name: 'Formulations', columns: [
-        text('formulationCode', 'Formulation Code', true), number('versionNo', 'Version', true), text('experimentName', 'Experiment'),
-        text('family', 'Family'), text('targetBenchmarkCode', 'Target Benchmark Code'), text('status', 'Status'), text('notes', 'Notes'),
+        text('formulationCode', 'Formulation Code', true), text('formulationName', 'Formulation Name'), number('versionNo', 'Version', true), text('status', 'Status', false, { allowedValues: FORMULATION_STATUSES, defaultValue: 'draft' }), text('approvedBy', 'Approved By'), text('notes', 'Notes'),
       ] },
       { name: 'Components', columns: [
         text('formulationCode', 'Formulation Code', true), number('versionNo', 'Version', true), text('materialCode', 'Material Code', true),
         text('supplierCode', 'Supplier Code', true), text('lotNumber', 'Lot Number'), number('percentComposition', 'Percent Composition', true),
-        text('basis', 'Basis'), number('sortOrder', 'Sort Order'),
+        text('basis', 'Basis', false, { allowedValues: FORMULATION_BASES, defaultValue: 'weight_percent' }), number('sortOrder', 'Sort Order'),
       ] },
     ],
   },
@@ -95,10 +98,10 @@ export const transferDefinitions: Record<string, TransferDefinition> = {
         number('meltTemperature', 'Melt Temperature'), text('meltTemperatureUnit', 'Melt Temperature Unit'), number('coolingTime', 'Cooling Time'),
         text('coolingTimeUnit', 'Cooling Time Unit'), number('cycleTime', 'Cycle Time'), text('cycleTimeUnit', 'Cycle Time Unit'),
         number('cureHoursBeforeTest', 'Cure Hours Before Test'), text('jobName', 'Job Name'), text('partNumber', 'Part Number'),
-        text('operatorName', 'Operator Name'), text('shiftCode', 'Shift Code'), text('status', 'Status'),
+        text('operatorName', 'Operator Name'), text('shiftCode', 'Shift Code'), text('status', 'Status', false, { allowedValues: PRODUCTION_RUN_STATUSES, defaultValue: 'planned' }), text('approvedBy', 'Approved By'),
       ] },
       { name: 'Samples', columns: [
-        text('runCode', 'Run Code', true), text('sampleCode', 'Sample Code', true), number('cavityNumber', 'Cavity Number'), text('status', 'Status'),
+        text('runCode', 'Run Code', true), text('sampleCode', 'Sample Code', true), number('cavityNumber', 'Cavity Number'), text('status', 'Status', false, { allowedValues: SAMPLE_STATUSES, defaultValue: 'created' }),
       ] },
     ],
   },

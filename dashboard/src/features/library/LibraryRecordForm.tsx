@@ -1,13 +1,14 @@
 import { controlStyles } from '../../components/ui/controls';
 import type { LibraryFieldDefinition, LibraryRecord } from '../../services/api';
 import { labelize } from './LibrarySectionNav';
+import { COMPARISON_MODES, CRITICALITY_LEVELS, RECORD_STATUSES } from '@amfpi/shared';
 
-const enumOptions: Record<string, string[]> = {
+const enumOptions: Record<string, readonly string[]> = {
   category: ['physical', 'performance', 'durability', 'environmental', 'subjective'],
-  comparisonMode: ['target_range', 'max_cap', 'min_floor'],
-  criticality: ['low', 'medium', 'high', 'critical'],
+  comparisonMode: COMPARISON_MODES,
+  criticality: CRITICALITY_LEVELS,
   dataType: ['numeric', 'text', 'boolean', 'rating'],
-  status: ['active', 'inactive', 'archived'],
+  status: RECORD_STATUSES,
 };
 
 export const optionResourceByField: Record<string, string> = {

@@ -8,26 +8,15 @@ export function normalizeFormulationInput(input: Record<string, unknown>): Formu
 
   return {
     approve: Boolean(input['approve']),
+    approvedBy: stringOrNull(input['approvedBy']),
     components: components.map(normalizeComponent),
-    experimentId: stringOrNull(input['experimentId']),
-    experimentName: stringValue(input['experimentName']),
-    familyId: stringOrNull(input['familyId']),
     formulationCode: stringValue(input['formulationCode']),
-    formulationFamily: stringValue(input['formulationFamily']),
+    formulationName: stringValue(input['formulationName']),
     notes: input['notes'] == null ? null : String(input['notes']),
-    targetBenchmarkId: stringOrNull(input['targetBenchmarkId']),
   };
 }
 
 export function validateFormulationInput(input: FormulationSaveInput): void {
-  if (!input.familyId && !input.formulationFamily) {
-    throw new ValidationError('Formulation Family is required');
-  }
-
-  if (!input.targetBenchmarkId) {
-    throw new ValidationError('Target Benchmark is required');
-  }
-
   if (input.components.length === 0) {
     throw new ValidationError('At least one recipe component is required');
   }
@@ -35,6 +24,7 @@ export function validateFormulationInput(input: FormulationSaveInput): void {
   input.components.forEach((component, index) => validateComponent(component, index));
 
   if (input.approve) {
+    if (!input.approvedBy) throw new ValidationError('Approved By is required when approving a formulation');
     validateComponentTotal(input.components);
   }
 }

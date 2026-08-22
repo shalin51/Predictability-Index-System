@@ -19,10 +19,6 @@ export function SampleGenerationForm({
           <span style={controlStyles.fieldLabel}>Number of Samples</span>
           <input min={1} onChange={(event) => onChange({ ...value, count: Number(event.target.value), cavityAssignments: [] })} style={controlStyles.input} type="number" value={value.count} />
         </label>
-        <label style={controlStyles.field}>
-          <span style={controlStyles.fieldLabel}>Starting Sample Code</span>
-          <input onChange={(event) => onChange({ ...value, startingSampleCode: event.target.value })} style={controlStyles.input} value={value.startingSampleCode} />
-        </label>
       </div>
       {cavityCount > 0 && (
         <div style={runStyles.formGrid}>

@@ -5,7 +5,6 @@ import { controlStyles, getTabButtonStyle } from '../../components/ui/controls';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
 import {
   approveFormulation,
-  duplicateFormulation,
   getFormulation,
   listLibraryOptions,
   listProductionRuns,
@@ -28,14 +27,12 @@ export function FormulationDetailPage({
   id,
   onBack,
   onCreateProductionRun,
-  onOpen,
   onOpenLabRun,
   onOpenProductionRun,
 }: {
   id: string;
   onBack: () => void;
   onCreateProductionRun: () => void;
-  onOpen: (id: string) => void;
   onOpenLabRun: (id: string) => void;
   onOpenProductionRun: (id: string) => void;
 }) {
@@ -47,6 +44,7 @@ export function FormulationDetailPage({
   const [productionRuns, setProductionRuns] = useState<ProductionRunRecord[]>([]);
   const [tab, setTab] = useState<DetailTab>('Overview');
   const [editing, setEditing] = useState(false);
+  const [approvedBy, setApprovedBy] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -84,7 +82,6 @@ export function FormulationDetailPage({
     );
   }
 
-  const locked = record.status !== 'draft';
   const total = components.reduce((sum, component) => sum + Number(component.percentComposition || 0), 0);
   const canApprove = record.status === 'draft' && Math.abs(total - 100) < 0.0001;
 
@@ -92,11 +89,9 @@ export function FormulationDetailPage({
     try {
       const next = await updateFormulation(record.id, {
         components,
-        experimentId: String(record['experimentId'] ?? '') || null,
-        familyId: String(record['familyId'] ?? '') || null,
         formulationCode: record.formulationCode,
+        formulationName: record.formulationName ?? '',
         notes: String(record['notes'] ?? ''),
-        targetBenchmarkId: String(record['targetBenchmarkId'] ?? '') || null,
       });
       setRecord(next);
       setEditing(false);
@@ -107,6 +102,21 @@ export function FormulationDetailPage({
     }
   };
 
+  const approve = async () => {
+    if (!approvedBy.trim()) {
+      setError('Approved By is required when approving a formulation');
+      return;
+    }
+    if (!window.confirm('Approve this formulation? Once approved, it cannot be edited or unapproved.')) return;
+    try {
+      const next = await approveFormulation(record.id, approvedBy);
+      setRecord(next);
+      setMessage('Approved');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Approval failed');
+    }
+  };
+
   return (
     <DashboardPage maxWidth="100%">
       <Card>
@@ -114,15 +124,16 @@ export function FormulationDetailPage({
           <div>
             <button onClick={onBack} style={controlStyles.subtleButton} type="button">Back</button>
             <h1 style={{ ...formulationStyles.title, marginTop: spacing.space4 }}>{record.formulationCode} / Version {record.versionNo}</h1>
+            {record.formulationName && <p style={formulationStyles.subtitle}>{record.formulationName}</p>}
             <p style={formulationStyles.subtitle}>
               Status: {labelize(record.status)} | Component Total: {formatValue(total)}%
             </p>
           </div>
           <div style={formulationStyles.actions}>
-            <button disabled={locked} onClick={() => setEditing(true)} style={{ ...controlStyles.secondaryButton, ...(locked ? styles.disabled : {}) }} type="button">Edit</button>
-            <button onClick={() => void duplicateFormulation(record.id).then((next) => onOpen(next.id)).catch((err: Error) => setError(err.message))} style={controlStyles.secondaryButton} type="button">Duplicate New Version</button>
-            <button disabled={!canApprove} onClick={() => void approveFormulation(record.id).then((next) => { setRecord(next); setMessage('Approved'); }).catch((err: Error) => setError(err.message))} style={{ ...controlStyles.primaryButton, ...(canApprove ? {} : styles.disabled) }} type="button">Approve</button>
-            <button disabled={record.status !== 'approved'} onClick={onCreateProductionRun} style={{ ...controlStyles.secondaryButton, ...(record.status === 'approved' ? {} : styles.disabled) }} type="button">Create Production Run</button>
+            {record.status === 'draft' && <button onClick={() => setEditing(true)} style={controlStyles.secondaryButton} type="button">Edit</button>}
+            {record.status === 'draft' && <label style={controlStyles.field}><span style={controlStyles.fieldLabel}>Approved By</span><input onChange={(event) => setApprovedBy(event.target.value)} style={controlStyles.input} value={approvedBy} /></label>}
+            {record.status === 'draft' && <button disabled={!canApprove} onClick={() => void approve()} style={{ ...controlStyles.primaryButton, ...(canApprove ? {} : styles.disabled) }} type="button">Approve</button>}
+            {record.status === 'approved' && <button onClick={onCreateProductionRun} style={controlStyles.secondaryButton} type="button">Create Production Run</button>}
           </div>
         </div>
         <Divider />
@@ -134,21 +145,34 @@ export function FormulationDetailPage({
           ))}
         </div>
         {tab === 'Overview' && (
-          <div style={styles.overviewGrid}>
-            <div style={formulationStyles.panel}>Family<br /><strong>{record.family ?? '-'}</strong></div>
-            <div style={formulationStyles.panel}>Component Total<br /><span style={{ ...formulationStyles.badge, ...totalTone(total) }}>{formatValue(total)}%</span></div>
-            <div style={formulationStyles.panel}>Last Updated<br /><strong>{formatValue(record.updatedAt)}</strong></div>
+          <div style={formulationStyles.stack}>
+            <div style={styles.overviewGrid}>
+              <div style={formulationStyles.panel}>Component Total<br /><span style={{ ...formulationStyles.badge, ...totalTone(total) }}>{formatValue(total)}%</span></div>
+              <div style={formulationStyles.panel}>Notes<br /><strong>{String(record.notes ?? '-')}</strong></div>
+              <div style={formulationStyles.panel}>Approved By<br /><strong>{String(record.approvedBy ?? '-')}</strong></div>
+              <div style={formulationStyles.panel}>Last Updated<br /><strong>{formatValue(record.updatedAt)}</strong></div>
+            </div>
+            {editing && (
+              <div style={formulationStyles.stack}>
+                <label style={controlStyles.field}>
+                  <span style={controlStyles.fieldLabel}>Formulation Name</span>
+                  <input onChange={(event) => setRecord((current) => current ? { ...current, formulationName: event.target.value } : current)} style={controlStyles.input} value={record.formulationName ?? ''} />
+                </label>
+                <label style={controlStyles.field}>
+                  <span style={controlStyles.fieldLabel}>Notes</span>
+                  <textarea onChange={(event) => setRecord((current) => current ? { ...current, notes: event.target.value } : current)} style={controlStyles.textarea} value={String(record.notes ?? '')} />
+                </label>
+                <div style={formulationStyles.actions}>
+                  <button onClick={() => { setEditing(false); load(); }} style={controlStyles.secondaryButton} type="button">Cancel</button>
+                  <button onClick={() => void save()} style={controlStyles.primaryButton} type="button">Save</button>
+                </div>
+              </div>
+            )}
           </div>
         )}
         {tab === 'Recipe Components' && (
           <div style={formulationStyles.stack}>
-            <FormulationComponentsEditor components={components} lots={lots} materials={materials} onChange={setComponents} readOnly={!editing || locked} suppliers={suppliers} />
-            {editing && (
-              <div style={formulationStyles.actions}>
-                <button onClick={() => { setEditing(false); load(); }} style={controlStyles.secondaryButton} type="button">Cancel</button>
-                <button onClick={() => void save()} style={controlStyles.primaryButton} type="button">Save</button>
-              </div>
-            )}
+            <FormulationComponentsEditor components={components} lots={lots} materials={materials} onChange={() => undefined} readOnly suppliers={suppliers} />
           </div>
         )}
         {tab === 'Production Runs' && (productionRuns.length > 0

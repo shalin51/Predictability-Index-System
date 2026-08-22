@@ -51,6 +51,8 @@ export class LabTestingService {
   async complete(runId: string, changedBy: string): Promise<LabTestingRecord> {
     const before = await this.run(runId);
     if (before['status'] !== 'testing') throw new ValidationError('Run must be testing before completion');
+    const sampleCount = await this.repo.sampleCount(runId);
+    if (sampleCount === 0) throw new ConflictError('Cannot complete testing without samples');
     const missing = await this.repo.missingRequiredMetricCount(runId);
     if (missing > 0) throw new ConflictError(`Cannot complete testing with ${missing} required metrics missing`);
     const record = await this.repo.updateRunStatus(runId, 'completed');

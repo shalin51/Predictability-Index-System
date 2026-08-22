@@ -8,7 +8,6 @@ export function createFormulationRouter() {
   const router = Router();
   const controller = new FormulationController(new FormulationService(new FormulationRepository(), new AuditService()));
 
-  router.get('/options', (req, res) => controller.options(req, res));
   router.get('/', (req, res) => controller.list(req, res));
   router.post('/', (req, res) => controller.create(req, res));
   router.get('/:id', (req, res) => controller.detail(req, res));

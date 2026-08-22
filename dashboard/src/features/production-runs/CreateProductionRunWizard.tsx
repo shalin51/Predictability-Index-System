@@ -1,5 +1,5 @@
 import type { CSSProperties } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, Divider } from '../../components/ui/Card';
 import { controlStyles, getTabButtonStyle } from '../../components/ui/controls';
 import { DashboardPage, MessageBanner } from '../../components/ui/Page';
@@ -12,11 +12,9 @@ import {
   type LibraryRecord,
   type ProductionRunPayload,
   type ProductionRunRecord,
-  type SampleGenerationPayload,
 } from '../../services/api';
 import { spacing } from '../../theme/tokens';
 import { ManufacturingParametersForm } from './components/ManufacturingParametersForm';
-import { SampleGenerationForm } from './components/SampleGenerationForm';
 import { formatValue, runStyles } from './productionRunUi';
 import { createProductionRunDraft, duplicateProductionRunDraft } from './duplicateProductionRun';
 
@@ -55,6 +53,8 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
           if (!sourceFormulationIsApproved) {
             setError(`The formulation used by ${source.runCode} is no longer approved. Select an approved formulation version before saving.`);
           }
+        } else {
+          setPayload((current) => withDefaultEquipment(current, machineOptions, moldOptions));
         }
       })
       .catch((err: Error) => setError(err.message))
@@ -62,16 +62,16 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
   }, [duplicateSourceId]);
 
   const selectedFormulation = formulations.find((item) => item.id === payload.formulationId);
-  const selectedMold = molds.find((item) => item.id === payload.moldId);
-  const cavityCount = Number(selectedMold?.['cavityCount'] ?? 0);
-  const samplePreview = useMemo(() => buildPreview(payload.sampleGeneration), [payload.sampleGeneration]);
 
-  const update = (patch: Partial<ProductionRunPayload>) => setPayload((current) => ({ ...current, ...patch }));
+  const update = (patch: Partial<ProductionRunPayload>) => {
+    setError('');
+    setPayload((current) => ({ ...current, ...patch }));
+  };
 
   const importPriorRun = async (id: string) => {
     if (!id) {
       setError('');
-      setPayload(createProductionRunDraft(today));
+      setPayload(withDefaultEquipment(createProductionRunDraft(today), machines, molds));
       setSourceRunCode('');
       setSelectedPriorRunId('');
       return;
@@ -95,7 +95,8 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
   const save = async (status: 'planned' | 'molded') => {
     try {
       setError('');
-      const record = await createProductionRun({ ...payload, status });
+      const { sampleGeneration: _sampleGeneration, ...runPayload } = payload;
+      const record = await createProductionRun({ ...runPayload, status });
       onSaved(record.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
@@ -113,7 +114,7 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
           <button onClick={onCancel} style={controlStyles.secondaryButton} type="button">Cancel</button>
         </div>
         <div style={styles.steps}>
-          {['Select Formulation', 'Manufacturing Parameters', 'Generate Samples', 'Review'].map((label, index) => (
+          {['Select Formulation', 'Manufacturing Parameters', 'Review'].map((label, index) => (
             <button key={label} onClick={() => setStep(index)} style={getTabButtonStyle(step === index)} type="button">{label}</button>
           ))}
         </div>
@@ -151,8 +152,8 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
               <input disabled style={controlStyles.input} value={String(selectedFormulation?.['versionNo'] ?? '')} />
             </label>
             <label style={controlStyles.field}>
-              <span style={controlStyles.fieldLabel}>Target Benchmark</span>
-              <input disabled style={controlStyles.input} value={String(selectedFormulation?.['targetBenchmark'] ?? '')} />
+              <span style={controlStyles.fieldLabel}>Benchmarks</span>
+              <input disabled style={controlStyles.input} value="All active benchmarks" />
             </label>
             <label style={controlStyles.field}>
               <span style={controlStyles.fieldLabel}>Run Code</span>
@@ -166,34 +167,24 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
         )}
         {step === 1 && <ManufacturingParametersForm machines={machines} molds={molds} onChange={update} value={payload} />}
         {step === 2 && (
-          <SampleGenerationForm
-            cavityCount={cavityCount}
-            onChange={(sampleGeneration) => update({ sampleGeneration })}
-            value={payload.sampleGeneration as SampleGenerationPayload}
-          />
-        )}
-        {step === 3 && (
           <div style={runStyles.stack}>
             <div style={runStyles.panel}>Selected formulation: <strong>{String(selectedFormulation?.['label'] ?? '-')}</strong></div>
             <div style={runStyles.panel}>Machine: <strong>{String(machines.find((item) => item.id === payload.machineId)?.['code'] ?? '-')}</strong></div>
-            <div style={runStyles.panel}>Mold: <strong>{String(selectedMold?.['code'] ?? '-')}</strong></div>
+            <div style={runStyles.panel}>Mold: <strong>{String(molds.find((item) => item.id === payload.moldId)?.['code'] ?? '-')}</strong></div>
             <div style={runStyles.panel}>Injection Pressure: {formatValue(payload.injectionPressure)} {payload.injectionPressureUnit}</div>
             <div style={runStyles.panel}>Melt Temperature: {formatValue(payload.meltTemperature)} {payload.meltTemperatureUnit}</div>
             <div style={runStyles.panel}>Cooling Time: {formatValue(payload.coolingTime)} {payload.coolingTimeUnit}</div>
             <div style={runStyles.panel}>Cycle Time: {formatValue(payload.cycleTime)} {payload.cycleTimeUnit}</div>
             <div style={runStyles.panel}>Cure Hours Before Test: {formatValue(payload.cureHoursBeforeTest)}</div>
-            <div style={runStyles.panel}>
-              Sample list:
-              <ul style={styles.sampleList}>{samplePreview.map((sample) => <li key={sample}>{sample}</li>)}</ul>
-            </div>
+            <div style={runStyles.panel}>Samples will be generated automatically when the run is marked Ready for Testing.</div>
           </div>
         )}
         <Divider />
         <div style={runStyles.actions}>
           <button disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))} style={controlStyles.secondaryButton} type="button">Back</button>
-          {step < 3 && <button onClick={() => setStep((current) => Math.min(3, current + 1))} style={controlStyles.primaryButton} type="button">Next</button>}
-          {step === 3 && <button onClick={() => void save('planned')} style={controlStyles.primaryButton} type="button">Save Planned Run</button>}
-          {step === 3 && <button onClick={() => void save('molded')} style={controlStyles.primaryButton} type="button">Save as Molded</button>}
+          {step < 2 && <button onClick={() => setStep((current) => Math.min(2, current + 1))} style={controlStyles.primaryButton} type="button">Next</button>}
+          {step === 2 && <button onClick={() => void save('planned')} style={controlStyles.primaryButton} type="button">Save Planned Run</button>}
+          {step === 2 && <button onClick={() => void save('molded')} style={controlStyles.primaryButton} type="button">Save as Molded</button>}
         </div>
           </>
         )}
@@ -202,16 +193,14 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
   );
 }
 
-function buildPreview(input?: SampleGenerationPayload): string[] {
-  if (!input) return [];
-  const match = input.startingSampleCode.match(/^(.*?)(\d+)$/);
-  return Array.from({ length: input.count }, (_, index) => {
-    if (!match) return index === 0 ? input.startingSampleCode : `${input.startingSampleCode}-${index + 1}`;
-    return `${match[1] ?? ''}${String(Number(match[2]) + index).padStart((match[2] ?? '').length, '0')}`;
-  });
+function withDefaultEquipment(payload: ProductionRunPayload, machines: LibraryRecord[], molds: LibraryRecord[]): ProductionRunPayload {
+  return {
+    ...payload,
+    machineId: payload.machineId || machines[0]?.id || '',
+    moldId: payload.moldId || molds[0]?.id || '',
+  };
 }
 
 const styles: Record<string, CSSProperties> = {
-  sampleList: { margin: `${spacing.space2}px 0 0 ${spacing.space5}px` },
   steps: { display: 'flex', flexWrap: 'wrap', gap: spacing.space3 },
 };

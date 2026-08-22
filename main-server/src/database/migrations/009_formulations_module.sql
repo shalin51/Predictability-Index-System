@@ -7,30 +7,11 @@ BEGIN
   END IF;
 END $$;
 
-CREATE TABLE IF NOT EXISTS experiments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  experiment_code VARCHAR(100) UNIQUE,
-  experiment_name VARCHAR(255) NOT NULL UNIQUE,
-  status record_status NOT NULL DEFAULT 'active',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS formulation_families (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  family_name VARCHAR(255) NOT NULL UNIQUE,
-  status record_status NOT NULL DEFAULT 'active',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
 CREATE TABLE IF NOT EXISTS formulations (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   formulation_code VARCHAR(100) NOT NULL,
+  formulation_name VARCHAR(255),
   version_no INT NOT NULL DEFAULT 1,
-  experiment_id UUID REFERENCES experiments(id),
-  family_id UUID REFERENCES formulation_families(id),
-  target_benchmark_id UUID REFERENCES benchmark_profiles(id),
   status formulation_status NOT NULL DEFAULT 'draft',
   notes TEXT,
   archived_at TIMESTAMPTZ,
@@ -54,7 +35,6 @@ CREATE TABLE IF NOT EXISTS formulation_components (
 );
 
 CREATE INDEX IF NOT EXISTS idx_formulations_status ON formulations(status);
-CREATE INDEX IF NOT EXISTS idx_formulations_benchmark ON formulations(target_benchmark_id);
 CREATE INDEX IF NOT EXISTS idx_formulation_components_formulation ON formulation_components(formulation_id);
 CREATE INDEX IF NOT EXISTS idx_formulation_components_material ON formulation_components(material_id);
 
@@ -63,8 +43,6 @@ DECLARE
   tbl TEXT;
 BEGIN
   FOREACH tbl IN ARRAY ARRAY[
-    'experiments',
-    'formulation_families',
     'formulations',
     'formulation_components'
   ] LOOP

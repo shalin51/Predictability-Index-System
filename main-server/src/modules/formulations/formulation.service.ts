@@ -7,7 +7,7 @@ import {
   validateComponentTotal,
   validateFormulationInput,
 } from './formulation.validator';
-import type { FormulationListQuery, FormulationOptions, FormulationRecord } from './formulation.types';
+import type { FormulationListQuery, FormulationRecord } from './formulation.types';
 
 export class FormulationService {
   constructor(
@@ -17,10 +17,6 @@ export class FormulationService {
 
   async list(query: FormulationListQuery): Promise<FormulationRecord[]> {
     return this.repo.list(query);
-  }
-
-  async options(): Promise<FormulationOptions> {
-    return this.repo.options();
   }
 
   async detail(id: string): Promise<FormulationRecord> {
@@ -33,7 +29,7 @@ export class FormulationService {
   async create(input: Record<string, unknown>, changedBy: string): Promise<FormulationRecord> {
     const payload = normalizeFormulationInput(input);
     validateFormulationInput(payload);
-    const warnings = await this.repo.validateReferences(payload.components, payload.targetBenchmarkId);
+    const warnings = await this.repo.validateReferences(payload.components);
     if (payload.approve && warnings.length > 0) throw new ValidationError(warnings[0] ?? 'Invalid formulation references');
 
     const record = await this.repo.create(payload);
@@ -63,7 +59,7 @@ export class FormulationService {
 
     const payload = normalizeFormulationInput(input);
     validateFormulationInput(payload);
-    const warnings = await this.repo.validateReferences(payload.components, payload.targetBenchmarkId);
+    const warnings = await this.repo.validateReferences(payload.components);
     if (payload.approve && warnings.length > 0) throw new ValidationError(warnings[0] ?? 'Invalid formulation references');
 
     let record = await this.repo.update(id, payload);
@@ -71,7 +67,7 @@ export class FormulationService {
 
     if (payload.approve) {
       validateComponentTotal(payload.components);
-      record = await this.repo.approve(id);
+      record = await this.repo.approve(id, payload.approvedBy ?? '');
       if (!record) throw new NotFoundError(`Formulation ${id}`);
     }
 
@@ -86,10 +82,11 @@ export class FormulationService {
     return record;
   }
 
-  async approve(id: string, changedBy: string): Promise<FormulationRecord> {
+  async approve(id: string, approvedBy: string, changedBy: string): Promise<FormulationRecord> {
     const before = await this.repo.findById(id);
     if (!before) throw new NotFoundError(`Formulation ${id}`);
     if (before['status'] !== 'draft') throw new ConflictError('Only draft formulations can be approved');
+    if (!approvedBy.trim()) throw new ValidationError('Approved By is required when approving a formulation');
 
     const components = (before['components'] ?? []) as Array<{ percentComposition: number }>;
     validateComponentTotal(components.map((component) => ({
@@ -99,7 +96,7 @@ export class FormulationService {
       supplierId: 'x',
     })));
 
-    const record = await this.repo.approve(id);
+    const record = await this.repo.approve(id, approvedBy.trim());
     if (!record) throw new NotFoundError(`Formulation ${id}`);
     await this.auditService.log({
       tableName: 'formulations',

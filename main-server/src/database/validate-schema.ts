@@ -29,8 +29,6 @@ const REQUIRED_TABLES = [
   'benchmark_profiles',
   'benchmark_metric_targets',
   'algorithm_versions',
-  'experiments',
-  'formulation_families',
   'formulations',
   'formulation_components',
   'production_runs',
@@ -88,6 +86,8 @@ const REMOVED_TABLES = [
   'ball_testing_import_batches',
   'ball_testing_import_sheets',
   'ball_testing_import_samples',
+  'experiments',
+  'formulation_families',
 ] as const;
 
 const REQUIRED_INDEXES = [

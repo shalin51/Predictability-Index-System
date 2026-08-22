@@ -5,6 +5,8 @@ import { controlStyles, getTabButtonStyle } from '../../components/ui/controls';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
 import {
   getProductionRun,
+  archiveSample,
+  listApprovedFormulationOptions,
   listLibraryOptions,
   updateProductionRun,
   updateProductionRunStatus,
@@ -26,6 +28,17 @@ import { formatValue, runStyles, statusLabels } from './productionRunUi';
 
 type DetailTab = 'Overview' | 'Manufacturing Parameters' | 'Process Setup' | 'Samples' | 'Lab Results' | 'Run Summary' | 'Scores';
 
+const tabsByStatus: Record<ProductionRunStatus, DetailTab[]> = {
+  planned: ['Overview', 'Manufacturing Parameters', 'Process Setup'],
+  molded: ['Overview', 'Manufacturing Parameters', 'Process Setup'],
+  curing: ['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples'],
+  ready_for_testing: ['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples', 'Lab Results'],
+  testing: ['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples', 'Lab Results'],
+  completed: ['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples', 'Lab Results', 'Run Summary', 'Scores'],
+  scored: ['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples', 'Lab Results', 'Run Summary', 'Scores'],
+  archived: ['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples', 'Lab Results', 'Run Summary', 'Scores'],
+};
+
 const nextActions: Partial<Record<ProductionRunStatus, { label: string; status: ProductionRunStatus }>> = {
   curing: { label: 'Mark Ready for Testing', status: 'ready_for_testing' },
   molded: { label: 'Start Curing', status: 'curing' },
@@ -33,12 +46,18 @@ const nextActions: Partial<Record<ProductionRunStatus, { label: string; status: 
   ready_for_testing: { label: 'Start Testing', status: 'testing' },
 };
 
-export function ProductionRunDetailPage({ id, onBack, onDuplicate, onOpenFormulation, onOpenLabRun, onOpenReport }: { id: string; onBack: () => void; onDuplicate: (id: string) => void; onOpenFormulation: (formulationId: string) => void; onOpenLabRun?: (runId: string) => void; onOpenReport?: (runId: string) => void }) {
+const previousActions: Partial<Record<ProductionRunStatus, { label: string; status: ProductionRunStatus }>> = {
+  molded: { label: 'Return to Planning', status: 'planned' },
+  ready_for_testing: { label: 'Return to Curing', status: 'curing' },
+  completed: { label: 'Return to Testing', status: 'testing' },
+};
+
+export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenLabRun, onOpenReport }: { id: string; onBack: () => void; onOpenFormulation: (formulationId: string) => void; onOpenLabRun?: (runId: string) => void; onOpenReport?: (runId: string) => void }) {
   const [record, setRecord] = useState<ProductionRunRecord | null>(null);
   const [machines, setMachines] = useState<LibraryRecord[]>([]);
   const [molds, setMolds] = useState<LibraryRecord[]>([]);
+  const [formulations, setFormulations] = useState<LibraryRecord[]>([]);
   const [tab, setTab] = useState<DetailTab>('Overview');
-  const [editing, setEditing] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
@@ -49,8 +68,9 @@ export function ProductionRunDetailPage({ id, onBack, onDuplicate, onOpenFormula
 
   useEffect(load, [id]);
   useEffect(() => {
-    void Promise.all([listLibraryOptions('machines'), listLibraryOptions('molds')])
-      .then(([machineOptions, moldOptions]) => {
+    void Promise.all([listApprovedFormulationOptions(), listLibraryOptions('machines'), listLibraryOptions('molds')])
+      .then(([formulationOptions, machineOptions, moldOptions]) => {
+        setFormulations(formulationOptions);
         setMachines(machineOptions);
         setMolds(moldOptions);
       })
@@ -66,14 +86,16 @@ export function ProductionRunDetailPage({ id, onBack, onDuplicate, onOpenFormula
   }
 
   const payload = toPayload(record);
-  const locked = record.status === 'completed' || record.status === 'scored';
+  const locked = record.status === 'completed' || record.status === 'scored' || record.status === 'archived';
   const nextAction = nextActions[record.status];
+  const previousAction = previousActions[record.status];
+  const availableTabs = tabsByStatus[record.status];
+  const canEditParameters = record.status === 'planned';
 
-  const save = async (nextPayload: ProductionRunPayload) => {
+  const saveParameters = async () => {
     try {
-      const next = await updateProductionRun(record.id, nextPayload);
+      const next = await updateProductionRun(record.id, toPayload(record));
       setRecord(next);
-      setEditing(false);
       setMessage('Saved');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed');
@@ -86,27 +108,30 @@ export function ProductionRunDetailPage({ id, onBack, onDuplicate, onOpenFormula
         <div style={runStyles.header}>
           <div>
             <button onClick={onBack} style={controlStyles.subtleButton} type="button">Back</button>
-            <h1 style={{ ...runStyles.title, marginTop: spacing.space4 }}>{record.runCode}</h1>
+            <div style={styles.titleRow}>
+              <h1 style={runStyles.title}>{record.runCode}</h1>
+              <ProductionRunStatusBadge status={record.status} />
+            </div>
             <p style={runStyles.subtitle}>{record.formulation} | Samples: {record.sampleCount}</p>
           </div>
-          <div style={runStyles.actions}>
-            <ProductionRunStatusBadge status={record.status} />
-            <button onClick={() => onOpenFormulation(record.formulationId)} style={controlStyles.secondaryButton} type="button">View Formulation</button>
-            <button onClick={() => onDuplicate(record.id)} style={controlStyles.secondaryButton} type="button">Duplicate</button>
-            <button disabled={locked} onClick={() => setEditing(true)} style={{ ...controlStyles.secondaryButton, ...(locked ? styles.disabled : {}) }} type="button">Edit</button>
-            {nextAction && <button onClick={() => void updateProductionRunStatus(record.id, nextAction.status).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.primaryButton} type="button">{nextAction.label}</button>}
-            {record.status === 'testing' && onOpenLabRun && <button onClick={() => onOpenLabRun(record.id)} style={controlStyles.primaryButton} type="button">Continue Lab Testing</button>}
-            {record.status === 'completed' && <button onClick={() => setTab('Run Summary')} style={controlStyles.secondaryButton} type="button">Run Summary</button>}
-            {(record.status === 'completed' || record.status === 'scored') && <button onClick={() => setTab('Scores')} style={controlStyles.secondaryButton} type="button">Scores</button>}
-            {(record.status === 'completed' || record.status === 'scored') && onOpenReport && <button onClick={() => onOpenReport(record.id)} style={controlStyles.secondaryButton} type="button">Report</button>}
+          <div style={styles.actionArea}>
+            <div style={{ ...runStyles.actions, justifyContent: 'center' }}>
+              <button onClick={() => onOpenFormulation(record.formulationId)} style={controlStyles.secondaryButton} type="button">View Formulation</button>
+              {previousAction && <button onClick={() => void updateProductionRunStatus(record.id, previousAction.status).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.secondaryButton} type="button">{previousAction.label}</button>}
+              {nextAction && <button onClick={() => void updateProductionRunStatus(record.id, nextAction.status).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.primaryButton} type="button">{nextAction.label}</button>}
+              {record.status === 'testing' && onOpenLabRun && <button onClick={() => onOpenLabRun(record.id)} style={controlStyles.primaryButton} type="button">Continue Lab Testing</button>}
+              {record.status === 'completed' && <button onClick={() => setTab('Run Summary')} style={controlStyles.secondaryButton} type="button">Run Summary</button>}
+              {(record.status === 'completed' || record.status === 'scored') && <button onClick={() => setTab('Scores')} style={controlStyles.secondaryButton} type="button">Scores</button>}
+              {(record.status === 'completed' || record.status === 'scored') && onOpenReport && <button onClick={() => onOpenReport(record.id)} style={controlStyles.secondaryButton} type="button">Report</button>}
+            </div>
+            <ProductionRunTimeline status={record.status} />
           </div>
         </div>
         <Divider />
         {error && <MessageBanner tone="danger">{error}</MessageBanner>}
         {message && <MessageBanner tone="success">{message}</MessageBanner>}
-        <ProductionRunTimeline status={record.status} />
         <div style={styles.tabs}>
-          {(['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples', 'Lab Results', 'Run Summary', 'Scores'] as DetailTab[]).map((item) => (
+          {availableTabs.map((item) => (
             <button key={item} onClick={() => setTab(item)} style={getTabButtonStyle(tab === item)} type="button">{item}</button>
           ))}
         </div>
@@ -115,6 +140,7 @@ export function ProductionRunDetailPage({ id, onBack, onDuplicate, onOpenFormula
             <div style={runStyles.panel}>Formulation<br /><strong>{record.formulation}</strong></div>
             <div style={runStyles.panel}>Date Produced<br /><strong>{formatValue(record.dateProduced)}</strong></div>
             <div style={runStyles.panel}>Status<br /><strong>{statusLabels[record.status]}</strong></div>
+            <div style={runStyles.panel}>Approved By<br /><strong>{formatValue(record.approvedBy)}</strong></div>
           </div>
         )}
         {tab === 'Manufacturing Parameters' && (
@@ -122,19 +148,17 @@ export function ProductionRunDetailPage({ id, onBack, onDuplicate, onOpenFormula
             <ManufacturingParametersForm
               machines={machines}
               molds={molds}
+              formulations={formulations}
               onChange={(patch) => setRecord((current) => current ? ({ ...current, ...patch } as ProductionRunRecord) : current)}
-              readOnly={!editing || locked}
+              readOnly={!canEditParameters}
               value={payload}
             />
-            {editing && (
-              <div style={runStyles.actions}>
-                <button onClick={() => { setEditing(false); load(); }} style={controlStyles.secondaryButton} type="button">Cancel</button>
-                <button onClick={() => void save(toPayload(record))} style={controlStyles.primaryButton} type="button">Save</button>
-              </div>
-            )}
+            {canEditParameters && <div style={runStyles.actions}><button onClick={() => void saveParameters()} style={controlStyles.primaryButton} type="button">Save Changes</button></div>}
           </div>
         )}
-        {tab === 'Samples' && (record.samples?.length ? <SampleTable samples={record.samples} /> : <EmptyState>No samples.</EmptyState>)}
+        {tab === 'Samples' && (record.samples?.length
+          ? <SampleTable canDelete={!locked} onDelete={(sampleId) => void archiveSample(sampleId).then(() => { setRecord((current) => current ? { ...current, samples: current.samples?.filter((sample) => sample.id !== sampleId), sampleCount: Math.max(0, current.sampleCount - 1) } : current); setMessage('Sample deleted'); }).catch((err: Error) => setError(err.message))} samples={record.samples} />
+          : <EmptyState>Samples are automatically generated when this run is marked Ready for Testing.</EmptyState>)}
         {tab === 'Process Setup' && <ProcessSetupPanel runId={record.id} />}
         {tab === 'Lab Results' && <ReadOnlyLabResultsPanel onOpenLabRun={onOpenLabRun} runId={record.id} />}
         {tab === 'Run Summary' && <RunSummaryPanel onContinueToScoring={() => setTab('Scores')} runId={record.id} />}
@@ -146,6 +170,7 @@ export function ProductionRunDetailPage({ id, onBack, onDuplicate, onOpenFormula
 
 function toPayload(record: ProductionRunRecord): ProductionRunPayload {
   return {
+    approvedBy: record.approvedBy ?? null,
     coolingTime: record.coolingTime ?? null,
     coolingTimeUnit: record.coolingTimeUnit,
     cureHoursBeforeTest: record.cureHoursBeforeTest,
@@ -164,7 +189,8 @@ function toPayload(record: ProductionRunRecord): ProductionRunPayload {
 }
 
 const styles: Record<string, CSSProperties> = {
-  disabled: { opacity: 0.5, cursor: 'not-allowed' },
+  actionArea: { alignItems: 'center', display: 'flex', flexDirection: 'column', gap: spacing.space2 },
   overviewGrid: { display: 'grid', gap: spacing.space4, gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' },
   tabs: { display: 'flex', flexWrap: 'wrap', gap: spacing.space3 },
+  titleRow: { alignItems: 'center', display: 'flex', gap: spacing.space2, marginTop: spacing.space4 },
 };

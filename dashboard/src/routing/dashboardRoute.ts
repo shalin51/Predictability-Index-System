@@ -46,7 +46,7 @@ export interface DashboardRouteState {
   labRunId?: string;
   labTestingMode?: 'list' | 'detail';
   productionRunId?: string;
-  productionRunMode?: 'list' | 'new' | 'duplicate' | 'import' | 'detail';
+  productionRunMode?: 'list' | 'new' | 'import' | 'detail';
   reportId?: string;
   reportMode?: 'list' | 'detail' | 'run';
   reportRunId?: string;
@@ -132,9 +132,6 @@ function parseRouteSegments(segments: string[]): DashboardRouteState | null {
     }
     if (segments[1] === 'import') {
       return { productionRunMode: 'import', view: 'production-runs' };
-    }
-    if (segments[1] && segments[2] === 'duplicate') {
-      return { productionRunId: segments[1], productionRunMode: 'duplicate', view: 'production-runs' };
     }
     if (segments[1] && segments[2] === 'report') {
       return { reportMode: 'run', reportRunId: segments[1], view: 'reports' };
@@ -233,9 +230,6 @@ export function buildDashboardPath({ formulationId, formulationMode, importResou
     }
     if (productionRunMode === 'import') {
       return '/production-runs/import';
-    }
-    if (productionRunMode === 'duplicate' && productionRunId) {
-      return `/production-runs/${encodeURIComponent(productionRunId)}/duplicate`;
     }
     if (productionRunMode === 'detail' && productionRunId) {
       return `/production-runs/${encodeURIComponent(productionRunId)}`;

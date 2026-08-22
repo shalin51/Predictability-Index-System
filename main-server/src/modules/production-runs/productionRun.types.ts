@@ -18,7 +18,6 @@ export interface ProductionRunListQuery {
   moldId?: string;
   search?: string;
   status?: ProductionRunStatus | 'all';
-  targetBenchmarkId?: string;
 }
 
 export interface SampleInput {
@@ -34,6 +33,7 @@ export interface SampleGenerationInput {
 }
 
 export interface ProductionRunInput {
+  approvedBy?: string | null;
   auditReason?: string;
   coolingTime?: number | null;
   coolingTimeUnit?: string;

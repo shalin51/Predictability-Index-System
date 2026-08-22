@@ -37,11 +37,6 @@ export class ProductionRunRepository {
       clauses.push(`pr.mold_id = $${params.length}`);
     }
 
-    if (query.targetBenchmarkId) {
-      params.push(query.targetBenchmarkId);
-      clauses.push(`f.target_benchmark_id = $${params.length}`);
-    }
-
     if (query.dateProducedFrom) {
       params.push(query.dateProducedFrom);
       clauses.push(`pr.date_produced >= $${params.length}::date`);
@@ -55,7 +50,7 @@ export class ProductionRunRepository {
     const result = await getPool().query(
       `${this.baseSelect()}
        ${clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''}
-       GROUP BY pr.id, f.formulation_code, f.version_no, f.target_benchmark_id, bp.benchmark_name, bp.benchmark_code, m.machine_code, mo.mold_code
+       GROUP BY pr.id, f.formulation_code, f.version_no, m.machine_code, mo.mold_code
        ORDER BY pr.updated_at DESC`,
       params
     );
@@ -66,7 +61,7 @@ export class ProductionRunRepository {
     const result = await getPool().query(
       `${this.baseSelect()}
        WHERE pr.id = $1
-       GROUP BY pr.id, f.formulation_code, f.version_no, f.target_benchmark_id, bp.benchmark_name, bp.benchmark_code, m.machine_code, mo.mold_code`,
+       GROUP BY pr.id, f.formulation_code, f.version_no, m.machine_code, mo.mold_code`,
       [id]
     );
     return (result.rows[0] as ProductionRunRecord | undefined) ?? null;
@@ -76,10 +71,9 @@ export class ProductionRunRepository {
     const result = await getPool().query(
       `SELECT f.id, f.formulation_code AS "formulationCode", f.version_no AS "versionNo",
               CONCAT(f.formulation_code, ' V', f.version_no) AS label,
-              f.target_benchmark_id AS "targetBenchmarkId", bp.benchmark_name AS "targetBenchmark",
+              'All active benchmarks' AS "targetBenchmark",
               f.status::text AS status
        FROM formulations f
-       LEFT JOIN benchmark_profiles bp ON bp.id = f.target_benchmark_id
        WHERE f.id = $1`,
       [id]
     );
@@ -90,9 +84,8 @@ export class ProductionRunRepository {
     const result = await getPool().query(
       `SELECT f.id, CONCAT(f.formulation_code, ' V', f.version_no) AS label,
               f.formulation_code AS "formulationCode", f.version_no AS "versionNo",
-              f.target_benchmark_id AS "targetBenchmarkId", bp.benchmark_name AS "targetBenchmark"
+              'All active benchmarks' AS "targetBenchmark"
        FROM formulations f
-       LEFT JOIN benchmark_profiles bp ON bp.id = f.target_benchmark_id
        WHERE f.status = 'approved'
        ORDER BY f.formulation_code, f.version_no`
     );
@@ -143,6 +136,7 @@ export class ProductionRunRepository {
   }
 
   async update(id: string, input: ProductionRunInput): Promise<ProductionRunRecord | null> {
+    if (input.formulationId) await getPool().query(`UPDATE production_runs SET formulation_id = $2, updated_at = now() WHERE id = $1`, [id, input.formulationId]);
     await getPool().query(
       `UPDATE production_runs
        SET run_code = COALESCE(NULLIF($2, ''), run_code),
@@ -238,8 +232,7 @@ export class ProductionRunRepository {
   private baseSelect(): string {
     return `SELECT pr.id, pr.run_code AS "runCode", pr.formulation_id AS "formulationId",
                    CONCAT(f.formulation_code, ' V', f.version_no) AS formulation,
-                   f.target_benchmark_id AS "targetBenchmarkId",
-                   bp.benchmark_name AS "targetBenchmark", bp.benchmark_code AS "targetBenchmarkCode",
+                   'All active benchmarks' AS "targetBenchmark",
                    pr.date_produced AS "dateProduced", pr.machine_id AS "machineId", m.machine_code AS machine,
                    pr.mold_id AS "moldId", mo.mold_code AS mold,
                    pr.injection_pressure::float AS "injectionPressure", pr.injection_pressure_unit AS "injectionPressureUnit",
@@ -254,7 +247,6 @@ export class ProductionRunRepository {
                    pr.created_at AS "createdAt", pr.updated_at AS "updatedAt"
             FROM production_runs pr
             JOIN formulations f ON f.id = pr.formulation_id
-            LEFT JOIN benchmark_profiles bp ON bp.id = f.target_benchmark_id
             JOIN machines m ON m.id = pr.machine_id
             JOIN molds mo ON mo.id = pr.mold_id
             LEFT JOIN samples s ON s.production_run_id = pr.id AND s.status <> 'archived'`;

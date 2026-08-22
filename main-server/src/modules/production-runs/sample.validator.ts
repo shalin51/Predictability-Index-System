@@ -1,7 +1,8 @@
 import { ValidationError } from '../../errors/app-error';
+import { SAMPLE_STATUSES } from '../../constants/domain.constants';
 import type { SampleInput, SampleStatus } from './productionRun.types';
 
-const statuses = new Set<SampleStatus>(['created', 'testing', 'tested', 'archived']);
+const statuses = new Set<SampleStatus>(SAMPLE_STATUSES);
 
 export function normalizeSampleInput(input: Record<string, unknown>): SampleInput {
   const status = input['status'] ? String(input['status']) as SampleStatus : undefined;

@@ -1,4 +1,6 @@
-export type FormulationStatus = 'draft' | 'approved' | 'molded' | 'testing' | 'scored' | 'archived';
+import { FORMULATION_STATUSES } from '../../constants/domain.constants';
+
+export type FormulationStatus = typeof FORMULATION_STATUSES[number];
 
 export interface FormulationListQuery {
   createdFrom?: string;
@@ -6,7 +8,6 @@ export interface FormulationListQuery {
   materialId?: string;
   search?: string;
   status?: FormulationStatus | 'all';
-  targetBenchmarkId?: string;
 }
 
 export interface FormulationComponentInput {
@@ -19,22 +20,14 @@ export interface FormulationComponentInput {
 
 export interface FormulationSaveInput {
   approve?: boolean;
-  experimentId?: string | null;
-  experimentName?: string;
+  approvedBy?: string | null;
   formulationCode?: string;
-  formulationFamily?: string;
-  familyId?: string | null;
+  formulationName?: string;
   notes?: string | null;
-  targetBenchmarkId?: string | null;
   components: FormulationComponentInput[];
 }
 
 export interface FormulationRecord {
   [key: string]: unknown;
   id: string;
-}
-
-export interface FormulationOptions {
-  experiments: FormulationRecord[];
-  families: FormulationRecord[];
 }

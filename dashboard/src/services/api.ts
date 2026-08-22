@@ -2,6 +2,7 @@ import type {
   DbHealthResponse,
   HealthResponse,
 } from '@amfpi/shared';
+import { FORMULATION_STATUSES, PRODUCTION_RUN_STATUSES, SAMPLE_STATUSES } from '@amfpi/shared';
 import { env } from '../config/env';
 import { clearAuthSession, getAccessToken } from '../features/auth/authSession';
 
@@ -43,7 +44,7 @@ export interface GlobalBenchmarkRegenerationResult {
   runsSkipped: number;
 }
 
-export type FormulationStatus = 'draft' | 'approved' | 'molded' | 'testing' | 'scored' | 'archived';
+export type FormulationStatus = typeof FORMULATION_STATUSES[number];
 
 export interface FormulationComponentPayload {
   basis: 'weight_percent';
@@ -55,14 +56,11 @@ export interface FormulationComponentPayload {
 
 export interface FormulationPayload {
   approve?: boolean;
+  approvedBy?: string | null;
   components: FormulationComponentPayload[];
-  experimentId?: string | null;
-  experimentName?: string;
-  familyId?: string | null;
   formulationCode?: string;
-  formulationFamily?: string;
+  formulationName?: string;
   notes?: string | null;
-  targetBenchmarkId?: string | null;
 }
 
 export interface FormulationRecord {
@@ -71,8 +69,9 @@ export interface FormulationRecord {
   components?: FormulationComponentRecord[];
   componentsTotal: number;
   createdAt: string;
-  family: string | null;
   formulationCode: string;
+  formulationName?: string | null;
+  approvedBy?: string | null;
   status: FormulationStatus;
   targetBenchmark: string | null;
   updatedAt: string;
@@ -95,17 +94,13 @@ export interface FormulationComponentRecord {
   supplierName: string;
 }
 
-export interface FormulationOptions {
-  experiments: LibraryRecord[];
-  families: LibraryRecord[];
-}
 
-export type ProductionRunStatus = 'planned' | 'molded' | 'curing' | 'ready_for_testing' | 'testing' | 'completed' | 'scored' | 'archived';
+export type ProductionRunStatus = typeof PRODUCTION_RUN_STATUSES[number];
 
 export interface SamplePayload {
   cavityNumber?: number | null;
   sampleCode: string;
-  status?: 'created' | 'testing' | 'tested' | 'archived';
+  status?: typeof SAMPLE_STATUSES[number];
 }
 
 export interface SampleGenerationPayload {
@@ -115,6 +110,7 @@ export interface SampleGenerationPayload {
 }
 
 export interface ProductionRunPayload {
+  approvedBy?: string | null;
   auditReason?: string;
   coolingTime?: number | null;
   coolingTimeUnit?: string;
@@ -150,6 +146,7 @@ export interface SampleRecord {
 export interface ProductionRunRecord {
   [key: string]: unknown;
   id: string;
+  approvedBy?: string | null;
   coolingTime?: number | null;
   coolingTimeUnit: string;
   cureHoursBeforeTest: number;
@@ -176,7 +173,6 @@ export interface ProductionRunRecord {
   samples?: SampleRecord[];
   status: ProductionRunStatus;
   targetBenchmark: string | null;
-  targetBenchmarkId?: string | null;
   updatedAt: string;
 }
 
@@ -319,7 +315,6 @@ export interface LabTestingQueueRecord {
   sampleCount: number;
   status: 'ready_for_testing' | 'testing' | 'completed' | 'scored';
   targetBenchmark: string | null;
-  targetBenchmarkId?: string | null;
 }
 
 export interface LabMetric {
@@ -807,8 +802,8 @@ export async function updateFormulation(id: string, payload: FormulationPayload)
   });
 }
 
-export async function approveFormulation(id: string): Promise<FormulationRecord> {
-  return fetchJSON<FormulationRecord>(`/formulations/${id}/approve`, { method: 'PUT' });
+export async function approveFormulation(id: string, approvedBy: string): Promise<FormulationRecord> {
+  return fetchJSON<FormulationRecord>(`/formulations/${id}/approve`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ approvedBy }) });
 }
 
 export async function archiveFormulation(id: string): Promise<FormulationRecord> {
@@ -819,9 +814,6 @@ export async function duplicateFormulation(id: string): Promise<FormulationRecor
   return fetchJSON<FormulationRecord>(`/formulations/${id}/duplicate`, { method: 'POST' });
 }
 
-export async function listFormulationOptions(): Promise<FormulationOptions> {
-  return fetchJSON<FormulationOptions>('/formulations/options');
-}
 
 export async function listProductionRuns(filters: Record<string, string> = {}): Promise<ProductionRunRecord[]> {
   const params = new URLSearchParams();
@@ -907,6 +899,14 @@ export async function updateProductionRunProcessValues(runId: string, payload: R
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+  });
+}
+
+export async function importProductionRunProcessValues(runId: string, sourceRunId: string): Promise<ProcessSetupDetail> {
+  return fetchJSON<ProcessSetupDetail>(`/production-runs/${runId}/process-values/import`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sourceRunId }),
   });
 }
 

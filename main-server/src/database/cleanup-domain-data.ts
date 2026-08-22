@@ -25,8 +25,6 @@ const DOMAIN_TABLES_IN_DELETE_ORDER = [
   'setup_sheet_imports',
   'formulation_components',
   'formulations',
-  'formulation_families',
-  'experiments',
   'mold_zones',
   'molds',
 ] as const;

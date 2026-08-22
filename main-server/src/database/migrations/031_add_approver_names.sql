@@ -1,0 +1,2 @@
+ALTER TABLE formulations ADD COLUMN IF NOT EXISTS approved_by VARCHAR(255);
+ALTER TABLE production_runs ADD COLUMN IF NOT EXISTS approved_by VARCHAR(255);

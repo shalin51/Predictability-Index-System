@@ -24,8 +24,6 @@ DROP TABLE IF EXISTS
   production_runs,
   formulation_components,
   formulation_versions,
-  formulation_families,
-  experiments,
   ball_testing_import_samples,
   ball_testing_import_sheets,
   ball_testing_import_batches,

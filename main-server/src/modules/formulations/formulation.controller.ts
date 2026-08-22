@@ -10,10 +10,6 @@ export class FormulationController {
     respondJson(res, () => this.service.list(this.getQuery(req)), { errorStatus: this.resolveStatus });
   }
 
-  options(_req: Request, res: Response): void {
-    respondJson(res, () => this.service.options(), { errorStatus: this.resolveStatus });
-  }
-
   detail(req: Request, res: Response): void {
     respondJson(res, () => this.service.detail(req.params['id'] ?? ''), { errorStatus: this.resolveStatus });
   }
@@ -32,7 +28,7 @@ export class FormulationController {
   }
 
   approve(req: Request, res: Response): void {
-    respondJson(res, () => this.service.approve(req.params['id'] ?? '', this.getChangedBy(req)), { errorStatus: this.resolveStatus });
+    respondJson(res, () => this.service.approve(req.params['id'] ?? '', String(req.body?.['approvedBy'] ?? ''), this.getChangedBy(req)), { errorStatus: this.resolveStatus });
   }
 
   archive(req: Request, res: Response): void {
@@ -53,7 +49,6 @@ export class FormulationController {
       materialId: req.query['materialId'] as string | undefined,
       search: req.query['search'] as string | undefined,
       status: req.query['status'] as FormulationListQuery['status'],
-      targetBenchmarkId: req.query['targetBenchmarkId'] as string | undefined,
     };
   }
 

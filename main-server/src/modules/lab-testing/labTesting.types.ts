@@ -7,7 +7,6 @@ export interface LabTestingQueueQuery {
   moldId?: string;
   search?: string;
   status?: 'ready_for_testing' | 'testing' | 'completed' | 'scored' | 'all';
-  targetBenchmarkId?: string;
 }
 
 export interface LabTestingRecord {

@@ -10,8 +10,6 @@ const DEFAULT_WORKBOOK = 'D:\\CCP\\Pickleball Testing Results Amerilabs.xlsx';
 const DEFAULT_REFERENCE_RUN = 'KINGFA-1789-RUN-20260806';
 const IMPORT_ACTOR = 'codex-dev-amerilabs-import';
 const LEGACY_SUPPLIER = 'Unspecified Supplier — Amerilabs Workbook';
-const EXPERIMENT_NAME = 'Amerilabs Pickleball Formulation Testing';
-const FAMILY_NAME = 'Amerilabs Pickleball Formulations';
 
 function argument(name, fallback = null) {
   const prefix = `--${name}=`;
@@ -65,24 +63,6 @@ async function referenceRun(client, runCode) {
   if (result.rowCount !== 1) throw new Error(`Expected one reference production run with code ${runCode}`);
   if (!result.rows[0].process_setup_revision_id) throw new Error(`Reference run ${runCode} has no process setup revision`);
   return result.rows[0];
-}
-
-async function ensureExperimentAndFamily(client) {
-  const experiment = await client.query(
-    `INSERT INTO experiments (experiment_code, experiment_name, status)
-     VALUES ('PICKLEBALL', $1, 'active')
-     ON CONFLICT (experiment_name) DO UPDATE SET status = 'active', updated_at = now()
-     RETURNING id`,
-    [EXPERIMENT_NAME]
-  );
-  const family = await client.query(
-    `INSERT INTO formulation_families (family_name, status)
-     VALUES ($1, 'active')
-     ON CONFLICT (family_name) DO UPDATE SET status = 'active', updated_at = now()
-     RETURNING id`,
-    [FAMILY_NAME]
-  );
-  return { experimentId: experiment.rows[0].id, familyId: family.rows[0].id };
 }
 
 async function ensureLegacySupplier(client) {
@@ -161,7 +141,7 @@ async function ensureMaterial(client, component, supplierId, workbookName, count
   return inserted.rows[0];
 }
 
-async function ensureFormulation(client, sheet, componentRecords, references, workbookName, counters) {
+async function ensureFormulation(client, sheet, componentRecords, workbookName, counters) {
   const existing = await client.query(
     `SELECT id, status::text, notes
      FROM formulations
@@ -177,19 +157,18 @@ async function ensureFormulation(client, sheet, componentRecords, references, wo
     action = 'UPDATE';
     await client.query(
       `UPDATE formulations
-       SET experiment_id = $2, family_id = $3, status = 'testing',
-           notes = COALESCE(NULLIF(notes, ''), $4), updated_at = now()
+       SET status = 'testing', notes = COALESCE(NULLIF(notes, ''), $2), updated_at = now()
        WHERE id = $1`,
-      [formulationId, references.experimentId, references.familyId, sourceNote]
+      [formulationId, sourceNote]
     );
     counters.formulationsUpdated += 1;
   } else {
     const inserted = await client.query(
       `INSERT INTO formulations
-        (formulation_code, version_no, experiment_id, family_id, status, notes)
-       VALUES ($1, 1, $2, $3, 'testing', $4)
+        (formulation_code, version_no, status, notes)
+       VALUES ($1, 1, 'testing', $2)
        RETURNING id`,
-      [sheet.sheetName, references.experimentId, references.familyId, sourceNote]
+      [sheet.sheetName, sourceNote]
     );
     formulationId = inserted.rows[0].id;
     action = 'INSERT';
@@ -502,7 +481,6 @@ async function main() {
   try {
     await client.query('BEGIN');
     const sourceRun = await referenceRun(client, referenceRunCode);
-    const references = await ensureExperimentAndFamily(client);
     const supplierId = await ensureLegacySupplier(client);
     const metricResolutions = new Map();
     for (const mapping of METRIC_MAPPINGS) {
@@ -515,7 +493,7 @@ async function main() {
         const material = await ensureMaterial(client, component, supplierId, source.workbookName, stats);
         componentRecords.push({ component, material });
       }
-      const formulationId = await ensureFormulation(client, sheet, componentRecords, references, source.workbookName, stats);
+      const formulationId = await ensureFormulation(client, sheet, componentRecords, source.workbookName, stats);
       const revisionId = await cloneProcessSetup(client, sourceRun, formulationId, stats);
       const run = await ensureRun(client, sourceRun, formulationId, revisionId, sheet.sheetName, stats);
       stats.processValuesCopied += await cloneRunProcessValues(client, sourceRun, run.id, revisionId);
