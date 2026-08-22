@@ -10,6 +10,7 @@ import {
   listLibraryOptions,
   updateProductionRun,
   updateProductionRunStatus,
+  updateSample,
   type LibraryRecord,
   type ProductionRunPayload,
   type ProductionRunRecord,
@@ -157,7 +158,7 @@ export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenL
           </div>
         )}
         {tab === 'Samples' && (record.samples?.length
-          ? <SampleTable canDelete={!locked} onDelete={(sampleId) => void archiveSample(sampleId).then(() => { setRecord((current) => current ? { ...current, samples: current.samples?.filter((sample) => sample.id !== sampleId), sampleCount: Math.max(0, current.sampleCount - 1) } : current); setMessage('Sample deleted'); }).catch((err: Error) => setError(err.message))} samples={record.samples} />
+          ? <SampleTable canDelete={!locked} editable={!locked} onDelete={(sampleId) => void archiveSample(sampleId).then(() => { setRecord((current) => current ? { ...current, samples: current.samples?.filter((sample) => sample.id !== sampleId), sampleCount: Math.max(0, current.sampleCount - 1) } : current); setMessage('Sample deleted'); }).catch((err: Error) => setError(err.message))} onUpdate={(sample, patch) => void updateSample(sample.id, { cavityNumber: patch.cavityNumber === undefined ? sample.cavityNumber : patch.cavityNumber, sampleCode: patch.sampleCode ?? sample.sampleCode, status: patch.status ?? sample.status as import('../../services/api').SamplePayload['status'] }).then((updated) => { setRecord((current) => current ? { ...current, samples: current.samples?.map((item) => item.id === updated.id ? updated : item) } : current); setMessage('Sample saved'); }).catch((err: Error) => setError(err.message))} samples={record.samples} />
           : <EmptyState>Samples are automatically generated when this run is marked Ready for Testing.</EmptyState>)}
         {tab === 'Process Setup' && <ProcessSetupPanel runId={record.id} />}
         {tab === 'Lab Results' && <ReadOnlyLabResultsPanel onOpenLabRun={onOpenLabRun} runId={record.id} />}

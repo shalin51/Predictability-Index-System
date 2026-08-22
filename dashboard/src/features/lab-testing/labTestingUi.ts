@@ -40,6 +40,7 @@ export const METRIC_ORDER: Record<LabMetricCategory, string[]> = {
 
 export const labStyles: Record<string, CSSProperties> = {
   actions: { alignItems: 'center', display: 'flex', flexWrap: 'wrap', gap: spacing.space3 },
+  centeredHeader: { alignItems: 'start', display: 'grid', gap: spacing.space4, gridTemplateColumns: 'minmax(0, 1fr) auto minmax(0, 1fr)' },
   filterControl: { boxSizing: 'border-box', minWidth: 0, width: '100%' },
   filters: { display: 'grid', gap: spacing.space3, gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', marginBottom: spacing.space4, minWidth: 0, width: '100%' },
   header: { alignItems: 'flex-start', display: 'flex', gap: spacing.space4, justifyContent: 'space-between' },
@@ -47,6 +48,8 @@ export const labStyles: Record<string, CSSProperties> = {
   muted: { color: colors.text.muted, fontSize: font.size.small },
   panel: { border: `1px solid ${colors.border}`, borderRadius: radius.md, padding: spacing.space4 },
   progressTrack: { backgroundColor: colors.surfaceMuted, borderRadius: radius.sm, height: 8, overflow: 'hidden', width: '100%' },
+  progressSummary: { display: 'grid', gap: spacing.space2, justifyItems: 'stretch' },
+  saved: { color: colors.status.ok, fontSize: font.size.xs, marginTop: spacing.space1 },
   stack: { display: 'grid', gap: spacing.space4 },
   subtitle: { color: colors.text.secondary, margin: 0 },
   table: { borderCollapse: 'collapse', minWidth: 980, width: '100%' },

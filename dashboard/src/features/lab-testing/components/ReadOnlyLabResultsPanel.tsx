@@ -11,8 +11,6 @@ import {
 } from '../../../services/api';
 import { colors, font, radius, spacing } from '../../../theme/tokens';
 import { formatLabValue, LAB_RESULT_CATEGORIES, labStyles } from '../labTestingUi';
-import { LabResultCategoryAccordion } from './LabResultCategoryAccordion';
-import { LabResultSampleAccordion } from './LabResultSampleAccordion';
 
 interface ReadOnlyLabResultsPanelProps {
   onOpenLabRun?: (runId: string) => void;
@@ -42,21 +40,7 @@ export function ReadOnlyLabResultsPanel({ onOpenLabRun, runId, title }: ReadOnly
   }, [runId]);
 
   const rows = useMemo(() => data ? buildRows(data) : [], [data]);
-  const sampleSections = useMemo(() => groupRowsBySample(rows).map(([sample, sampleRows]) => ({
-    content: (
-      <LabResultCategoryAccordion
-        sections={groupRowsByCategory(sampleRows).map(([category, categoryRows]) => ({
-          content: <ResultTable rows={categoryRows} />,
-          count: categoryRows.length,
-          id: `${sample}-${category}`,
-          label: categoryLabel(category),
-        }))}
-      />
-    ),
-    count: sampleRows.length,
-    id: sample,
-    label: sample,
-  })), [rows]);
+  const sampleGroups = useMemo(() => groupRowsBySample(rows), [rows]);
 
   if (error) return <MessageBanner tone="danger">{error}</MessageBanner>;
   if (!data) return <div style={labStyles.muted}>Loading lab results...</div>;
@@ -79,7 +63,7 @@ export function ReadOnlyLabResultsPanel({ onOpenLabRun, runId, title }: ReadOnly
         )}
       </div>
 
-      {rows.length === 0 ? <EmptyState>No lab results.</EmptyState> : <LabResultSampleAccordion sections={sampleSections} />}
+      {rows.length === 0 ? <EmptyState>No lab results.</EmptyState> : <div style={styles.resultGroups}>{sampleGroups.map(([sample, sampleRows]) => <section key={sample}><h4 style={styles.sampleTitle}>{sample}</h4>{groupRowsByCategory(sampleRows).map(([category, categoryRows]) => <div key={category} style={styles.category}><h5 style={styles.categoryTitle}>{categoryLabel(category)}</h5><ResultTable rows={categoryRows} /></div>)}</section>)}</div>}
 
       {data.observations.length > 0 && (
         <div style={styles.observations}>
@@ -182,10 +166,14 @@ function sampleName(samples: SampleRecord[], sampleId: string): string {
 }
 
 const styles: Record<string, CSSProperties> = {
+  category: { display: 'grid', gap: spacing.space2 },
+  categoryTitle: { margin: 0 },
   header: { alignItems: 'flex-start', display: 'flex', flexWrap: 'wrap', gap: spacing.space3, justifyContent: 'space-between' },
   observation: { color: colors.text.secondary, fontSize: font.size.small },
   observations: { display: 'grid', gap: spacing.space2 },
   panel: { border: `1px solid ${colors.border}`, borderRadius: radius.md, display: 'grid', gap: spacing.space4, padding: spacing.space4 },
+  resultGroups: { display: 'grid', gap: spacing.space5 },
+  sampleTitle: { color: colors.text.primary, margin: 0 },
   summary: { color: colors.text.muted, display: 'flex', flexWrap: 'wrap', fontSize: font.size.small, gap: spacing.space4 },
   title: { color: colors.text.primary, fontSize: font.size.h3, margin: 0 },
 };
