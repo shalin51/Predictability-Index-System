@@ -9,6 +9,14 @@ type Row = Record<string, unknown>;
 const value = (row: Row, key: string) => row[key] === '' ? null : row[key] ?? null;
 
 export class DataTransferRepository {
+  async saveToHistoric(resourceType: string, recordId: string, action: 'overwrite' | 'delete', data: Record<string, unknown>, actor: string): Promise<void> {
+    const pool = getPool();
+    await pool.query(
+      `INSERT INTO historic_data (resource_type, record_id, action, data_json, actor) VALUES ($1, $2, $3, $4::jsonb, $5)`,
+      [resourceType, recordId, action, JSON.stringify(data), actor]
+    );
+  }
+
   async exportRows(resource: string): Promise<TransferRows> {
     switch (resource) {
       case 'material-properties': return { Properties: await this.rows(`

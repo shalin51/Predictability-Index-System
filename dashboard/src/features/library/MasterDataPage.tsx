@@ -4,14 +4,13 @@ import { LibraryRecordDetailPage } from './LibraryRecordDetailPage';
 interface MasterDataPageProps {
   activeSection: string;
   editRecordId?: string;
-  onImport?: () => void;
   onOpenRecord: (id: string) => void;
   onSectionChange: (section: string) => void;
   recordId?: string;
   sections: readonly string[];
 }
 
-export function MasterDataPage({ activeSection, editRecordId, onImport, onOpenRecord, onSectionChange, recordId, sections }: MasterDataPageProps) {
+export function MasterDataPage({ activeSection, editRecordId, onOpenRecord, onSectionChange, recordId, sections }: MasterDataPageProps) {
   if (recordId) {
     return (
       <LibraryRecordDetailPage
@@ -28,7 +27,6 @@ export function MasterDataPage({ activeSection, editRecordId, onImport, onOpenRe
   return (
     <LibraryPage
       activeSection={activeSection}
-      onImport={onImport}
       onOpenRecord={onOpenRecord}
       onSectionChange={onSectionChange}
       sectionOptions={sections}

@@ -20,7 +20,6 @@ import {
 import { colors, font, radius, spacing } from '../../theme/tokens';
 import { coerceLibraryPayload, LibraryRecordForm, libraryOptionResources } from './LibraryRecordForm';
 import { labelize, LibrarySectionNav } from './LibrarySectionNav';
-import { DataTransferActions } from '../../components/data-transfer/DataTransferActions';
 
 const sections = [
   'materials',
@@ -29,7 +28,6 @@ const sections = [
   'machines',
   'machine-parameters',
   'molds',
-  'mold-zones',
   'metrics',
   'test-methods',
   'test-conditions',
@@ -47,7 +45,6 @@ const columns: Record<string, string[]> = {
   'material-suppliers': ['supplierName', 'supplierRole', 'contactName', 'contactEmail', 'contactPhone', 'status'],
   metrics: ['displayName', 'metricKey', 'category', 'defaultUnit', 'dataType', 'benchmarkComparable', 'requiredForScoring', 'status'],
   molds: ['moldName', 'moldType', 'manufacturer', 'cavityCount', 'zoneCount', 'status'],
-  'mold-zones': ['zoneNumber', 'zoneName', 'zoneType', 'minimumTemperature', 'maximumTemperature', 'temperatureUnit', 'status'],
   'scoring-rules': ['metricKey', 'comparisonMode', 'targetMean', 'minAcceptable', 'maxAcceptable', 'targetStdDev', 'weight', 'criticality'],
   suppliers: ['supplierName', 'supplierType', 'contactName', 'contactEmail', 'contactPhone', 'status'],
   'test-conditions': ['conditionCode', 'conditionName', 'description', 'status'],
@@ -58,14 +55,12 @@ const columns: Record<string, string[]> = {
 export function LibraryPage({
   activeSection,
   onSectionChange,
-  onImport,
   onOpenRecord,
   sectionOptions,
   standalone = false,
 }: {
   activeSection: string;
   onSectionChange: (section: string) => void;
-  onImport?: () => void;
   onOpenRecord: (id: string) => void;
   sectionOptions?: readonly string[];
   standalone?: boolean;
@@ -156,7 +151,6 @@ export function LibraryPage({
               <CardSubtitle>{standalone ? `Manage ${labelize(section).toLowerCase()} master data used by formulations and production.` : 'Controlled reference records for dropdowns, benchmarks, and scoring.'}</CardSubtitle>
             </div>
             <div style={styles.headerActions}>
-              {section !== 'process-setups' && <DataTransferActions onImported={load} resource={section} />}
               {section === 'scoring-rules' && (
                 <Button
                   disabled={!selected}
@@ -168,7 +162,6 @@ export function LibraryPage({
                 </Button>
               )}
               {section !== 'process-setups' && !readOnly && <Button onClick={() => startEdit()} type="button" variant="primary">New</Button>}
-              {section === 'materials' && onImport && <Button onClick={onImport} type="button" variant="subtle">Advanced Catalog Import</Button>}
             </div>
           </CardHeader>
           <Divider />

@@ -8,12 +8,14 @@ export function SubjectiveRatingForm({
   onFeedbackSave,
   onRatingSave,
   ratings,
+  hideSampleColumn = false,
   samples,
 }: {
   metrics: LabMetric[];
   onFeedbackSave: (sample: SampleRecord, feedbackText: string) => void;
   onRatingSave: (sample: SampleRecord, metric: LabMetric, value: number) => void;
   ratings: LabResultRecord[];
+  hideSampleColumn?: boolean;
   samples: SampleRecord[];
 }) {
   const subjective = metrics
@@ -26,7 +28,7 @@ export function SubjectiveRatingForm({
       <table style={labStyles.table}>
         <thead>
           <tr>
-            <th style={labStyles.th}>Sample</th>
+            {!hideSampleColumn && <th style={labStyles.th}>Sample</th>}
             {subjective.map((metric) => <th key={metric.id} style={labStyles.th}>{metric.displayName}</th>)}
             <th style={labStyles.th}>Player Feedback</th>
           </tr>
@@ -34,7 +36,7 @@ export function SubjectiveRatingForm({
         <tbody>
           {samples.map((sample) => (
             <tr key={sample.id}>
-              <td style={labStyles.td}>{sample.sampleCode}</td>
+              {!hideSampleColumn && <td style={labStyles.td}>{sample.sampleCode}</td>}
               {subjective.map((metric) => {
                 const result = ratings.find((item) => item.sampleId === sample.id && item.metricId === metric.id);
                 return (

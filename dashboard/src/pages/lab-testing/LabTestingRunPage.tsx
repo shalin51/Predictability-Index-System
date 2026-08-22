@@ -15,6 +15,7 @@ import {
 } from '../../services/api';
 import { EnvironmentalResultGrid } from '../../features/lab-testing/components/EnvironmentalResultGrid';
 import { LabResultCategoryAccordion } from '../../features/lab-testing/components/LabResultCategoryAccordion';
+import { LabResultSampleAccordion } from '../../features/lab-testing/components/LabResultSampleAccordion';
 import { LabResultGrid } from '../../features/lab-testing/components/LabResultGrid';
 import { LabRunHeader } from '../../features/lab-testing/components/LabRunHeader';
 import { MissingRequiredMetricsPanel } from '../../features/lab-testing/components/MissingRequiredMetricsPanel';
@@ -87,12 +88,47 @@ export function LabTestingRunPage({
 
   const run = data.run;
   const disabledComplete = run.missingRequiredMetrics > 0;
-  const metricCount = (category: LabMetric['category']) => data.metrics.filter((metric) => metric.category === category).length;
-  const resultCount = (category: LabMetric['category']) => {
+  const resultCount = (category: LabMetric['category'], sampleId?: string) => {
     const metricIds = new Set(data.metrics.filter((metric) => metric.category === category).map((metric) => metric.id));
     return [...data.numericResults, ...data.environmentalResults, ...data.subjectiveRatings]
-      .filter((result) => result.metricId && metricIds.has(result.metricId)).length;
+      .filter((result) => result.metricId && metricIds.has(result.metricId) && (!sampleId || result.sampleId === sampleId)).length;
   };
+  const sampleSections = data.samples.map((sample) => ({
+    content: (
+      <LabResultCategoryAccordion
+        sections={[
+          { content: <LabResultGrid category="physical" hideSampleColumn metrics={data.metrics} onSave={saveNumeric} results={data.numericResults} samples={[sample]} />, count: resultCount('physical', sample.id), id: `${sample.id}-physical`, label: 'Physical' },
+          { content: <LabResultGrid category="performance" hideSampleColumn metrics={data.metrics} onSave={saveNumeric} results={data.numericResults} samples={[sample]} />, count: resultCount('performance', sample.id), id: `${sample.id}-performance`, label: 'Performance' },
+          {
+            content: (
+              <div style={labStyles.stack}>
+                <LabResultGrid category="durability" hideSampleColumn metrics={data.metrics} onSave={saveNumeric} results={data.numericResults} samples={[sample]} />
+                <ObservationPanel
+                  observations={data.observations.filter((item) => item.sampleId === sample.id && item['observationType'] === 'crack_propagation')}
+                  onSave={(sampleId, observationType, observationText) => void saveObservation({ observationText, observationType, sampleId }).then(load).catch((err: Error) => setError(err.message))}
+                  sample={sample}
+                  samples={[sample]}
+                />
+              </div>
+            ),
+            count: resultCount('durability', sample.id), id: `${sample.id}-durability`, label: 'Durability',
+          },
+          { content: <EnvironmentalResultGrid hideSampleColumn metrics={data.metrics} onSave={saveEnvironmental} results={data.environmentalResults} samples={[sample]} testConditions={data.testConditions} />, count: resultCount('environmental', sample.id), id: `${sample.id}-environmental`, label: 'Environmental' },
+          {
+            content: <SubjectiveRatingForm hideSampleColumn metrics={data.metrics} onFeedbackSave={(item, feedbackText) => void saveSubjectiveRating({ feedbackText, sampleId: item.id }).then(load).catch((err: Error) => setError(err.message))} onRatingSave={(item, metric, value) => void saveSubjectiveRating({ metricId: metric.id, ratingValue: value, sampleId: item.id }).then(load).catch((err: Error) => setError(err.message))} ratings={data.subjectiveRatings} samples={[sample]} />,
+            count: resultCount('subjective', sample.id), id: `${sample.id}-subjective`, label: 'Subjective',
+          },
+          {
+            content: <ObservationPanel observations={data.observations.filter((item) => item.sampleId === sample.id)} onSave={(sampleId, observationType, observationText) => void saveObservation({ observationText, observationType, sampleId }).then(load).catch((err: Error) => setError(err.message))} sample={sample} samples={[sample]} />,
+            count: data.observations.filter((item) => item.sampleId === sample.id).length, id: `${sample.id}-observations`, label: 'Observations',
+          },
+        ].sort((left, right) => right.count - left.count || left.label.localeCompare(right.label))}
+      />
+    ),
+    count: resultCount('physical', sample.id) + resultCount('performance', sample.id) + resultCount('durability', sample.id) + resultCount('environmental', sample.id) + resultCount('subjective', sample.id),
+    id: sample.id,
+    label: sample.sampleCode,
+  })).sort((left, right) => right.count - left.count || left.label.localeCompare(right.label));
 
   return (
     <DashboardPage maxWidth="100%">
@@ -116,83 +152,10 @@ export function LabTestingRunPage({
         {message && <MessageBanner tone="success">{message}</MessageBanner>}
         {data.samples.length === 0 && <EmptyState>No samples on this run.</EmptyState>}
         {data.samples.length > 0 && (
-          <LabResultCategoryAccordion
-            sections={[
-              {
-                content: <LabResultGrid category="physical" metrics={data.metrics} onSave={saveNumeric} results={data.numericResults} samples={data.samples} />,
-                count: resultCount('physical'),
-                id: 'physical',
-                label: `Physical (${metricCount('physical')} metrics)`,
-              },
-              {
-                content: <LabResultGrid category="performance" metrics={data.metrics} onSave={saveNumeric} results={data.numericResults} samples={data.samples} />,
-                count: resultCount('performance'),
-                id: 'performance',
-                label: `Performance (${metricCount('performance')} metrics)`,
-              },
-              {
-                content: (
-                  <div style={labStyles.stack}>
-                    <LabResultGrid category="durability" metrics={data.metrics} onSave={saveNumeric} results={data.numericResults} samples={data.samples} />
-                    <ObservationPanel
-                      observations={data.observations.filter((item) => item['observationType'] === 'crack_propagation')}
-                      onSave={(sampleId, observationType, observationText) => void saveObservation({ observationText, observationType, sampleId }).then(load).catch((err: Error) => setError(err.message))}
-                      samples={data.samples}
-                    />
-                  </div>
-                ),
-                count: resultCount('durability'),
-                id: 'durability',
-                label: `Durability (${metricCount('durability')} metrics)`,
-              },
-              {
-                content: (
-                  <EnvironmentalResultGrid
-                    metrics={data.metrics}
-                    onSave={saveEnvironmental}
-                    results={data.environmentalResults}
-                    samples={data.samples}
-                    testConditions={data.testConditions}
-                  />
-                ),
-                count: resultCount('environmental'),
-                id: 'environmental',
-                label: `Environmental (${metricCount('environmental')} metrics)`,
-              },
-              {
-                content: (
-                  <SubjectiveRatingForm
-                    metrics={data.metrics}
-                    onFeedbackSave={(sample, feedbackText) => void saveSubjectiveRating({ feedbackText, sampleId: sample.id }).then(load).catch((err: Error) => setError(err.message))}
-                    onRatingSave={(sample, metric, value) => void saveSubjectiveRating({ metricId: metric.id, ratingValue: value, sampleId: sample.id }).then(load).catch((err: Error) => setError(err.message))}
-                    ratings={data.subjectiveRatings}
-                    samples={data.samples}
-                  />
-                ),
-                count: resultCount('subjective'),
-                id: 'subjective',
-                label: `Subjective (${metricCount('subjective')} metrics)`,
-              },
-              {
-                content: (
-                  <ObservationPanel
-                    observations={data.observations}
-                    onSave={(sampleId, observationType, observationText) => void saveObservation({ observationText, observationType, sampleId }).then(load).catch((err: Error) => setError(err.message))}
-                    samples={data.samples}
-                  />
-                ),
-                count: data.observations.length,
-                id: 'observations',
-                label: 'Observations',
-              },
-              {
-                content: <MissingRequiredMetricsPanel metrics={data.metrics} results={data.numericResults} samples={data.samples} />,
-                count: run.missingRequiredMetrics,
-                id: 'review',
-                label: 'Review Missing Results',
-              },
-            ]}
-          />
+          <>
+            <LabResultSampleAccordion sections={sampleSections} />
+            <MissingRequiredMetricsPanel metrics={data.metrics} results={data.numericResults} samples={data.samples} />
+          </>
         )}
       </Card>
     </DashboardPage>

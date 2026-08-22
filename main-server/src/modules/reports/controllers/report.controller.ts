@@ -45,6 +45,10 @@ export class ReportController {
     this.sendExport(res, () => this.exportService.xlsx(req.params['reportId'] ?? ''));
   }
 
+  exportDatabaseXlsx(req: Request, res: Response): void {
+    this.sendExport(res, () => this.exportService.databaseXlsx(req.query['category'] as string | undefined));
+  }
+
   private sendExport(res: Response, action: () => Promise<{ body: Buffer | string; contentType: string; filename: string }>): void {
     void action()
       .then((file) => {

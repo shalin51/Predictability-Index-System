@@ -8,7 +8,22 @@ export type DashboardView =
   | 'production-runs'
   | 'lab-testing'
   | 'reports'
+  | 'imports'
+  | 'exports'
   | 'settings';
+
+export type ImportResource =
+  | 'materials'
+  | 'material-suppliers'
+  | 'material-properties'
+  | 'machines'
+  | 'machine-parameters'
+  | 'molds'
+  | 'mold-zones'
+  | 'benchmarks'
+  | 'scoring-rules'
+  | 'formulations'
+  | 'production-runs';
 
 export type LibrarySection =
   | 'materials'
@@ -18,12 +33,12 @@ export type LibrarySection =
   | 'scoring-rules'
   | 'machines'
   | 'machine-parameters'
-  | 'molds'
-  | 'mold-zones';
+  | 'molds';
 
 export interface DashboardRouteState {
   formulationId?: string;
   formulationMode?: 'list' | 'new' | 'detail';
+  importResource?: ImportResource;
   libraryRecordId?: string;
   libraryRecordMode?: 'view' | 'edit';
   librarySection?: LibrarySection;
@@ -47,7 +62,6 @@ const libraryViewBySection: Record<LibrarySection, DashboardView> = {
   'material-properties': 'materials',
   'material-suppliers': 'materials',
   molds: 'molds',
-  'mold-zones': 'molds',
 };
 
 const librarySections = new Set<LibrarySection>(Object.keys(libraryViewBySection) as LibrarySection[]);
@@ -145,6 +159,17 @@ function parseRouteSegments(segments: string[]): DashboardRouteState | null {
     return { reportMode: 'list', view: 'reports' };
   }
 
+  if (segments[0] === 'imports') {
+    if (segments[1]) {
+      return { importResource: segments[1] as ImportResource, view: 'imports' };
+    }
+    return { view: 'imports' };
+  }
+
+  if (segments[0] === 'exports') {
+    return { view: 'exports' };
+  }
+
   if (segments[0] === 'settings') {
     return { view: 'settings' };
   }
@@ -171,7 +196,7 @@ export function parseDashboardLocation(
   return { view: defaultView };
 }
 
-export function buildDashboardPath({ formulationId, formulationMode, labRunId, labTestingMode, libraryRecordId, librarySection, materialMode, productionRunId, productionRunMode, reportId, reportMode, reportRunId, view }: DashboardRouteState): string {
+export function buildDashboardPath({ formulationId, formulationMode, importResource, labRunId, labTestingMode, libraryRecordId, librarySection, materialMode, productionRunId, productionRunMode, reportId, reportMode, reportRunId, view }: DashboardRouteState): string {
   if (view === 'materials') {
     if (materialMode === 'import') return '/materials/import';
     const section = librarySection ?? 'materials';
@@ -189,8 +214,7 @@ export function buildDashboardPath({ formulationId, formulationMode, labRunId, l
   }
 
   if (view === 'molds') {
-    const section = librarySection === 'mold-zones' ? librarySection : 'molds';
-    return `/${section}${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
+    return `/molds${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
   }
 
   if (view === 'formulations') {
@@ -234,6 +258,15 @@ export function buildDashboardPath({ formulationId, formulationMode, labRunId, l
       return `/production-runs/${encodeURIComponent(reportRunId)}/report`;
     }
     return '/reports';
+  }
+
+  if (view === 'imports') {
+    if (importResource) return `/imports/${encodeURIComponent(importResource)}`;
+    return '/imports';
+  }
+
+  if (view === 'exports') {
+    return '/exports';
   }
 
   if (view === 'settings') {

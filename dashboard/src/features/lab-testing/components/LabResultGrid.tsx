@@ -7,12 +7,14 @@ export function LabResultGrid({
   metrics,
   onSave,
   results,
+  hideSampleColumn = false,
   samples,
 }: {
   category: LabMetricCategory;
   metrics: LabMetric[];
   onSave: (sample: SampleRecord, metric: LabMetric, value: number) => void;
   results: LabResultRecord[];
+  hideSampleColumn?: boolean;
   samples: SampleRecord[];
 }) {
   const ordered = metrics
@@ -25,7 +27,7 @@ export function LabResultGrid({
       <table style={labStyles.table}>
         <thead>
           <tr>
-            <th style={labStyles.th}>Sample</th>
+            {!hideSampleColumn && <th style={labStyles.th}>Sample</th>}
             {ordered.map((metric) => (
               <th key={metric.id} style={labStyles.th}>{metric.displayName}<br /><span style={labStyles.muted}>{metric.defaultUnit ?? ''}</span></th>
             ))}
@@ -34,7 +36,7 @@ export function LabResultGrid({
         <tbody>
           {samples.map((sample) => (
             <tr key={sample.id}>
-              <td style={labStyles.td}>{sample.sampleCode}</td>
+              {!hideSampleColumn && <td style={labStyles.td}>{sample.sampleCode}</td>}
               {ordered.map((metric) => {
                 const result = results.find((item) => item.sampleId === sample.id && item.metricId === metric.id);
                 return (

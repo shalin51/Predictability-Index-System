@@ -38,12 +38,12 @@ function slug(value) {
 function datedRunCode(sheetName, dateProduced) {
   const date = new Date(dateProduced).toISOString().slice(0, 10).replaceAll('-', '');
   const hash = crypto.createHash('sha256').update(normalizeKey(sheetName)).digest('hex').slice(0, 6).toUpperCase();
-  return `AMERILABS-${slug(sheetName).slice(0, 105)}-${hash}-${date}`;
+  return `${slug(sheetName).slice(0, 105)}-${hash}-${date}`;
 }
 
 function legacyMaterialCode(role, materialLabel) {
   const hash = crypto.createHash('sha256').update(`${role}:${normalizeKey(materialLabel)}`).digest('hex').slice(0, 8).toUpperCase();
-  return `AMERILABS-${slug(materialLabel).slice(0, 70)}-${hash}`;
+  return `${slug(materialLabel).slice(0, 70)}-${hash}`;
 }
 
 async function audit(client, tableName, recordId, action, oldValues, newValues) {
@@ -70,7 +70,7 @@ async function referenceRun(client, runCode) {
 async function ensureExperimentAndFamily(client) {
   const experiment = await client.query(
     `INSERT INTO experiments (experiment_code, experiment_name, status)
-     VALUES ('AMERILABS-PICKLEBALL', $1, 'active')
+     VALUES ('PICKLEBALL', $1, 'active')
      ON CONFLICT (experiment_name) DO UPDATE SET status = 'active', updated_at = now()
      RETURNING id`,
     [EXPERIMENT_NAME]
@@ -94,7 +94,7 @@ async function ensureLegacySupplier(client) {
   const inserted = await client.query(
     `INSERT INTO suppliers
       (name, supplier_name, supplier_code, supplier_type, supplier_role, notes, status)
-     VALUES ($1::text, $1::varchar, 'SUP-AMERILABS-UNSPEC', 'unspecified', 'Source workbook placeholder',
+     VALUES ($1::text, $1::varchar, 'SUP-UNSPEC', 'unspecified', 'Source workbook placeholder',
              'Supplier was not identified in the Amerilabs workbook.', 'active')
      RETURNING id`,
     [LEGACY_SUPPLIER]
@@ -233,7 +233,7 @@ async function cloneProcessSetup(client, sourceRun, formulationId, counters) {
   const source = await client.query('SELECT * FROM process_setup_revisions WHERE id = $1', [sourceRun.process_setup_revision_id]);
   if (source.rowCount !== 1) throw new Error(`Reference process setup revision not found: ${sourceRun.process_setup_revision_id}`);
   const sourceRevision = source.rows[0];
-  const revisionNo = `AMERILABS-${new Date(sourceRun.date_produced).toISOString().slice(0, 10).replaceAll('-', '')}`;
+  const revisionNo = new Date(sourceRun.date_produced).toISOString().slice(0, 10).replaceAll('-', '');
   const existing = await client.query(
     `SELECT id FROM process_setup_revisions
      WHERE machine_id = $1 AND mold_id = $2 AND formulation_id = $3 AND revision_no = $4`,

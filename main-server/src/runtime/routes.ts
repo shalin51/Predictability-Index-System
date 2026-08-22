@@ -94,6 +94,7 @@ export const routes: RouteDefinition[] = [
   { method: 'GET', path: '/reports/runs/:runId', handler: (req, res) => controllers.reports.latestForRun(req, res) },
   { method: 'POST', path: '/reports/runs/:runId/generate', handler: (req, res) => controllers.reports.generate(req, res) },
   { method: 'POST', path: '/reports/runs/:runId/regenerate', handler: (req, res) => controllers.reports.regenerate(req, res) },
+  { method: 'GET', path: '/reports/export/database/xlsx', handler: (req, res) => controllers.reports.exportDatabaseXlsx(req, res) },
   { method: 'GET', path: '/reports/:reportId/export/pdf', handler: (req, res) => controllers.reports.exportPdf(req, res) },
   { method: 'GET', path: '/reports/:reportId/export/xlsx', handler: (req, res) => controllers.reports.exportXlsx(req, res) },
   { method: 'GET', path: '/reports/:reportId/export/csv', handler: (req, res) => controllers.reports.exportCsv(req, res) },

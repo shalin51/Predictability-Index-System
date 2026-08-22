@@ -27,10 +27,10 @@ describe('ReportExportService', () => {
     const file = await service.xlsx(id);
     const workbook = XLSX.read(file.body as Buffer, { type: 'buffer' });
 
-    expect(file.filename).toBe('RUN-001_Score_Report.xlsx');
-    expect(workbook.SheetNames).toEqual([
-      'Executive Scorecard', 'Benchmark Comparison', 'Metric Risk Register', 'Lab Results', 'Process Setup', 'Formulation Recipe',
-    ]);
+    expect(file.filename).toMatch(/^RUN-001_Score_Report-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}\.xlsx$/);
+    expect(workbook.SheetNames).toContain('Database Relations');
+    expect(workbook.SheetNames).toContain('Materials');
+    expect(workbook.SheetNames).toContain('Material Properties');
     expect(XLSX.utils.sheet_to_json(workbook.Sheets['Benchmark Comparison']!, { header: 1 })).toContainEqual([
       'Benchmark A', 91, 88, 93, 'green',
     ]);

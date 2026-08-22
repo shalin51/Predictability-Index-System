@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { resolveErrorStatus } from '../../core/http';
+import type { DuplicateResolution } from './dataTransfer.types';
 import type { DataTransferService } from './dataTransfer.service';
 
 export class DataTransferController {
@@ -13,10 +14,27 @@ export class DataTransferController {
     this.sendWorkbook(req, res, 'template');
   }
 
-  import(req: Request, res: Response): void {
-    void this.service.import(req.params['resource'] ?? '', req.body as Buffer, this.actor(req))
+  validate(req: Request, res: Response): void {
+    void this.service.validate(req.params['resource'] ?? '', req.body as Buffer)
       .then((result) => res.status(200).json(result))
       .catch((error: Error) => res.status(this.status(error)).json({ error: error.message }));
+  }
+
+  import(req: Request, res: Response): void {
+    const resolutions = this.parseResolutions(req);
+    void this.service.import(req.params['resource'] ?? '', req.body as Buffer, this.actor(req), resolutions)
+      .then((result) => res.status(200).json(result))
+      .catch((error: Error) => res.status(this.status(error)).json({ error: error.message }));
+  }
+
+  private parseResolutions(req: Request): DuplicateResolution[] {
+    try {
+      const raw = req.headers['x-import-resolutions'];
+      if (!raw || typeof raw !== 'string') return [];
+      return JSON.parse(raw) as DuplicateResolution[];
+    } catch {
+      return [];
+    }
   }
 
   private sendWorkbook(req: Request, res: Response, mode: 'export' | 'template'): void {

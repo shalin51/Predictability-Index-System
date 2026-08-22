@@ -5,15 +5,17 @@ import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Pa
 import { SortButton, TablePagination, useTableState } from '../../components/ui/useTableState';
 import {
   listReports,
+  downloadDatabaseWorkbook,
   type GeneratedReportRecord,
 } from '../../services/api';
 import { formatReportValue, formatScore, reportStyles, TrafficBadge } from '../../features/reports/components/reportFormat';
 
-export function ReportListPage({ onOpen }: { onOpen: (id: string) => void }) {
+export function ReportListPage({ onOpen, onOpenProductionRuns }: { onOpen: (id: string) => void; onOpenProductionRuns: () => void }) {
   const [records, setRecords] = useState<GeneratedReportRecord[]>([]);
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const table = useTableState(records, (record, key) => record[key as keyof GeneratedReportRecord], { key: 'generatedAt', direction: 'desc' });
 
   const load = () => {
@@ -23,6 +25,14 @@ export function ReportListPage({ onOpen }: { onOpen: (id: string) => void }) {
   };
 
   useEffect(load, [search]);
+
+  const exportDatabase = async (category: string) => {
+    setExporting(true);
+    setError('');
+    try { await downloadDatabaseWorkbook(category); }
+    catch (err) { setError(err instanceof Error ? err.message : 'Database export failed'); }
+    finally { setExporting(false); }
+  };
 
   return (
     <DashboardPage maxWidth="100%">
@@ -34,6 +44,8 @@ export function ReportListPage({ onOpen }: { onOpen: (id: string) => void }) {
           </div>
         </div>
         <Divider />
+        <DatabaseDownloads disabled={exporting} exporting={exporting} onDownload={exportDatabase} />
+        <Divider />
         <input
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search reports"
@@ -42,7 +54,12 @@ export function ReportListPage({ onOpen }: { onOpen: (id: string) => void }) {
         />
         {error && <MessageBanner tone="danger">{error}</MessageBanner>}
         {loading && <div style={reportStyles.muted}>Loading...</div>}
-        {!loading && records.length === 0 && <EmptyState>No generated reports.</EmptyState>}
+        {!loading && records.length === 0 && (
+          <div style={reportStyles.stack}>
+            <EmptyState>No generated reports.</EmptyState>
+            <button onClick={onOpenProductionRuns} style={controlStyles.primaryButton} type="button">Open Production Runs</button>
+          </div>
+        )}
         {records.length > 0 && (
           <div style={reportStyles.tableWrap}>
             <table style={reportStyles.table}>
@@ -74,5 +91,32 @@ export function ReportListPage({ onOpen }: { onOpen: (id: string) => void }) {
         )}
       </Card>
     </DashboardPage>
+  );
+}
+
+const databaseDownloads = [
+  { title: 'Download Materials Database', items: [['Material Properties', 'material-properties'], ['Material Suppliers', 'material-suppliers'], ['Material Details', 'material-details'], ['Material Name & All Properties', 'materials-with-properties']] },
+  { title: 'Download Machine Database', items: [['Machine Specifications', 'machine-specifications'], ['Mold Template', 'mold-template'], ['Machine Template', 'machine-template'], ['Machines', 'machines']] },
+  { title: 'Download Formulation Database', items: [['Formulation Details', 'formulation-details'], ['Formulation Materials', 'formulation-materials'], ['Formulation Benchmarks', 'formulation-benchmarks'], ['Formulation Template', 'formulation-templates']] },
+  { title: 'Download Product Run Database', items: [['Product Run Details', 'product-run-details'], ['Process Values', 'product-run-process-values'], ['Material Lots', 'product-run-material-lots'], ['Run Notes', 'product-run-notes']] },
+  { title: 'Download Testing Database', items: [['Testing Specifications', 'testing-specifications'], ['Test Methods', 'testing-methods'], ['Test Conditions', 'testing-conditions'], ['Testing Results', 'testing-results']] },
+] as const;
+
+function DatabaseDownloads({ disabled, exporting, onDownload }: { disabled: boolean; exporting: boolean; onDownload: (category: string) => Promise<void> }) {
+  return (
+    <div style={{ display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(235px, 1fr))', margin: '16px 0' }}>
+      {databaseDownloads.map((group) => (
+        <div key={group.title} style={{ border: '1px solid #d8dee9', borderRadius: 8, padding: 14 }}>
+          <strong>{group.title}</strong>
+          <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
+            {group.items.map(([label, category]) => (
+              <button disabled={disabled} key={category} onClick={() => void onDownload(category)} style={controlStyles.secondaryButton} type="button">
+                {exporting ? 'Exporting...' : label}
+              </button>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 }

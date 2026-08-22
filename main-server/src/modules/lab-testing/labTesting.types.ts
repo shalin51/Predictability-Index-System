@@ -6,7 +6,7 @@ export interface LabTestingQueueQuery {
   missingResults?: string;
   moldId?: string;
   search?: string;
-  status?: 'ready_for_testing' | 'testing' | 'all';
+  status?: 'ready_for_testing' | 'testing' | 'completed' | 'scored' | 'all';
   targetBenchmarkId?: string;
 }
 

@@ -317,7 +317,7 @@ export interface LabTestingQueueRecord {
   requiredResultCount: number;
   runCode: string;
   sampleCount: number;
-  status: 'ready_for_testing' | 'testing';
+  status: 'ready_for_testing' | 'testing' | 'completed' | 'scored';
   targetBenchmark: string | null;
   targetBenchmarkId?: string | null;
 }
@@ -668,7 +668,7 @@ export async function downloadDataTransferWorkbook(resource: string, mode: 'expo
     throw new Error(body['error'] ?? `HTTP ${response.status}`);
   }
   const disposition = response.headers.get('content-disposition') ?? '';
-  const filename = disposition.match(/filename="?([^";]+)"?/i)?.[1] ?? `${resource}-${mode}.xlsx`;
+  const filename = downloadFilename(disposition, `${resource}-${mode}`, 'xlsx');
   const url = URL.createObjectURL(await response.blob());
   const anchor = document.createElement('a');
   anchor.href = url;
@@ -679,8 +679,41 @@ export async function downloadDataTransferWorkbook(resource: string, mode: 'expo
   URL.revokeObjectURL(url);
 }
 
-export async function importDataTransferWorkbook(resource: string, file: File): Promise<DataTransferImportResult> {
+export async function importDataTransferWorkbook(resource: string, file: File, resolutions: DuplicateResolution[] = []): Promise<DataTransferImportResult> {
   return fetchJSON<DataTransferImportResult>(`/data-transfer/${encodeURIComponent(resource)}/import`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'x-file-name': encodeURIComponent(file.name),
+      'x-import-resolutions': JSON.stringify(resolutions),
+    },
+    body: file,
+  });
+}
+
+export interface DataTransferValidationRowResult {
+  rowIndex: number;
+  data: Record<string, unknown>;
+  errors: string[];
+  action: 'create' | 'update' | 'error';
+  existingRecord?: Record<string, unknown>;
+}
+
+export interface DuplicateResolution {
+  rowIndex: number;
+  action: 'overwrite' | 'create-new';
+}
+
+export interface DataTransferValidationResponse {
+  canImport: boolean;
+  resource: string;
+  rows: DataTransferValidationRowResult[];
+  summary: { create: number; update: number; error: number };
+  totalErrors: number;
+}
+
+export async function validateDataTransferWorkbook(resource: string, file: File): Promise<DataTransferValidationResponse> {
+  return fetchJSON<DataTransferValidationResponse>(`/data-transfer/${encodeURIComponent(resource)}/validate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -1053,6 +1086,41 @@ export async function regenerateRunReport(runId: string): Promise<GeneratedRepor
 
 export function reportExportUrl(reportId: string, format: 'csv' | 'pdf' | 'xlsx'): string {
   return `${env.apiBaseUrl}/reports/${encodeURIComponent(reportId)}/export/${format}`;
+}
+
+export function databaseExportUrl(): string {
+  return `${env.apiBaseUrl}/reports/export/database/xlsx`;
+}
+
+export async function downloadDatabaseWorkbook(category?: string): Promise<void> {
+  const headers = new Headers();
+  const accessToken = getAccessToken();
+  if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
+  const query = category ? `?category=${encodeURIComponent(category)}` : '';
+  const response = await fetch(`${env.apiBaseUrl}/reports/export/database/xlsx${query}`, { headers });
+  if (response.status === 401) clearAuthSession();
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({ error: response.statusText }))) as Record<string, string>;
+    throw new Error(body['error'] ?? `HTTP ${response.status}`);
+  }
+  const disposition = response.headers.get('content-disposition') ?? '';
+  const filename = downloadFilename(disposition, 'predictability-index-database', 'xlsx');
+  const url = URL.createObjectURL(await response.blob());
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
+function downloadFilename(contentDisposition: string, name: string, extension: string): string {
+  const serverFilename = contentDisposition.match(/filename="?([^";]+)"?/i)?.[1];
+  if (serverFilename) return serverFilename;
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  return `${name}-${timestamp}.${extension}`;
 }
 
 export async function getDashboardOverview(): Promise<DashboardOverview> {

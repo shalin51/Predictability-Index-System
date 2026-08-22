@@ -40,11 +40,12 @@ function registerCommonMiddleware(app: Express): void {
     cors({
       origin: config.corsOrigin,
       credentials: true,
+      exposedHeaders: ['Content-Disposition'],
     })
   );
   app.use(['/setup-sheet-imports/preview', '/production-run-imports/preview', '/material-imports/preview', '/data-transfer'], (req, res, next) => {
     const contentType = req.headers['content-type']?.toLowerCase() ?? '';
-    const requiresWorkbook = req.method === 'POST' && (!req.originalUrl.startsWith('/data-transfer') || req.path.endsWith('/import'));
+    const requiresWorkbook = req.method === 'POST' && (!req.originalUrl.startsWith('/data-transfer') || req.path.endsWith('/import') || req.path.endsWith('/validate'));
     if (requiresWorkbook && !contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') && !contentType.includes('application/octet-stream')) {
       res.status(415).json({ error: 'Unsupported workbook content type', code: 'UNSUPPORTED_MEDIA_TYPE' });
       return;

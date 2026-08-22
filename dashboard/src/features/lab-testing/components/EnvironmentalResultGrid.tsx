@@ -6,12 +6,14 @@ export function EnvironmentalResultGrid({
   metrics,
   onSave,
   results,
+  hideSampleColumn = false,
   samples,
   testConditions,
 }: {
   metrics: LabMetric[];
   onSave: (sample: SampleRecord, metric: LabMetric, value: number, testConditionId?: string | null) => void;
   results: LabResultRecord[];
+  hideSampleColumn?: boolean;
   samples: SampleRecord[];
   testConditions: TestConditionRecord[];
 }) {
@@ -25,7 +27,7 @@ export function EnvironmentalResultGrid({
       <table style={labStyles.table}>
         <thead>
           <tr>
-            <th style={labStyles.th}>Sample</th>
+            {!hideSampleColumn && <th style={labStyles.th}>Sample</th>}
             {environmental.map((metric) => (
               <th key={metric.id} style={labStyles.th}>{metric.displayName}<br /><span style={labStyles.muted}>{metric.defaultUnit ?? ''}</span></th>
             ))}
@@ -34,7 +36,7 @@ export function EnvironmentalResultGrid({
         <tbody>
           {samples.map((sample) => (
             <tr key={sample.id}>
-              <td style={labStyles.td}>{sample.sampleCode}</td>
+              {!hideSampleColumn && <td style={labStyles.td}>{sample.sampleCode}</td>}
               {environmental.map((metric) => {
                 const condition = conditionForMetric(metric.metricKey, testConditions);
                 const result = results.find((item) => item.sampleId === sample.id && item.metricId === metric.id && item['testConditionId'] === condition?.id);

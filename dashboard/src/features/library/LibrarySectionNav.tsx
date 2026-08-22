@@ -34,7 +34,6 @@ export function labelize(value: string) {
     'machine-parameters': 'Parameters',
     'material-properties': 'Properties',
     'material-suppliers': 'Suppliers',
-    'mold-zones': 'Zones',
     'scoring-rules': 'Properties',
   };
   if (labels[value]) return labels[value];

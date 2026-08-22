@@ -7,7 +7,7 @@ export function ReportExportActions({ reportId, runId, onRegenerate }: { reportI
     <div style={reportStyles.header}>
       <div style={{ ...reportStyles.header, justifyContent: 'flex-start' }}>
         {reportId && <a href={reportExportUrl(reportId, 'pdf')} style={controlStyles.secondaryButton}>Download PDF</a>}
-        {reportId && <a href={reportExportUrl(reportId, 'xlsx')} style={controlStyles.secondaryButton}>Download Excel</a>}
+        {reportId && <a href={reportExportUrl(reportId, 'xlsx')} style={controlStyles.secondaryButton}>Download Database Excel</a>}
         {runId && onRegenerate && <button onClick={() => onRegenerate(runId)} style={controlStyles.secondaryButton} type="button">Regenerate</button>}
       </div>
     </div>

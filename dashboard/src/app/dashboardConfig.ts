@@ -33,7 +33,7 @@ export const NAV: ReadonlyArray<ShellNavItem<DashboardView>> = [
   {
     id: 'molds',
     label: 'Molds',
-    description: 'Mold configuration and hot-runner zones.',
+    description: 'Mold configuration.',
     group: 'Operations',
     icon: 'grid',
   },
@@ -66,6 +66,20 @@ export const NAV: ReadonlyArray<ShellNavItem<DashboardView>> = [
     icon: 'layers',
   },
   {
+    id: 'imports',
+    label: 'Imports',
+    description: 'Import data from Excel templates.',
+    group: 'System',
+    icon: 'upload',
+  },
+  {
+    id: 'exports',
+    label: 'Exports',
+    description: 'Export data to Excel for review or backup.',
+    group: 'System',
+    icon: 'layers',
+  },
+  {
     id: 'settings',
     label: 'Settings',
     description: 'Theme, alerts, and startup preferences.',
@@ -93,7 +107,7 @@ export const VIEW_META: Record<DashboardView, { title: string; subtitle: string 
   },
   molds: {
     title: 'Molds',
-    subtitle: 'Mold identity, cavities, and hot-runner zone configuration.',
+    subtitle: 'Mold identity and cavity configuration.',
   },
   formulations: {
     title: 'Formulations',
@@ -110,6 +124,14 @@ export const VIEW_META: Record<DashboardView, { title: string; subtitle: string 
   reports: {
     title: 'Reports',
     subtitle: 'Reporting workspace.',
+  },
+  imports: {
+    title: 'Imports',
+    subtitle: 'Import master data and run data from Excel templates.',
+  },
+  exports: {
+    title: 'Exports',
+    subtitle: 'Export current data to Excel with import-compatible formatting.',
   },
   settings: {
     title: 'Shell settings',

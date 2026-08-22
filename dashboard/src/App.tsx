@@ -49,6 +49,7 @@ function AuthenticatedApp({ onLogout, session }: AuthenticatedAppProps) {
   const {
     formulationId,
     formulationMode,
+    importResource,
     labRunId,
     labTestingMode,
     libraryRecordId,
@@ -111,6 +112,7 @@ function AuthenticatedApp({ onLogout, session }: AuthenticatedAppProps) {
           navigate={navigate}
           formulationId={formulationId}
           formulationMode={formulationMode}
+          importResource={importResource}
           labRunId={labRunId}
           labTestingMode={labTestingMode}
           libraryRecordId={libraryRecordId}

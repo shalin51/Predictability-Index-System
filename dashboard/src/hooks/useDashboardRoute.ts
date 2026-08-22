@@ -32,6 +32,7 @@ export function useDashboardRoute(defaultView: DashboardView) {
   const [reportId, setReportId] = useState<string | undefined>(() => initialRouteRef.current.reportId);
   const [reportRunId, setReportRunId] = useState<string | undefined>(() => initialRouteRef.current.reportRunId);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [importResource, setImportResource] = useState<DashboardRouteState['importResource']>(() => initialRouteRef.current.importResource);
   const currentPathRef = useRef(buildDashboardPath(initialRouteRef.current));
   const hasUnsavedChangesRef = useRef(false);
 
@@ -68,6 +69,7 @@ export function useDashboardRoute(defaultView: DashboardView) {
     setReportMode(route.reportMode ?? 'list');
     setReportId(route.reportId);
     setReportRunId(route.reportRunId);
+    setImportResource(route.importResource);
 
     const nextPath = buildDashboardPath(route);
     currentPathRef.current = nextPath;
@@ -134,6 +136,7 @@ export function useDashboardRoute(defaultView: DashboardView) {
       setReportMode(nextRoute.reportMode ?? 'list');
       setReportId(nextRoute.reportId);
       setReportRunId(nextRoute.reportRunId);
+      setImportResource(nextRoute.importResource);
       currentPathRef.current = buildDashboardPath(nextRoute);
 
       if (window.location.pathname !== currentPathRef.current || window.location.hash) {
@@ -167,6 +170,7 @@ export function useDashboardRoute(defaultView: DashboardView) {
     hasUnsavedChanges,
     formulationId,
     formulationMode,
+    importResource,
     labRunId,
     labTestingMode,
     libraryRecordId,

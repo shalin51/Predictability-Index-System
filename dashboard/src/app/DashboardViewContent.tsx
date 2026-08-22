@@ -3,7 +3,9 @@ import { CreateFormulationWizard } from '../features/formulations/CreateFormulat
 import { FormulationDetailPage } from '../features/formulations/FormulationDetailPage';
 import { FormulationListPage } from '../features/formulations/FormulationListPage';
 import { MasterDataPage } from '../features/library/MasterDataPage';
-import { MaterialImportPage } from '../features/materials/MaterialImportPage';
+import { ImportsPage } from '../features/imports/ImportsPage';
+import { ImportSubPage } from '../features/imports/ImportSubPage';
+import { ExportsPage } from '../features/imports/ExportsPage';
 import { CreateProductionRunWizard } from '../features/production-runs/CreateProductionRunWizard';
 import { ProductionRunDetailPage } from '../features/production-runs/ProductionRunDetailPage';
 import { ProductionRunListPage } from '../features/production-runs/ProductionRunListPage';
@@ -26,6 +28,7 @@ interface DashboardViewContentProps {
   view: DashboardView;
   formulationId?: string;
   formulationMode?: DashboardRouteState['formulationMode'];
+  importResource?: DashboardRouteState['importResource'];
   labRunId?: string;
   labTestingMode?: DashboardRouteState['labTestingMode'];
   libraryRecordId?: string;
@@ -48,12 +51,12 @@ export function DashboardViewContent({
   view,
   formulationId,
   formulationMode,
+  importResource,
   labRunId,
   labTestingMode,
   libraryRecordId,
   libraryRecordMode,
   librarySection,
-  materialMode,
   productionRunId,
   productionRunMode,
   reportId,
@@ -61,6 +64,26 @@ export function DashboardViewContent({
   reportRunId,
   navigate,
 }: DashboardViewContentProps) {
+  if (view === 'exports') {
+    return <ExportsPage />;
+  }
+
+  if (view === 'imports') {
+    if (importResource) {
+      return (
+        <ImportSubPage
+          resource={importResource}
+          onBack={() => navigate({ view: 'imports' })}
+        />
+      );
+    }
+    return (
+      <ImportsPage
+        onSelectResource={(resource) => navigate({ importResource: resource, view: 'imports' })}
+      />
+    );
+  }
+
   if (view === 'dashboard') {
     return (
       <DashboardLandingPage
@@ -73,15 +96,11 @@ export function DashboardViewContent({
   }
 
   if (view === 'materials') {
-    if (materialMode === 'import') {
-      return <MaterialImportPage onCancel={() => navigate({ materialMode: 'list', view: 'materials' })} onCommitted={() => navigate({ materialMode: 'list', view: 'materials' })} />;
-    }
     const section = librarySection ?? 'materials';
     return (
       <MasterDataPage
         activeSection={section}
         editRecordId={libraryRecordMode === 'edit' ? libraryRecordId : undefined}
-        onImport={() => navigate({ librarySection: 'materials', materialMode: 'import', view: 'materials' })}
         onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'materials' })}
         onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'materials' })}
         recordId={libraryRecordId}
@@ -119,15 +138,14 @@ export function DashboardViewContent({
   }
 
   if (view === 'molds') {
-    const section = librarySection === 'mold-zones' ? librarySection : 'molds';
     return (
       <MasterDataPage
-        activeSection={section}
+        activeSection="molds"
         editRecordId={libraryRecordMode === 'edit' ? libraryRecordId : undefined}
-        onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'molds' })}
-        onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'molds' })}
+        onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: 'molds', view: 'molds' })}
+        onSectionChange={() => undefined}
         recordId={libraryRecordId}
-        sections={['molds', 'mold-zones']}
+        sections={['molds']}
       />
     );
   }
@@ -224,7 +242,10 @@ export function DashboardViewContent({
     if (reportMode === 'run' && reportRunId) {
       return <ReportDetailPage productionRunId={reportRunId} onBack={() => navigate({ productionRunId: reportRunId, productionRunMode: 'detail', view: 'production-runs' })} />;
     }
-    return <ReportListPage onOpen={(id) => navigate({ reportId: id, reportMode: 'detail', view: 'reports' })} />;
+    return <ReportListPage
+      onOpen={(id) => navigate({ reportId: id, reportMode: 'detail', view: 'reports' })}
+      onOpenProductionRuns={() => navigate({ productionRunMode: 'list', view: 'production-runs' })}
+    />;
   }
 
   return (

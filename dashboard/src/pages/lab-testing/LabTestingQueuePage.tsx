@@ -10,7 +10,6 @@ import {
 } from '../../services/api';
 import { LabTestingQueueTable } from '../../features/lab-testing/components/LabTestingQueueTable';
 import { labStyles } from '../../features/lab-testing/labTestingUi';
-import { DataTransferActions } from '../../components/data-transfer/DataTransferActions';
 
 const defaultFilters = {
   dateProduced: '',
@@ -54,9 +53,8 @@ export function LabTestingQueuePage({ onOpen }: { onOpen: (id: string) => void }
         <div style={labStyles.header}>
           <div>
             <h1 style={labStyles.title}>Lab Testing</h1>
-            <p style={labStyles.subtitle}>Ready and active production runs awaiting sample result entry.</p>
+            <p style={labStyles.subtitle}>Production runs with lab testing data and progress.</p>
           </div>
-          <DataTransferActions onImported={load} resource="lab-results" />
         </div>
         <Divider />
         <div style={labStyles.filters}>
@@ -65,6 +63,8 @@ export function LabTestingQueuePage({ onOpen }: { onOpen: (id: string) => void }
             <option value="all">All Statuses</option>
             <option value="ready_for_testing">Ready</option>
             <option value="testing">Testing</option>
+            <option value="completed">Completed</option>
+            <option value="scored">Scored</option>
           </select>
           <select onChange={(event) => setFilters((current) => ({ ...current, targetBenchmarkId: event.target.value }))} style={{ ...controlStyles.input, ...labStyles.filterControl }} value={filters.targetBenchmarkId}>
             <option value="">Benchmark</option>

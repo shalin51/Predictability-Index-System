@@ -4,7 +4,7 @@ import type { LabTestingQueueQuery, LabTestingRecord } from '../labTesting.types
 export class LabTestingRepository {
   async queue(query: LabTestingQueueQuery): Promise<LabTestingRecord[]> {
     const params: unknown[] = [];
-    const clauses = [`pr.status IN ('ready_for_testing', 'testing')`];
+    const clauses = [`pr.status IN ('ready_for_testing', 'testing', 'completed', 'scored')`];
 
     if (query.search) {
       params.push(`%${query.search.toLowerCase()}%`);

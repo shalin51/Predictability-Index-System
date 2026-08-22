@@ -24,7 +24,7 @@ export function LabTestingQueueTable({ onOpen, records }: { onOpen: (id: string)
               <td style={labStyles.td}><button onClick={() => onOpen(record.id)} style={controlStyles.linkButton} type="button">{record.runCode}</button></td>
               <td style={labStyles.td}>{record.formulation}</td>
               <td style={labStyles.td}>{record.targetBenchmark ?? '-'}</td>
-              <td style={labStyles.td}>{record.status === 'ready_for_testing' ? 'Ready for Testing' : 'Testing'}</td>
+              <td style={labStyles.td}>{statusLabel(record.status)}</td>
               <td style={labStyles.td}><LabTestingProgressBar completed={record.completedResults} total={record.requiredResultCount} /></td>
               <td style={labStyles.td}>{record.missingRequiredMetrics}</td>
             </tr>
@@ -34,4 +34,13 @@ export function LabTestingQueueTable({ onOpen, records }: { onOpen: (id: string)
       <TablePagination currentPage={table.currentPage} onPageChange={table.setPage} pageCount={table.pageCount} />
     </div>
   );
+}
+
+function statusLabel(status: LabTestingQueueRecord['status']): string {
+  return {
+    ready_for_testing: 'Ready for Testing',
+    testing: 'Testing',
+    completed: 'Completed',
+    scored: 'Scored',
+  }[status];
 }

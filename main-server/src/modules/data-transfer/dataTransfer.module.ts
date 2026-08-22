@@ -17,6 +17,7 @@ export function createDataTransferRouter() {
   const controller = createDataTransferController();
   router.get('/:resource/export', (req, res) => controller.export(req, res));
   router.get('/:resource/template', (req, res) => controller.template(req, res));
+  router.post('/:resource/validate', (req, res) => controller.validate(req, res));
   router.post('/:resource/import', (req, res) => controller.import(req, res));
   return router;
 }

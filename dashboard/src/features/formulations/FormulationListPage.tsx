@@ -10,7 +10,6 @@ import {
   type LibraryRecord,
 } from '../../services/api';
 import { formatValue, formulationStyles, labelize, totalTone } from './formulationUi';
-import { DataTransferActions } from '../../components/data-transfer/DataTransferActions';
 
 export function FormulationListPage({ onCreate, onOpen }: { onCreate: () => void; onOpen: (id: string) => void }) {
   const [records, setRecords] = useState<FormulationRecord[]>([]);
@@ -48,7 +47,6 @@ export function FormulationListPage({ onCreate, onOpen }: { onCreate: () => void
             <p style={formulationStyles.subtitle}>Recipe versions, approval status, and component totals.</p>
           </div>
           <div style={{ alignItems: 'center', display: 'flex', gap: 8 }}>
-            <DataTransferActions onImported={load} resource="formulations" />
             <button onClick={onCreate} style={controlStyles.primaryButton} type="button">New Formulation</button>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { ValidationError } from '../../../errors/app-error';
 import type { LabTestingQueueQuery } from '../labTesting.types';
 
-const queueStatuses = new Set(['ready_for_testing', 'testing', 'all']);
+const queueStatuses = new Set(['ready_for_testing', 'testing', 'completed', 'scored', 'all']);
 
 export function normalizeQueueQuery(query: Record<string, unknown>): LabTestingQueueQuery {
   const status = stringValue(query['status']) as LabTestingQueueQuery['status'];

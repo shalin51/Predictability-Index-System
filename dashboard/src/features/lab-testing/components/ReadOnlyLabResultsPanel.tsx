@@ -12,6 +12,7 @@ import {
 import { colors, font, radius, spacing } from '../../../theme/tokens';
 import { formatLabValue, LAB_RESULT_CATEGORIES, labStyles } from '../labTestingUi';
 import { LabResultCategoryAccordion } from './LabResultCategoryAccordion';
+import { LabResultSampleAccordion } from './LabResultSampleAccordion';
 
 interface ReadOnlyLabResultsPanelProps {
   onOpenLabRun?: (runId: string) => void;
@@ -41,11 +42,20 @@ export function ReadOnlyLabResultsPanel({ onOpenLabRun, runId, title }: ReadOnly
   }, [runId]);
 
   const rows = useMemo(() => data ? buildRows(data) : [], [data]);
-  const categorySections = useMemo(() => groupRowsByCategory(rows).map(([category, categoryRows]) => ({
-    content: <ResultTable rows={categoryRows} />,
-    count: categoryRows.length,
-    id: category,
-    label: categoryLabel(category),
+  const sampleSections = useMemo(() => groupRowsBySample(rows).map(([sample, sampleRows]) => ({
+    content: (
+      <LabResultCategoryAccordion
+        sections={groupRowsByCategory(sampleRows).map(([category, categoryRows]) => ({
+          content: <ResultTable rows={categoryRows} />,
+          count: categoryRows.length,
+          id: `${sample}-${category}`,
+          label: categoryLabel(category),
+        }))}
+      />
+    ),
+    count: sampleRows.length,
+    id: sample,
+    label: sample,
   })), [rows]);
 
   if (error) return <MessageBanner tone="danger">{error}</MessageBanner>;
@@ -69,7 +79,7 @@ export function ReadOnlyLabResultsPanel({ onOpenLabRun, runId, title }: ReadOnly
         )}
       </div>
 
-      {rows.length === 0 ? <EmptyState>No lab results.</EmptyState> : <LabResultCategoryAccordion sections={categorySections} />}
+      {rows.length === 0 ? <EmptyState>No lab results.</EmptyState> : <LabResultSampleAccordion sections={sampleSections} />}
 
       {data.observations.length > 0 && (
         <div style={styles.observations}>
@@ -91,7 +101,7 @@ function ResultTable({ rows }: { rows: DisplayResult[] }) {
       <table style={labStyles.table}>
         <thead>
           <tr>
-            {['Sample', 'Metric', 'Value', 'Unit', 'Method', 'Tested At'].map((column) => (
+            {['Metric', 'Value', 'Unit', 'Method', 'Tested At'].map((column) => (
               <th key={column} style={labStyles.th}>{column}</th>
             ))}
           </tr>
@@ -99,7 +109,6 @@ function ResultTable({ rows }: { rows: DisplayResult[] }) {
         <tbody>
           {rows.map((row) => (
             <tr key={row.id}>
-              <td style={labStyles.td}>{row.sample}</td>
               <td style={labStyles.td}>{row.metric}</td>
               <td style={labStyles.td}>{formatLabValue(row.value)}</td>
               <td style={labStyles.td}>{row.unit || '-'}</td>
@@ -121,6 +130,12 @@ function groupRowsByCategory(rows: DisplayResult[]): Array<[string, DisplayResul
     (order.get(left) ?? Number.MAX_SAFE_INTEGER) - (order.get(right) ?? Number.MAX_SAFE_INTEGER)
       || left.localeCompare(right)
   ));
+}
+
+function groupRowsBySample(rows: DisplayResult[]): Array<[string, DisplayResult[]]> {
+  const groups = new Map<string, DisplayResult[]>();
+  rows.forEach((row) => groups.set(row.sample, [...(groups.get(row.sample) ?? []), row]));
+  return Array.from(groups.entries()).sort(([left], [right]) => left.localeCompare(right));
 }
 
 function categoryLabel(category: string): string {

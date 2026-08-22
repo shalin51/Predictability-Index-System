@@ -19,7 +19,6 @@ import { colors, font, spacing } from '../../theme/tokens';
 import { coerceLibraryPayload, LibraryRecordForm, libraryOptionResources } from './LibraryRecordForm';
 import { labelize, LibrarySectionNav } from './LibrarySectionNav';
 import { MachineParametersAccordion } from './MachineParametersAccordion';
-import { MoldZonesTable } from './MoldZonesTable';
 import { RelatedMaterialsTable } from './RelatedMaterialsTable';
 import { BenchmarkPropertiesEditor } from './BenchmarkPropertiesEditor';
 import { MaterialPropertiesEditor } from './MaterialPropertiesEditor';
@@ -47,13 +46,11 @@ export function LibraryRecordDetailPage({
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [machineParameters, setMachineParameters] = useState<LibraryRecord[]>([]);
-  const [moldZones, setMoldZones] = useState<LibraryRecord[]>([]);
   const [benchmarkProperties, setBenchmarkProperties] = useState<LibraryRecord[]>([]);
   const [benchmarkPropertyFields, setBenchmarkPropertyFields] = useState<LibraryFieldDefinition[]>([]);
   const [rerunningBenchmark, setRerunningBenchmark] = useState(false);
   const [relatedMaterials, setRelatedMaterials] = useState<LibraryRecord[]>([]);
   const [relatedError, setRelatedError] = useState('');
-  const [moldZonesError, setMoldZonesError] = useState('');
   const [benchmarkPropertiesError, setBenchmarkPropertiesError] = useState('');
 
   useEffect(() => {
@@ -62,12 +59,10 @@ export function LibraryRecordDetailPage({
     setError('');
     setMessage('');
     setMachineParameters([]);
-    setMoldZones([]);
     setBenchmarkProperties([]);
     setBenchmarkPropertyFields([]);
     setRelatedMaterials([]);
     setRelatedError('');
-    setMoldZonesError('');
     setBenchmarkPropertiesError('');
 
     const detailRequest = getLibraryRecord(resource, id);
@@ -111,16 +106,6 @@ export function LibraryRecordDetailPage({
         })
         .catch((reason: unknown) => {
           if (active) setRelatedError(getErrorMessage(reason, 'Unable to load related materials'));
-        });
-    }
-
-    if (resource === 'molds') {
-      void listLibraryRecords('mold-zones', { category: id, status: 'all' })
-        .then((response) => {
-          if (active) setMoldZones(response.data);
-        })
-        .catch((reason: unknown) => {
-          if (active) setMoldZonesError(getErrorMessage(reason, 'Unable to load mold zones'));
         });
     }
 
@@ -222,7 +207,6 @@ export function LibraryRecordDetailPage({
           {record && !editing && (
             <>
               {resource === 'machines' && <h2 style={styles.sectionTitle}>Machine Overview</h2>}
-              {resource === 'molds' && <h2 style={styles.sectionTitle}>Mold Overview</h2>}
               <div style={styles.summary}>
                 {details.map(([key, value]) => (
                   <div key={key} style={styles.detail}>
@@ -236,9 +220,6 @@ export function LibraryRecordDetailPage({
                   <h2 style={styles.sectionTitle}>Machine Parameters</h2>
                   <MachineParametersAccordion parameters={machineParameters} />
                 </section>
-              )}
-              {resource === 'molds' && (
-                <MoldZonesTable error={moldZonesError} zones={moldZones} />
               )}
               {resource === 'material-suppliers' && (
                 <RelatedMaterialsTable error={relatedError} materials={relatedMaterials} />

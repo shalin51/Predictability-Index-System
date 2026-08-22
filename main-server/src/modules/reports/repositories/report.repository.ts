@@ -3,6 +3,59 @@ import { getPool } from '../../../infrastructure/database/pg-pool';
 import type { ReportListQuery, ReportRecord, ReportSnapshot } from '../report.types';
 
 export class ReportRepository {
+  async exportAllDataset(): Promise<Record<string, ReportRecord[]>> {
+    const [formulations, materials, suppliers, definitions, properties, supplierMaterials, lots, components, runs, machines, machineCapabilities, molds, moldZones, parameterDefinitions, setupRevisions, setupParameters, runValues, runLots, runNotes, samples, testMethods, testConditions, sampleResults, environmentalResults, observations, ratings, benchmarks, benchmarkTargets] = await Promise.all([
+      getPool().query(`SELECT id, formulation_code AS "formulationCode", version_no AS "version", status::text AS status, target_benchmark_id AS "targetBenchmarkId", notes, created_at AS "createdAt", updated_at AS "updatedAt" FROM formulations ORDER BY formulation_code, version_no`),
+      getPool().query(`SELECT id, material_code AS "materialCode", material_name AS "materialName", material_type AS "materialType", supplier_id AS "supplierId", product_grade AS "productGrade", chemistry, role_in_blend AS "roleInBlend", default_unit AS "defaultUnit", material_lot AS "defaultLot", source_file AS "sourceFile", source_revision_date AS "sourceRevisionDate", status::text AS status, notes FROM materials ORDER BY material_code`),
+      getPool().query(`SELECT id, supplier_code AS "supplierCode", supplier_name AS "supplierName", supplier_type AS "supplierType", contact_info AS "contactInfo", status::text AS status, notes FROM suppliers ORDER BY supplier_name`),
+      getPool().query(`SELECT id, property_key AS "propertyKey", canonical_name AS "propertyName", category, value_type AS "valueType", common_units AS "commonUnits", condition_dimensions AS "conditionDimensions", status::text AS status FROM material_property_definitions ORDER BY property_key`),
+      getPool().query(`SELECT mpf.id, mpf.material_id AS "materialId", mpf.property_definition_id AS "propertyDefinitionId", mpd.property_key AS "propertyKey", mpd.canonical_name AS "propertyName", mpd.category, mpf.value_numeric::float AS "valueNumeric", mpf.value_text AS "valueText", mpf.qualifier, mpf.unit, mpf.test_method AS "testMethod", mpf.test_condition AS "testCondition", mpf.temperature_c::float AS "temperatureC", mpf.load, mpf.duration, mpf.frequency, mpf.direction, mpf.specimen, mpf.process_type AS "processType", mpf.zone, mpf.source_file AS "sourceFile", mpf.source_page AS "sourcePage", mpf.source_revision_date AS "sourceRevisionDate", mpf.notes FROM material_property_facts mpf JOIN material_property_definitions mpd ON mpd.id = mpf.property_definition_id ORDER BY mpd.property_key, mpf.created_at`),
+      getPool().query(`SELECT id, supplier_id AS "supplierId", material_id AS "materialId", supplier_material_code AS "supplierMaterialCode", status::text AS status FROM supplier_materials ORDER BY supplier_material_code`),
+      getPool().query(`SELECT id, supplier_material_id AS "supplierMaterialId", lot_number AS "lotNumber", received_date AS "receivedDate", expiration_date AS "expirationDate", status::text AS status, notes FROM material_lots ORDER BY lot_number`),
+      getPool().query(`SELECT id, formulation_id AS "formulationId", material_id AS "materialId", supplier_id AS "supplierId", material_lot_id AS "materialLotId", percent_composition::float AS percent, basis, sort_order AS "sortOrder" FROM formulation_components ORDER BY formulation_id, sort_order, created_at`),
+      getPool().query(`SELECT id, run_code AS "runCode", formulation_id AS "formulationId", status::text AS status, date_produced AS "dateProduced", machine_id AS "machineId", mold_id AS "moldId", created_at AS "createdAt" FROM production_runs ORDER BY date_produced DESC, run_code`),
+      getPool().query(`SELECT id, machine_code AS "machineCode", machine_name AS "machineName", location, status::text AS status, created_at AS "createdAt", updated_at AS "updatedAt" FROM machines ORDER BY machine_code`),
+      getPool().query(`SELECT id, machine_id AS "machineId", parameter_key AS "parameterKey", display_name AS "displayName", section_key AS "sectionKey", position_type AS "positionType", position_index AS "positionIndex", position_label AS "positionLabel", minimum_value::float AS "minimumValue", maximum_value::float AS "maximumValue", unit, notes, sort_order AS "sortOrder", status::text AS status FROM machine_parameter_capabilities ORDER BY machine_id, sort_order`),
+      getPool().query(`SELECT id, mold_code AS "moldCode", mold_name AS "moldName", mold_type AS "moldType", cavity_count AS "cavityCount", description, manufacturer, hot_runner_controller AS "hotRunnerController", zone_count AS "zoneCount", status::text AS status FROM molds ORDER BY mold_code`),
+      getPool().query(`SELECT id, mold_id AS "moldId", zone_number AS "zoneNumber", zone_name AS "zoneName", zone_type AS "zoneType", minimum_temperature::float AS "minimumTemperature", maximum_temperature::float AS "maximumTemperature", temperature_unit AS "temperatureUnit", notes, status::text AS status FROM mold_zones ORDER BY mold_id, zone_number`),
+      getPool().query(`SELECT id, parameter_key AS "parameterKey", section_key AS "sectionKey", display_name AS "displayName", data_type AS "dataType", default_unit AS "defaultUnit", sort_order AS "sortOrder", status::text AS status FROM process_parameter_definitions ORDER BY sort_order, parameter_key`),
+      getPool().query(`SELECT id, machine_id AS "machineId", mold_id AS "moldId", formulation_id AS "formulationId", revision_no AS "revisionNo", status::text AS status, setup_hash AS "setupHash", hot_runner_manufacturer AS "hotRunnerManufacturer", hot_runner_controller_model AS "hotRunnerControllerModel", hot_runner_zone_count AS "hotRunnerZoneCount", approved_by_display AS "approvedBy", document_approval_date AS "documentApprovalDate" FROM process_setup_revisions ORDER BY created_at DESC`),
+      getPool().query(`SELECT id, process_setup_revision_id AS "processSetupRevisionId", parameter_definition_id AS "parameterDefinitionId", position_type AS "positionType", position_index AS "positionIndex", position_label AS "positionLabel", value_numeric::float AS "valueNumeric", value_text AS "valueText", value_date AS "valueDate", unit, tolerance_min::float AS "toleranceMin", tolerance_max::float AS "toleranceMax", notes, sort_order AS "sortOrder" FROM process_setup_revision_parameters ORDER BY process_setup_revision_id, sort_order`),
+      getPool().query(`SELECT id, production_run_id AS "productionRunId", parameter_definition_id AS "parameterDefinitionId", position_type AS "positionType", position_index AS "positionIndex", position_label AS "positionLabel", setpoint_numeric::float AS "setpointNumeric", setpoint_text AS "setpointText", setpoint_date AS "setpointDate", actual_numeric::float AS "actualNumeric", actual_text AS "actualText", actual_date AS "actualDate", unit, tolerance_min::float AS "toleranceMin", tolerance_max::float AS "toleranceMax", notes FROM production_run_process_values ORDER BY production_run_id, created_at`),
+      getPool().query(`SELECT id, production_run_id AS "productionRunId", formulation_component_id AS "formulationComponentId", material_lot_id AS "materialLotId", is_primary AS "isPrimary" FROM production_run_material_lots ORDER BY production_run_id, created_at`),
+      getPool().query(`SELECT id, production_run_id AS "productionRunId", note_type AS "noteType", note_text AS "noteText", entered_by AS "enteredBy", created_at AS "createdAt" FROM production_run_notes ORDER BY production_run_id, created_at`),
+      getPool().query(`SELECT id, production_run_id AS "productionRunId", sample_code AS "sampleCode", cavity_number AS "cavityNumber", status::text AS status, created_at AS "createdAt" FROM samples ORDER BY sample_code`),
+      getPool().query(`SELECT id, method_code AS "methodCode", method_name AS "methodName", metric_id AS "metricId", cure_hours::float AS "cureHours", description, status::text AS status FROM test_method_definitions ORDER BY method_code`),
+      getPool().query(`SELECT id, condition_code AS "conditionCode", condition_name AS "conditionName", description, status::text AS status FROM test_condition_definitions ORDER BY condition_code`),
+      getPool().query(`SELECT id, sample_id AS "sampleId", metric_id AS "metricId", test_method_id AS "testMethodId", value_numeric::float AS value, unit, tested_by AS "testedBy", tested_at AS "testedAt" FROM sample_test_results ORDER BY tested_at DESC`),
+      getPool().query(`SELECT id, sample_id AS "sampleId", metric_id AS "metricId", test_condition_id AS "testConditionId", test_method_id AS "testMethodId", value_numeric::float AS value, unit, tested_by AS "testedBy", tested_at AS "testedAt" FROM environmental_test_results ORDER BY tested_at DESC`),
+      getPool().query(`SELECT id, sample_id AS "sampleId", observation_type AS "observationType", observation_text AS "observationText", observed_by AS "observedBy", observed_at AS "observedAt" FROM sample_observations ORDER BY observed_at DESC`),
+      getPool().query(`SELECT id, sample_id AS "sampleId", metric_id AS "metricId", rating_value::float AS "ratingValue", feedback_text AS "feedbackText", rated_by AS "ratedBy", rated_at AS "ratedAt" FROM sample_subjective_ratings ORDER BY rated_at DESC`),
+      getPool().query(`SELECT id, benchmark_code AS "benchmarkCode", benchmark_name AS "benchmarkName", profile_version AS "profileVersion", status::text AS status, notes FROM benchmark_profiles ORDER BY benchmark_code`),
+      getPool().query(`SELECT id, COALESCE(benchmark_profile_id, benchmark_id) AS "benchmarkId", metric_id AS "metricId", condition_id AS "conditionId", metric_name AS "metricName", metric_category AS "metricCategory", target_mean::float AS "targetMean", min_acceptable::float AS "minAcceptable", max_acceptable::float AS "maxAcceptable", unit, weight::float AS weight, criticality, notes FROM benchmark_metric_targets ORDER BY "benchmarkId", metric_name`),
+    ]);
+    const materialRows = materials.rows.map((material) => ({
+      ...material,
+      materialProperties: properties.rows.filter((property) => property.materialId === material.id).length,
+    }));
+    return {
+      Formulations: formulations.rows as ReportRecord[], Materials: materialRows as ReportRecord[], Suppliers: suppliers.rows as ReportRecord[],
+      'Property Definitions': definitions.rows as ReportRecord[], 'Material Properties': properties.rows as ReportRecord[],
+      'Supplier Materials': supplierMaterials.rows as ReportRecord[], 'Material Lots': lots.rows as ReportRecord[],
+      'Formulation Components': components.rows as ReportRecord[], 'Production Runs': runs.rows as ReportRecord[],
+      Machines: machines.rows as ReportRecord[], 'Machine Capabilities': machineCapabilities.rows as ReportRecord[],
+      Molds: molds.rows as ReportRecord[], 'Mold Zones': moldZones.rows as ReportRecord[],
+      'Process Parameter Definitions': parameterDefinitions.rows as ReportRecord[], 'Process Setup Revisions': setupRevisions.rows as ReportRecord[],
+      'Process Setup Parameters': setupParameters.rows as ReportRecord[], 'Production Run Process Values': runValues.rows as ReportRecord[],
+      'Production Run Material Lots': runLots.rows as ReportRecord[], 'Production Run Notes': runNotes.rows as ReportRecord[],
+      Samples: samples.rows as ReportRecord[], 'Metric Definitions': definitions.rows as ReportRecord[],
+      'Test Method Definitions': testMethods.rows as ReportRecord[], 'Test Condition Definitions': testConditions.rows as ReportRecord[],
+      'Sample Test Results': sampleResults.rows as ReportRecord[], 'Environmental Test Results': environmentalResults.rows as ReportRecord[],
+      'Sample Observations': observations.rows as ReportRecord[], 'Sample Ratings': ratings.rows as ReportRecord[],
+      'Benchmark Profiles': benchmarks.rows as ReportRecord[], 'Benchmark Metric Targets': benchmarkTargets.rows as ReportRecord[],
+    };
+  }
+
   async exportDataset(reportId: string): Promise<Record<string, ReportRecord[]>> {
     const context = await getPool().query<{ productionRunId: string; formulationId: string }>(
       `SELECT gr.production_run_id AS "productionRunId", pr.formulation_id AS "formulationId"
@@ -23,7 +76,7 @@ export class ReportRepository {
       WHERE fc.formulation_id = $1
       ORDER BY fc.sort_order, fc.created_at`;
     const [formulations, components] = await Promise.all([
-      getPool().query(`SELECT id, formulation_code AS "formulationCode", version_no AS "version", name, status::text AS status, target_benchmark_id AS "targetBenchmarkId", created_at AS "createdAt", updated_at AS "updatedAt" FROM formulations WHERE id = $1`, [formulationId]),
+      getPool().query(`SELECT id, formulation_code AS "formulationCode", version_no AS "version", status::text AS status, target_benchmark_id AS "targetBenchmarkId", notes, created_at AS "createdAt", updated_at AS "updatedAt" FROM formulations WHERE id = $1`, [formulationId]),
       getPool().query(componentSql, [formulationId]),
     ]);
     const materialIds = components.rows.map((row) => row.materialId).filter(Boolean);
@@ -39,10 +92,14 @@ export class ReportRepository {
     const propertyDefinitionIds = properties.rows.map((row) => row.propertyDefinitionId).filter(Boolean);
     const definitions = await getPool().query(`SELECT id, property_key AS "propertyKey", canonical_name AS "propertyName", category, value_type AS "valueType", common_units AS "commonUnits", condition_dimensions AS "conditionDimensions", status::text AS status FROM material_property_definitions WHERE id = ANY($1::uuid[]) ORDER BY property_key`, [propertyDefinitionIds]);
     const runs = await getPool().query(`SELECT id, run_code AS "runCode", formulation_id AS "formulationId", status::text AS status, date_produced AS "dateProduced", machine_id AS "machineId", mold_id AS "moldId", created_at AS "createdAt" FROM production_runs WHERE id = $1`, [report.productionRunId]);
+    const materialRows = materials.rows.map((material) => ({
+      ...material,
+      materialProperties: properties.rows.filter((property) => property.materialId === material.id).length,
+    }));
 
     return {
       Formulations: formulations.rows as ReportRecord[],
-      Materials: materials.rows as ReportRecord[],
+      Materials: materialRows as ReportRecord[],
       Suppliers: suppliers.rows as ReportRecord[],
       'Property Definitions': definitions.rows as ReportRecord[],
       'Material Properties': properties.rows as ReportRecord[],

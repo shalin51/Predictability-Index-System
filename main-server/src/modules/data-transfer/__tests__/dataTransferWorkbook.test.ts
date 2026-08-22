@@ -1,6 +1,7 @@
+import * as XLSX from 'xlsx';
 import { describe, expect, it } from 'vitest';
 import { transferDefinitions } from '../dataTransfer.config';
-import { createTransferWorkbook, parseTransferWorkbook } from '../dataTransferWorkbook';
+import { createTransferWorkbook, parseTransferWorkbook, importTabName, testTabName, instructionTabName } from '../dataTransferWorkbook';
 
 describe('data transfer workbook contract', () => {
   it.each(Object.values(transferDefinitions).map((definition) => [definition.resource, definition] as const))(
@@ -21,8 +22,81 @@ describe('data transfer workbook contract', () => {
     }
   );
 
-  it('rejects a workbook for a different resource', () => {
+  it('every sheet gets import_, test_, and instruction_ tabs', () => {
+    for (const definition of Object.values(transferDefinitions)) {
+      const bytes = createTransferWorkbook(definition, {});
+      const wb = XLSX.read(bytes, { type: 'buffer' });
+      for (const sheet of definition.sheets) {
+        expect(wb.SheetNames).toContain(importTabName(sheet.name));
+        expect(wb.SheetNames).toContain(testTabName(sheet.name));
+        expect(wb.SheetNames).toContain(instructionTabName(sheet.name));
+      }
+    }
+  });
+
+  it('test_{name} sheet has exactly one data row per sheet', () => {
+    for (const definition of Object.values(transferDefinitions)) {
+      const bytes = createTransferWorkbook(definition, {});
+      const wb = XLSX.read(bytes, { type: 'buffer' });
+      for (const sheet of definition.sheets) {
+        const testSheet = wb.Sheets[testTabName(sheet.name)];
+        expect(testSheet).toBeDefined();
+        const rows = XLSX.utils.sheet_to_json(testSheet!, { defval: null });
+        expect(rows).toHaveLength(1);
+      }
+    }
+  });
+
+  it('import_{name} is empty (no data rows) in the template', () => {
     const bytes = createTransferWorkbook(transferDefinitions['machines']!, {});
-    expect(() => parseTransferWorkbook(bytes, transferDefinitions['molds']!)).toThrow(/does not match/);
+    const wb = XLSX.read(bytes, { type: 'buffer' });
+    const importSheet = wb.Sheets[importTabName('Machines')];
+    expect(importSheet).toBeDefined();
+    const rows = XLSX.utils.sheet_to_json(importSheet!, { defval: null });
+    expect(rows).toHaveLength(0);
+  });
+
+  it('instruction_{name} sheet has one row per column', () => {
+    const bytes = createTransferWorkbook(transferDefinitions['machines']!, {});
+    const wb = XLSX.read(bytes, { type: 'buffer' });
+    const instrSheet = wb.Sheets[instructionTabName('Machines')];
+    expect(instrSheet).toBeDefined();
+    // Row 1 = title, row 2 = blank spacer, row 3 = headers, row 4+ = field rows
+    const matrix = XLSX.utils.sheet_to_json<unknown[]>(instrSheet!, { header: 1, defval: null });
+    const fieldRows = matrix.slice(3); // skip title + spacer + header
+    expect(fieldRows.length).toBe(transferDefinitions['machines']!.sheets[0]!.columns.length);
+  });
+
+  it('rejects a workbook missing the first import_ tab', () => {
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Col']]), 'wrong_sheet');
+    const bytes = XLSX.write(wb, { bookType: 'xlsx', type: 'buffer' }) as Buffer;
+    expect(() => parseTransferWorkbook(bytes, transferDefinitions['machines']!)).toThrow(/import_machines/);
+  });
+
+  it('production-runs has import_ and test_ tabs for both sheets', () => {
+    const bytes = createTransferWorkbook(transferDefinitions['production-runs']!, {});
+    const wb = XLSX.read(bytes, { type: 'buffer' });
+    expect(wb.SheetNames).toContain(importTabName('Production Runs'));
+    expect(wb.SheetNames).toContain(testTabName('Production Runs'));
+    expect(wb.SheetNames).toContain(importTabName('Samples'));
+    expect(wb.SheetNames).toContain(testTabName('Samples'));
+  });
+
+  it('import_{name} headers match definition columns', () => {
+    for (const definition of Object.values(transferDefinitions)) {
+      const bytes = createTransferWorkbook(definition, {});
+      const wb = XLSX.read(bytes, { type: 'buffer' });
+      for (const sheetDef of definition.sheets) {
+        const sheet = wb.Sheets[importTabName(sheetDef.name)]!;
+        const matrix = XLSX.utils.sheet_to_json<unknown[]>(sheet, { header: 1 });
+        const headers = (matrix[0] ?? []) as string[];
+        const normalised = headers.map((h) => h.replace(/\s*\*$/, '').trim());
+        for (const col of sheetDef.columns) {
+          expect(normalised).toContain(col.header);
+        }
+      }
+    }
   });
 });
+

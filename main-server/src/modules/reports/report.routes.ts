@@ -8,6 +8,7 @@ export function createReportRoutes(controller: ReportController) {
   router.get('/runs/:runId', (req, res) => controller.latestForRun(req, res));
   router.post('/runs/:runId/generate', (req, res) => controller.generate(req, res));
   router.post('/runs/:runId/regenerate', (req, res) => controller.regenerate(req, res));
+  router.get('/export/database/xlsx', (req, res) => controller.exportDatabaseXlsx(req, res));
   router.get('/:reportId/export/pdf', (req, res) => controller.exportPdf(req, res));
   router.get('/:reportId/export/xlsx', (req, res) => controller.exportXlsx(req, res));
   router.get('/:reportId/export/csv', (req, res) => controller.exportCsv(req, res));
