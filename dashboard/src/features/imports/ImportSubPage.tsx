@@ -33,9 +33,11 @@ type Stage = 'idle' | 'validating' | 'validated' | 'importing' | 'done';
 interface ImportSubPageProps {
   resource: ImportResource;
   onBack: () => void;
+  /** Called after a successful commit — navigate the user to the imported data. */
+  onViewImported?: () => void;
 }
 
-export function ImportSubPage({ resource, onBack }: ImportSubPageProps) {
+export function ImportSubPage({ resource, onBack, onViewImported }: ImportSubPageProps) {
   const title = IMPORT_TITLES[resource] ?? resource;
   const [file, setFile] = useState<File | null>(null);
   const [fileError, setFileError] = useState('');
@@ -124,8 +126,8 @@ export function ImportSubPage({ resource, onBack }: ImportSubPageProps) {
     // Build resolutions array for 'update' rows
     const duplicateResolutions: DuplicateResolution[] = validation.rows
       .filter((r) => r.action === 'update')
-      .map((r, i) => ({
-        rowIndex: i,
+      .map((r) => ({
+        rowIndex: r.rowIndex,
         action: resolutions[r.rowIndex] ?? 'overwrite',
       }));
 
@@ -262,7 +264,12 @@ export function ImportSubPage({ resource, onBack }: ImportSubPageProps) {
         {stage === 'done' && (
           <div style={styles.doneActions}>
             <Button onClick={handleReset} type="button" variant="secondary">Import Another File</Button>
-            <Button onClick={onBack} type="button" variant="primary">Back to Imports</Button>
+            <Button onClick={onBack} type="button" variant="secondary">Back to Imports</Button>
+            {onViewImported && (
+              <Button onClick={onViewImported} type="button" variant="primary">
+                View {title} →
+              </Button>
+            )}
           </div>
         )}
       </Card>

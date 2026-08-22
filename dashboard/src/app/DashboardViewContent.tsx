@@ -16,7 +16,7 @@ import { LabTestingRunPage } from '../pages/lab-testing/LabTestingRunPage';
 import { ReportDetailPage } from '../pages/reports/ReportDetailPage';
 import { ReportListPage } from '../pages/reports/ReportListPage';
 import type { DashboardPreferences } from './dashboardPreferences';
-import type { DashboardRouteState, DashboardView } from '../routing/dashboardRoute';
+import type { DashboardRouteState, DashboardView, ImportResource } from '../routing/dashboardRoute';
 import { themeOptions, type ThemeName } from '../theme/tokens';
 
 interface DashboardViewContentProps {
@@ -41,6 +41,23 @@ interface DashboardViewContentProps {
   reportMode?: DashboardRouteState['reportMode'];
   reportRunId?: string;
   navigate: (route: DashboardRouteState, options?: { replace?: boolean; skipConfirm?: boolean }) => boolean;
+}
+
+/** Maps an import resource to the dashboard route where its data is visible. */
+function importViewRoute(resource: ImportResource): DashboardRouteState {
+  switch (resource) {
+    case 'material-suppliers': return { view: 'materials', librarySection: 'material-suppliers' };
+    case 'materials':          return { view: 'materials', librarySection: 'materials' };
+    case 'material-properties': return { view: 'materials', librarySection: 'material-properties' };
+    case 'machines':           return { view: 'machines', librarySection: 'machines' };
+    case 'machine-parameters': return { view: 'machines', librarySection: 'machine-parameters' };
+    case 'molds':              return { view: 'molds', librarySection: 'molds' };
+    case 'mold-zones':         return { view: 'molds', librarySection: 'molds' };
+    case 'benchmarks':         return { view: 'benchmarks', librarySection: 'benchmarks' };
+    case 'scoring-rules':      return { view: 'benchmarks', librarySection: 'scoring-rules' };
+    case 'formulations':       return { view: 'formulations', formulationMode: 'list' };
+    case 'production-runs':    return { view: 'production-runs', productionRunMode: 'list' };
+  }
 }
 
 export function DashboardViewContent({
@@ -74,6 +91,7 @@ export function DashboardViewContent({
         <ImportSubPage
           resource={importResource}
           onBack={() => navigate({ view: 'imports' })}
+          onViewImported={() => navigate(importViewRoute(importResource))}
         />
       );
     }

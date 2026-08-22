@@ -254,20 +254,59 @@ export class DashboardRepository {
   }
 
   async dataInventory(): Promise<DashboardRecord[]> {
+    // Use live COUNT(*) per table instead of pg_stat_user_tables.n_live_tup, which is a
+    // stale autovacuum estimate and does not reflect rows inserted in the current session.
     const result = await getPool().query(
-      `SELECT relname AS "tableName", n_live_tup::int AS "rowCount",
-              CASE
-                WHEN relname IN ('materials', 'suppliers', 'supplier_materials', 'material_lots', 'material_catalog_imports', 'material_external_identifiers', 'material_source_documents', 'material_property_definitions', 'material_property_facts', 'material_processing_profiles', 'material_processing_ranges') THEN 'Materials'
-                WHEN relname IN ('machines', 'molds', 'mold_zones', 'machine_parameter_capabilities', 'process_parameter_definitions', 'setup_sheet_imports', 'process_setup_revisions', 'process_setup_revision_parameters', 'production_run_process_values', 'production_run_notes', 'production_run_material_lots', 'material_drying_events', 'process_setup_revision_log_entries') THEN 'Manufacturing'
-                WHEN relname IN ('experiments', 'formulation_families', 'formulations', 'formulation_components', 'production_runs', 'samples') THEN 'Workflow'
-                WHEN relname IN ('metric_definitions', 'test_method_definitions', 'test_condition_definitions', 'sample_test_results', 'environmental_test_results', 'sample_observations', 'sample_subjective_ratings', 'run_metric_summaries') THEN 'Testing'
-                WHEN relname IN ('benchmark_profiles', 'benchmark_metric_targets', 'algorithm_versions', 'score_reports', 'score_report_metrics', 'generated_reports', 'comparison_analyses', 'comparison_analysis_candidates', 'comparison_analysis_metrics') THEN 'Analysis'
-                WHEN relname IN ('roles', 'app_users', 'user_roles', 'audit_log', 'audit_logs', 'request_logs', 'api_versions', 'users') THEN 'System'
-                ELSE 'Project data'
-              END AS domain
-       FROM pg_stat_user_tables
-       WHERE relname NOT IN ('_migrations', 'audit_log', 'audit_logs', 'audit_events', 'request_logs')
-       ORDER BY domain, relname`
+      `SELECT "tableName", "rowCount"::int, domain FROM (
+        SELECT 'materials'                         AS "tableName", COUNT(*) AS "rowCount", 'Materials'      AS domain FROM materials
+        UNION ALL SELECT 'suppliers',                                COUNT(*), 'Materials'      FROM suppliers
+        UNION ALL SELECT 'supplier_materials',                       COUNT(*), 'Materials'      FROM supplier_materials
+        UNION ALL SELECT 'material_lots',                            COUNT(*), 'Materials'      FROM material_lots
+        UNION ALL SELECT 'material_catalog_imports',                 COUNT(*), 'Materials'      FROM material_catalog_imports
+        UNION ALL SELECT 'material_external_identifiers',            COUNT(*), 'Materials'      FROM material_external_identifiers
+        UNION ALL SELECT 'material_source_documents',                COUNT(*), 'Materials'      FROM material_source_documents
+        UNION ALL SELECT 'material_property_definitions',            COUNT(*), 'Materials'      FROM material_property_definitions
+        UNION ALL SELECT 'material_property_facts',                  COUNT(*), 'Materials'      FROM material_property_facts
+        UNION ALL SELECT 'material_processing_profiles',             COUNT(*), 'Materials'      FROM material_processing_profiles
+        UNION ALL SELECT 'material_processing_ranges',               COUNT(*), 'Materials'      FROM material_processing_ranges
+        UNION ALL SELECT 'machines',                                 COUNT(*), 'Manufacturing'  FROM machines
+        UNION ALL SELECT 'molds',                                    COUNT(*), 'Manufacturing'  FROM molds
+        UNION ALL SELECT 'mold_zones',                               COUNT(*), 'Manufacturing'  FROM mold_zones
+        UNION ALL SELECT 'machine_parameter_capabilities',           COUNT(*), 'Manufacturing'  FROM machine_parameter_capabilities
+        UNION ALL SELECT 'process_parameter_definitions',            COUNT(*), 'Manufacturing'  FROM process_parameter_definitions
+        UNION ALL SELECT 'setup_sheet_imports',                      COUNT(*), 'Manufacturing'  FROM setup_sheet_imports
+        UNION ALL SELECT 'process_setup_revisions',                  COUNT(*), 'Manufacturing'  FROM process_setup_revisions
+        UNION ALL SELECT 'process_setup_revision_parameters',        COUNT(*), 'Manufacturing'  FROM process_setup_revision_parameters
+        UNION ALL SELECT 'production_run_process_values',            COUNT(*), 'Manufacturing'  FROM production_run_process_values
+        UNION ALL SELECT 'production_run_notes',                     COUNT(*), 'Manufacturing'  FROM production_run_notes
+        UNION ALL SELECT 'production_run_material_lots',             COUNT(*), 'Manufacturing'  FROM production_run_material_lots
+        UNION ALL SELECT 'material_drying_events',                   COUNT(*), 'Manufacturing'  FROM material_drying_events
+        UNION ALL SELECT 'process_setup_revision_log_entries',       COUNT(*), 'Manufacturing'  FROM process_setup_revision_log_entries
+        UNION ALL SELECT 'experiments',                              COUNT(*), 'Workflow'       FROM experiments
+        UNION ALL SELECT 'formulation_families',                     COUNT(*), 'Workflow'       FROM formulation_families
+        UNION ALL SELECT 'formulations',                             COUNT(*), 'Workflow'       FROM formulations
+        UNION ALL SELECT 'formulation_components',                   COUNT(*), 'Workflow'       FROM formulation_components
+        UNION ALL SELECT 'production_runs',                          COUNT(*), 'Workflow'       FROM production_runs
+        UNION ALL SELECT 'samples',                                  COUNT(*), 'Workflow'       FROM samples
+        UNION ALL SELECT 'metric_definitions',                       COUNT(*), 'Testing'        FROM metric_definitions
+        UNION ALL SELECT 'test_method_definitions',                  COUNT(*), 'Testing'        FROM test_method_definitions
+        UNION ALL SELECT 'test_condition_definitions',               COUNT(*), 'Testing'        FROM test_condition_definitions
+        UNION ALL SELECT 'sample_test_results',                      COUNT(*), 'Testing'        FROM sample_test_results
+        UNION ALL SELECT 'environmental_test_results',               COUNT(*), 'Testing'        FROM environmental_test_results
+        UNION ALL SELECT 'sample_observations',                      COUNT(*), 'Testing'        FROM sample_observations
+        UNION ALL SELECT 'sample_subjective_ratings',                COUNT(*), 'Testing'        FROM sample_subjective_ratings
+        UNION ALL SELECT 'run_metric_summaries',                     COUNT(*), 'Testing'        FROM run_metric_summaries
+        UNION ALL SELECT 'benchmark_profiles',                       COUNT(*), 'Analysis'       FROM benchmark_profiles
+        UNION ALL SELECT 'benchmark_metric_targets',                 COUNT(*), 'Analysis'       FROM benchmark_metric_targets
+        UNION ALL SELECT 'algorithm_versions',                       COUNT(*), 'Analysis'       FROM algorithm_versions
+        UNION ALL SELECT 'score_reports',                            COUNT(*), 'Analysis'       FROM score_reports
+        UNION ALL SELECT 'score_report_metrics',                     COUNT(*), 'Analysis'       FROM score_report_metrics
+        UNION ALL SELECT 'generated_reports',                        COUNT(*), 'Analysis'       FROM generated_reports
+        UNION ALL SELECT 'comparison_analyses',                      COUNT(*), 'Analysis'       FROM comparison_analyses
+        UNION ALL SELECT 'comparison_analysis_candidates',           COUNT(*), 'Analysis'       FROM comparison_analysis_candidates
+        UNION ALL SELECT 'comparison_analysis_metrics',              COUNT(*), 'Analysis'       FROM comparison_analysis_metrics
+      ) counts
+      ORDER BY domain, "tableName"`
     );
     return result.rows as DashboardRecord[];
   }

@@ -230,7 +230,7 @@ export function LibraryPage({
 function formatValue(value: unknown) {
   if (value === null || value === undefined || value === '') return '-';
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-  if (typeof value === 'string' && value.includes('T')) return value.slice(0, 10);
+  if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) return value.slice(0, 10);
   return String(value);
 }
 
