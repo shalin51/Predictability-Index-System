@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Button } from '../../components/ui/Button';
+import { MessageBanner } from '../../components/ui/Page';
 import { login, type AuthSession } from './authSession';
 
 interface LoginPageProps {
@@ -60,7 +61,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
             />
           </label>
 
-          {error && <div className="auth-error" role="alert">{error}</div>}
+          {error && <MessageBanner tone="danger">{error}</MessageBanner>}
 
           <Button disabled={submitting} type="submit">
             {submitting ? 'Signing in…' : 'Sign in'}

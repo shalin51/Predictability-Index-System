@@ -7,7 +7,7 @@ export interface DateRangeValue {
   to: string;
 }
 
-export function DateRangePicker({ label, onChange, value }: { label: string; onChange: (value: DateRangeValue) => void; value: DateRangeValue }) {
+export function DateRangePicker({ label, onChange, value }: { label?: string; onChange: (value: DateRangeValue) => void; value: DateRangeValue }) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const hasValue = Boolean(value.from || value.to);
@@ -45,13 +45,13 @@ export function DateRangePicker({ label, onChange, value }: { label: string; onC
 
   return (
     <div ref={containerRef} style={styles.container}>
-      <span style={controlStyles.fieldLabel}>{label}</span>
+      {label && <span style={controlStyles.fieldLabel}>{label}</span>}
       <button aria-expanded={open} aria-haspopup="dialog" onClick={() => setOpen((current) => !current)} style={styles.trigger} type="button">
         <span>{displayValue}</span>
         <span aria-hidden="true" style={styles.calendar}>▣</span>
       </button>
       {open && (
-        <div aria-label={`${label} date range`} role="dialog" style={styles.popover}>
+        <div aria-label={label ? `${label} date range` : 'Date range'} role="dialog" style={styles.popover}>
           <label style={controlStyles.field}>
             <span style={controlStyles.fieldLabel}>From</span>
             <input max={value.to || undefined} onChange={(event) => setDate('from', event.target.value)} style={controlStyles.input} type="date" value={value.from} />

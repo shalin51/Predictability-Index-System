@@ -300,7 +300,15 @@ export class LibraryRepository {
 
   async options(resource: string): Promise<LibraryRecord[]> {
     const configMap: Record<string, string> = {
-      materials: `SELECT id, material_name AS label, material_code AS code FROM materials WHERE status = 'active' ORDER BY material_code`,
+      materials: `
+        SELECT m.id, m.material_name AS label, m.material_code AS code,
+               ARRAY_REMOVE(ARRAY_AGG(DISTINCT sm.supplier_id) FILTER (WHERE sm.status = 'active'), NULL) AS "supplierIds"
+        FROM materials m
+        LEFT JOIN supplier_materials sm ON sm.material_id = m.id
+        WHERE m.status = 'active'
+        GROUP BY m.id, m.material_name, m.material_code
+        ORDER BY m.material_code
+      `,
       'material-suppliers': `SELECT id, supplier_name AS label, supplier_code AS code FROM suppliers WHERE status = 'active' ORDER BY supplier_code`,
       suppliers: `SELECT id, supplier_name AS label FROM suppliers WHERE status = 'active' ORDER BY supplier_name`,
       'material-lots': `

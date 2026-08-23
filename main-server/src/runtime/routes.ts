@@ -57,6 +57,7 @@ export const routes: RouteDefinition[] = [
   { method: 'POST', path: '/production-runs', handler: (req, res) => controllers.productionRuns.create(req, res) },
   { method: 'GET', path: '/production-runs/:id', handler: (req, res) => controllers.productionRuns.detail(req, res) },
   { method: 'GET', path: '/production-runs/:id/process-setup', handler: (req, res) => controllers.processSetups.runDetail(req, res) },
+  { method: 'POST', path: '/production-runs/:id/process-values/initialize', handler: (req, res) => controllers.processSetups.initializeRunValues(req, res) },
   { method: 'PATCH', path: '/production-runs/:id/process-values', handler: (req, res) => controllers.processSetups.updateRunValues(req, res) },
   { method: 'PATCH', path: '/production-runs/:id', handler: (req, res) => controllers.productionRuns.update(req, res) },
   { method: 'POST', path: '/production-runs/:id/archive', handler: (req, res) => controllers.productionRuns.archive(req, res) },

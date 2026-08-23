@@ -1,5 +1,6 @@
 import { createHash } from 'crypto';
 import type { PoolClient } from 'pg';
+import { formatCode } from '../../core/code-format';
 import { getPool } from '../../infrastructure/database/pg-pool';
 import type {
   MaterialImportCommitInput,
@@ -265,10 +266,13 @@ export class MaterialImportRepository {
   }
 
   private async createMaterial(client: PoolClient, material: ParsedMaterialRecord, supplierId: string, existing: ExistingMaterial[]): Promise<ExistingMaterial> {
-    const base = this.code(material.productGrade).slice(0, 100);
+    const base = this.code(material.productGrade).slice(0, 98);
     const occupied = new Set(existing.map((item) => item.materialCode?.toLowerCase()).filter(Boolean));
-    const suffix = `_${this.code(material.externalId)}`;
-    const code = occupied.has(base.toLowerCase()) ? `${base.slice(0, 100 - suffix.length)}${suffix}` : base;
+    const duplicateSuffix = `-${this.code(material.externalId)}`.slice(0, 97);
+    const candidate = occupied.has(formatCode(base, 'M').toLowerCase())
+      ? `${base.slice(0, 98 - duplicateSuffix.length)}${duplicateSuffix}`
+      : base;
+    const code = formatCode(candidate, 'M');
     const type = /lab trial/i.test(material.manufacturer) || /blend trial/i.test(material.roleInBlend ?? '') ? 'lab_trial_compound' : 'polymer';
     const inserted = await client.query<{ id: string }>(
       `INSERT INTO materials
@@ -319,7 +323,7 @@ export class MaterialImportRepository {
   }
 
   private code(value: string): string {
-    return value.toUpperCase().replace(/[^A-Z0-9]+/g, '_').replace(/^_+|_+$/g, '') || 'MATERIAL';
+    return String(value ?? '').toUpperCase().replace(/[^A-Z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'MATERIAL';
   }
 
   private select(suffix: string): string {

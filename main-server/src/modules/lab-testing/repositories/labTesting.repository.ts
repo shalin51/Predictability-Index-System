@@ -85,7 +85,18 @@ export class LabTestingRepository {
          LIMIT 1
        ) tm ON true
        WHERE md.status = 'active'
-       ORDER BY md.sort_order, md.metric_key`
+         AND md.metric_key = ANY($1::text[])
+       ORDER BY array_position($1::text[], md.metric_key)` ,
+      [[
+        'weight',
+        'compression',
+        'stretch',
+        'full_stretch_max',
+        'hardness',
+        'wall_thickness',
+        'diameter',
+        'drop_test',
+      ]]
     );
     return result.rows as LabTestingRecord[];
   }

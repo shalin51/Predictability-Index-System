@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { colors, font, radius, spacing } from '../../theme/tokens';
 
 interface DashboardPageProps {
@@ -39,6 +39,16 @@ export function EmptyState({ children }: { children: ReactNode }) {
 }
 
 export function MessageBanner({ children, tone }: MessageBannerProps) {
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    setVisible(true);
+    const timeout = window.setTimeout(() => setVisible(false), 3_000);
+    return () => window.clearTimeout(timeout);
+  }, [children, tone]);
+
+  if (!visible) return null;
+
   return (
     <div
       style={{

@@ -30,26 +30,14 @@ ON CONFLICT (machine_code) DO UPDATE
 INSERT INTO metric_definitions
   (metric_key, display_name, category, default_unit, data_type, required_for_scoring, higher_is_better, sort_order)
 VALUES
-  ('weight', 'Weight', 'physical', 'g', 'numeric', false, NULL, 10),
-  ('diameter', 'Diameter', 'physical', 'mm', 'numeric', false, NULL, 20),
-  ('wall_thickness', 'Wall Thickness', 'physical', 'mm', 'numeric', false, NULL, 30),
-  ('roundness', 'Roundness', 'physical', 'mm', 'numeric', false, false, 40),
-  ('balance_deviation', 'Balance Deviation', 'physical', 'mm', 'numeric', false, false, 50),
-  ('bounce_height', 'Bounce Height', 'performance', 'in', 'numeric', false, true, 60),
-  ('hardness', 'Hardness', 'performance', 'Shore D', 'numeric', false, NULL, 70),
-  ('compression', 'Compression', 'performance', 'in', 'numeric', false, NULL, 80),
-  ('deflection', 'Deflection', 'performance', 'mm', 'numeric', false, NULL, 90),
-  ('coefficient_of_restitution', 'Coefficient of Restitution', 'performance', 'ratio', 'numeric', false, true, 100),
-  ('air_cannon_cycles_to_failure', 'Air Cannon Cycles to Failure', 'durability', 'cycles', 'numeric', false, true, 110),
-  ('crack_initiation_cycles', 'Crack Initiation Cycles', 'durability', 'cycles', 'numeric', false, true, 120),
-  ('deformation_measurement', 'Deformation Measurement', 'durability', 'mm', 'numeric', false, false, 130),
-  ('hot_temperature_performance', 'Hot Temperature Performance', 'environmental', 'score', 'numeric', false, true, 140),
-  ('cold_temperature_performance', 'Cold Temperature Performance', 'environmental', 'score', 'numeric', false, true, 150),
-  ('humidity_exposure_result', 'Humidity Exposure Result', 'environmental', 'score', 'numeric', false, true, 160),
-  ('feel_rating', 'Feel Rating', 'subjective', '1-10', 'rating', false, true, 170),
-  ('sound_rating', 'Sound Rating', 'subjective', '1-10', 'rating', false, true, 180),
-  ('perceived_speed', 'Perceived Speed', 'subjective', '1-10', 'rating', false, true, 190),
-  ('perceived_durability', 'Perceived Durability', 'subjective', '1-10', 'rating', false, true, 200)
+  ('weight', 'Weight', 'physical', 'g', 'numeric', true, NULL, 10),
+  ('compression', 'Compression', 'physical', 'lbf', 'numeric', true, NULL, 20),
+  ('stretch', 'Stretch', 'physical', 'lbf', 'numeric', true, NULL, 30),
+  ('full_stretch_max', 'Full Stretch max', 'physical', 'lbf', 'numeric', true, NULL, 40),
+  ('hardness', 'Hardness', 'physical', 'Shore D', 'numeric', true, NULL, 50),
+  ('wall_thickness', 'Wall Thickness', 'physical', 'mm', 'numeric', true, NULL, 60),
+  ('diameter', 'Diameter', 'physical', 'mm', 'numeric', true, NULL, 70),
+  ('drop_test', 'Drop Test', 'physical', 'in', 'numeric', true, NULL, 80)
 ON CONFLICT (metric_key) DO UPDATE
 SET display_name = EXCLUDED.display_name, category = EXCLUDED.category, default_unit = EXCLUDED.default_unit,
     data_type = EXCLUDED.data_type, required_for_scoring = EXCLUDED.required_for_scoring,

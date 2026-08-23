@@ -33,6 +33,7 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
   const [lots, setLots] = useState<LibraryRecord[]>([]);
   const [duplicateSourceId, setDuplicateSourceId] = useState('');
   const [approvedBy, setApprovedBy] = useState('');
+  const [approvalRequested, setApprovalRequested] = useState(false);
   const [formulations, setFormulations] = useState<FormulationRecord[]>([]);
   const [error, setError] = useState('');
   const total = useMemo(() => form.components.reduce((sum, component) => sum + Number(component.percentComposition || 0), 0), [form.components]);
@@ -55,6 +56,10 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
   const save = async (approve: boolean) => {
     try {
       setError('');
+      if (approve && !approvalRequested) {
+        setApprovalRequested(true);
+        return;
+      }
       if (approve && !window.confirm('Approve this formulation? Once approved, it cannot be edited or unapproved.')) return;
       if (approve && !approvedBy.trim()) {
         setError('Approved By is required when approving a formulation');
@@ -106,10 +111,6 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
               <input onChange={(event) => setForm((current) => ({ ...current, formulationCode: event.target.value }))} placeholder="Auto if blank" style={controlStyles.input} value={form.formulationCode ?? ''} />
             </label>
             <label style={controlStyles.field}>
-              <span style={controlStyles.fieldLabel}>Approved By (required to approve)</span>
-              <input onChange={(event) => setApprovedBy(event.target.value)} placeholder="Required when approving" style={controlStyles.input} value={approvedBy} />
-            </label>
-            <label style={controlStyles.field}>
               <span style={controlStyles.fieldLabel}>Duplicate Existing Formulation</span>
               <select onChange={(event) => setDuplicateSourceId(event.target.value)} style={controlStyles.input} value={duplicateSourceId}>
                 <option value="">Select formulation</option>
@@ -146,6 +147,12 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
             </div>
             <FormulationComponentsEditor components={form.components} lots={lots} materials={materials} onChange={() => undefined} readOnly suppliers={suppliers} />
             {!canApprove && <MessageBanner tone="warning">Component total must equal 100% before approval.</MessageBanner>}
+            {approvalRequested && (
+              <label style={controlStyles.field}>
+                <span style={controlStyles.fieldLabel}>Approved By (required to approve)</span>
+                <input autoFocus onChange={(event) => setApprovedBy(event.target.value)} placeholder="Enter approver name" style={controlStyles.input} value={approvedBy} />
+              </label>
+            )}
           </div>
         )}
         <Divider />
@@ -153,7 +160,7 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
           <button disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))} style={controlStyles.secondaryButton} type="button">Back</button>
           {step < 2 && <button onClick={() => setStep((current) => Math.min(2, current + 1))} style={controlStyles.primaryButton} type="button">Next</button>}
           {step === 2 && <button onClick={() => void save(false)} style={controlStyles.primaryButton} type="button">Save Draft</button>}
-          {step === 2 && <button disabled={!canApprove} onClick={() => void save(true)} style={{ ...controlStyles.primaryButton, ...(canApprove ? {} : styles.disabled) }} type="button">Approve</button>}
+          {step === 2 && <button disabled={!canApprove} onClick={() => void save(true)} style={{ ...controlStyles.primaryButton, ...(canApprove ? {} : styles.disabled) }} type="button">{approvalRequested ? 'Confirm Approval' : 'Approve'}</button>}
         </div>
       </Card>
     </DashboardPage>

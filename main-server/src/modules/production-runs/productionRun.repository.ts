@@ -1,5 +1,6 @@
 import type { PoolClient } from 'pg';
 import { getPool } from '../../infrastructure/database/pg-pool';
+import { formatCode } from '../../core/code-format';
 import type { ProductionRunInput, ProductionRunListQuery, ProductionRunRecord, ProductionRunStatus } from './productionRun.types';
 import { buildSamples } from './sample.repository';
 
@@ -211,7 +212,7 @@ export class ProductionRunRepository {
     const code = formulation.rows[0]?.formulation_code ?? 'RUN';
     const result = await client.query<{ count: string }>('SELECT COUNT(*)::text AS count FROM production_runs WHERE formulation_id = $1', [formulationId]);
     const suffix = String.fromCharCode(65 + Number(result.rows[0]?.count ?? 0));
-    return `${code}-RUN-${suffix}`;
+    return formatCode(`${code}-${suffix}`, 'PR');
   }
 
   private async withTransaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> {

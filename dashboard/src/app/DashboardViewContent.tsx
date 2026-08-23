@@ -212,7 +212,6 @@ export function DashboardViewContent({
     return (
       <ProductionRunListPage
         onCreate={() => navigate({ productionRunMode: 'new', view: 'production-runs' })}
-        onImport={() => navigate({ productionRunMode: 'import', view: 'production-runs' })}
         onOpen={(id) => navigate({ productionRunId: id, productionRunMode: 'detail', view: 'production-runs' })}
       />
     );

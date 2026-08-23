@@ -39,7 +39,6 @@ export function ProductionRunFilters({
         {machines.map((item) => <option key={item.id} value={item.id}>{String(item['code'] ?? item['label'])}</option>)}
       </select>
       <DateRangePicker
-        label="Date produced"
         onChange={({ from, to }) => {
           onChange('dateProducedFrom', from);
           onChange('dateProducedTo', to);

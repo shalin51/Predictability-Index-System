@@ -15,16 +15,14 @@ export function MissingRequiredMetricsPanel({
     .filter((metric) => !results.some((result) => result.sampleId === sample.id && result.metricId === metric.id))
     .map((metric) => `${sample.sampleCode}: ${metric.displayName}`));
 
+  if (missing.length === 0) return null;
+
   return (
     <div style={labStyles.panel}>
       <strong>Missing Required Metrics</strong>
-      {missing.length === 0 ? (
-        <div style={labStyles.muted}>None</div>
-      ) : (
-        <ul>
-          {missing.map((item) => <li key={item}>{item}</li>)}
-        </ul>
-      )}
+      <ul>
+        {missing.map((item) => <li key={item}>{item}</li>)}
+      </ul>
     </div>
   );
 }

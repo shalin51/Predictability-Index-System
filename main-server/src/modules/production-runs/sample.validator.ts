@@ -1,4 +1,5 @@
 import { ValidationError } from '../../errors/app-error';
+import { formatCode } from '../../core/code-format';
 import { SAMPLE_STATUSES } from '../../constants/domain.constants';
 import type { SampleInput, SampleStatus } from './productionRun.types';
 
@@ -9,7 +10,7 @@ export function normalizeSampleInput(input: Record<string, unknown>): SampleInpu
   if (status && !statuses.has(status)) throw new ValidationError('Invalid sample status');
   return {
     cavityNumber: input['cavityNumber'] == null || input['cavityNumber'] === '' ? null : Number(input['cavityNumber']),
-    sampleCode: input['sampleCode'] == null ? '' : String(input['sampleCode']).trim(),
+    sampleCode: input['sampleCode'] == null ? '' : formatCode(String(input['sampleCode']), 'T'),
     status,
   };
 }

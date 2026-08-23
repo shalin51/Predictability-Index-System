@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { useEffect, useState } from 'react';
 import { controlStyles } from '../../components/ui/controls';
 import type { FormulationComponentPayload, LibraryRecord } from '../../services/api';
 import { colors, spacing } from '../../theme/tokens';
@@ -21,6 +22,7 @@ export function FormulationComponentsEditor({
   readOnly = false,
   suppliers,
 }: FormulationComponentsEditorProps) {
+  const [materialSearches, setMaterialSearches] = useState<string[]>([]);
   const total = components.reduce((sum, component) => sum + Number(component.percentComposition || 0), 0);
   const remaining = 100 - total;
   const warnings = components.flatMap((component, index) => {
@@ -31,6 +33,20 @@ export function FormulationComponentsEditor({
 
   const update = (index: number, patch: Partial<FormulationComponentPayload>) => {
     onChange(components.map((component, currentIndex) => currentIndex === index ? { ...component, ...patch } : component));
+  };
+
+  useEffect(() => {
+    setMaterialSearches((current) => components.map((component, index) => {
+      if (current[index] !== undefined) return current[index];
+      return materialSearchValue(materials.find((item) => item.id === component.materialId));
+    }));
+  }, [components, materials]);
+
+  const selectMaterial = (index: number, value: string) => {
+    setMaterialSearches((current) => current.map((search, currentIndex) => currentIndex === index ? value : search));
+    const material = materials.find((item) => materialSearchValue(item) === value);
+    if (material) update(index, { materialId: material.id, materialLotId: '', supplierId: '' });
+    if (!value) update(index, { materialId: '', materialLotId: '', supplierId: '' });
   };
 
   return (
@@ -44,7 +60,7 @@ export function FormulationComponentsEditor({
           <thead>
             <tr>
               <th style={formulationStyles.th}>Material *</th>
-              <th style={formulationStyles.th}>Supplier *</th>
+              <th style={formulationStyles.th}>Supplier</th>
               <th style={formulationStyles.th}>Lot Number</th>
               <th style={formulationStyles.th}>Percent Composition *</th>
               <th style={formulationStyles.th}>Basis</th>
@@ -55,15 +71,29 @@ export function FormulationComponentsEditor({
             {components.map((component, index) => (
               <tr key={`${component.materialId}-${index}`}>
                 <td style={formulationStyles.td}>
-                  <select disabled={readOnly} onChange={(event) => update(index, { materialId: event.target.value, materialLotId: '' })} style={controlStyles.input} value={component.materialId}>
-                    <option value="">Select</option>
-                    {materials.map((item) => <option key={item.id} value={item.id}>{String(item['code'] ?? item['label'])}</option>)}
-                  </select>
+                  {readOnly ? (
+                    <input disabled style={controlStyles.input} value={materialSearchValue(materials.find((item) => item.id === component.materialId))} />
+                  ) : (
+                    <>
+                      <input
+                        aria-label={`Search material for component ${index + 1}`}
+                        autoComplete="off"
+                        list="formulation-material-options"
+                        onChange={(event) => selectMaterial(index, event.target.value)}
+                        placeholder="Search material name"
+                        style={controlStyles.input}
+                        value={materialSearches[index] ?? materialSearchValue(materials.find((item) => item.id === component.materialId))}
+                      />
+                      <datalist id="formulation-material-options">
+                        {materials.map((item) => <option key={item.id} value={materialSearchValue(item)} />)}
+                      </datalist>
+                    </>
+                  )}
                 </td>
                 <td style={formulationStyles.td}>
-                  <select disabled={readOnly} onChange={(event) => update(index, { materialLotId: '', supplierId: event.target.value })} style={controlStyles.input} value={component.supplierId}>
+                  <select disabled={readOnly} onChange={(event) => update(index, { materialLotId: '', supplierId: event.target.value || null })} style={controlStyles.input} value={component.supplierId ?? ''}>
                     <option value="">Select</option>
-                    {suppliers.map((item) => <option key={item.id} value={item.id}>{String(item['label'])}</option>)}
+                    {suppliers.filter((item) => supplierMatchesMaterial(item.id, component.materialId, materials)).map((item) => <option key={item.id} value={item.id}>{String(item['label'])}</option>)}
                   </select>
                 </td>
                 <td style={formulationStyles.td}>
@@ -108,6 +138,19 @@ export function FormulationComponentsEditor({
       {warnings.map((warning) => <div key={warning} style={styles.warning}>{warning}</div>)}
     </div>
   );
+}
+
+function materialSearchValue(material?: LibraryRecord): string {
+  if (!material) return '';
+  const name = String(material['label'] ?? '');
+  const code = String(material['code'] ?? '');
+  return code ? `${name} (${code})` : name;
+}
+
+function supplierMatchesMaterial(supplierId: string, materialId: string, materials: LibraryRecord[]): boolean {
+  if (!materialId) return true;
+  const supplierIds = materials.find((material) => material.id === materialId)?.['supplierIds'];
+  return !Array.isArray(supplierIds) || supplierIds.includes(supplierId);
 }
 
 const styles: Record<string, CSSProperties> = {

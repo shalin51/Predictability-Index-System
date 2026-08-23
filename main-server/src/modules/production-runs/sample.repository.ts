@@ -1,4 +1,5 @@
 import { getPool } from '../../infrastructure/database/pg-pool';
+import { formatCode } from '../../core/code-format';
 import type { ProductionRunRecord, SampleGenerationInput, SampleInput } from './productionRun.types';
 
 export class SampleRepository {
@@ -42,7 +43,7 @@ export class SampleRepository {
     const width = (match[2] ?? '1').length;
     const result = await getPool().query<{ sample_code: string }>(`SELECT sample_code FROM samples WHERE sample_code LIKE $1`, [`${prefix}%`]);
     const max = result.rows.reduce((highest, row) => {
-      const suffix = row.sample_code.slice(prefix.length);
+      const suffix = row.sample_code.replace(/-T$/i, '').slice(prefix.length);
       return /^\d+$/.test(suffix) ? Math.max(highest, Number(suffix)) : highest;
     }, 0);
     return `${prefix}${String(max + 1).padStart(width, '0')}`;
@@ -94,7 +95,7 @@ export class SampleRepository {
 export function buildSamples(input: SampleGenerationInput): SampleInput[] {
   return Array.from({ length: input.count }, (_, index) => ({
     cavityNumber: input.cavityAssignments?.[index] ?? null,
-    sampleCode: incrementSampleCode(input.startingSampleCode, index),
+    sampleCode: formatCode(incrementSampleCode(input.startingSampleCode, index), 'T'),
     status: 'created',
   }));
 }

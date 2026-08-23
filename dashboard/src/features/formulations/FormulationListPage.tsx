@@ -57,7 +57,6 @@ export function FormulationListPage({ onCreate, onOpen }: { onCreate: () => void
             {materials.map((item) => <option key={item.id} value={item.id}>{String(item['code'] ?? item['label'])}</option>)}
           </select>
           <DateRangePicker
-            label="Created date"
             onChange={({ from, to }) => setFilters((current) => ({ ...current, createdFrom: from, createdTo: to }))}
             value={{ from: filters.createdFrom, to: filters.createdTo }}
           />

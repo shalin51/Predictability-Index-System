@@ -133,6 +133,17 @@ export class ProcessSetupService {
     return record;
   }
 
+  async initializeRunValues(runId: string, actor: string) {
+    const state = await this.repo.runState(runId);
+    if (!state) throw new NotFoundError(`Production run ${runId}`);
+    if (!['planned', 'molded'].includes(state.status)) throw new ConflictError('Process setups can only be configured while a run is planned or molded');
+    const before = await this.runProcessSetup(runId);
+    await this.repo.initializeRunValues(runId);
+    const record = await this.runProcessSetup(runId);
+    await this.audit.log({ tableName: 'production_runs', recordId: runId, action: 'UPDATE', changedBy: actor, oldValues: { processValues: before.values }, newValues: { processValues: record.values, setupMode: 'manual' } });
+    return record;
+  }
+
   private async withMatches(record: Awaited<ReturnType<ProcessSetupRepository['findImport']>>) {
     if (!record) return null;
     const matches = await this.repo.matchLibrary(record.parsedSnapshot);

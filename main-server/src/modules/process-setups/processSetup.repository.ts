@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import type { PoolClient } from 'pg';
 import { getPool } from '../../infrastructure/database/pg-pool';
+import { formatCode } from '../../core/code-format';
 import type { ParsedSetupWorkbook, ProcessSetupRecord, SetupImportCommitInput } from './processSetup.types';
 
 interface ImportRow extends ProcessSetupRecord {
@@ -229,6 +230,18 @@ export class ProcessSetupRepository {
     } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
   }
 
+  async initializeRunValues(runId: string): Promise<void> {
+    await getPool().query(
+      `INSERT INTO production_run_process_values
+        (production_run_id, parameter_definition_id, position_type, unit)
+       SELECT $1, id, 'single', default_unit
+       FROM process_parameter_definitions
+       WHERE status = 'active'
+       ON CONFLICT DO NOTHING`,
+      [runId]
+    );
+  }
+
   async runState(runId: string): Promise<{ status: string } | null> {
     const result = await getPool().query<{ status: string }>(`SELECT status::text AS status FROM production_runs WHERE id = $1`, [runId]);
     return result.rows[0] ?? null;
@@ -361,7 +374,7 @@ export class ProcessSetupRepository {
     if (!runCode) {
       const formulation = await client.query<{ formulation_code: string }>(`SELECT formulation_code FROM formulations WHERE id = $1`, [input.formulationId]);
       const count = await client.query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM production_runs WHERE formulation_id = $1`, [input.formulationId]);
-      runCode = `${formulation.rows[0]?.formulation_code ?? 'RUN'}-RUN-${String.fromCharCode(65 + Number(count.rows[0]?.count ?? 0))}`;
+      runCode = formatCode(`${formulation.rows[0]?.formulation_code ?? 'RUN'}-${String.fromCharCode(65 + Number(count.rows[0]?.count ?? 0))}`, 'PR');
     }
     const coolingParameter = snapshot.parameters.find((item) => item.key === 'cycle.cooling_time');
     const cycleParameter = snapshot.parameters.find((item) => item.key === 'cycle.total_time');

@@ -1,4 +1,5 @@
 import { ValidationError } from '../../errors/app-error';
+import { formatCode } from '../../core/code-format';
 import type { FormulationComponentInput, FormulationSaveInput } from './formulation.types';
 
 const totalTolerance = 0.0001;
@@ -10,7 +11,7 @@ export function normalizeFormulationInput(input: Record<string, unknown>): Formu
     approve: Boolean(input['approve']),
     approvedBy: stringOrNull(input['approvedBy']),
     components: components.map(normalizeComponent),
-    formulationCode: stringValue(input['formulationCode']),
+    formulationCode: formatCode(stringValue(input['formulationCode']), 'F'),
     formulationName: stringValue(input['formulationName']),
     notes: input['notes'] == null ? null : String(input['notes']),
   };
@@ -47,14 +48,13 @@ function normalizeComponent(value: unknown): FormulationComponentInput {
     materialId: stringValue(input['materialId']),
     materialLotId: stringOrNull(input['materialLotId']),
     percentComposition: Number(input['percentComposition']),
-    supplierId: stringValue(input['supplierId']),
+    supplierId: stringOrNull(input['supplierId']),
   };
 }
 
 function validateComponent(component: FormulationComponentInput, index: number): void {
   const row = index + 1;
   if (!component.materialId) throw new ValidationError(`Component ${row}: Material is required`);
-  if (!component.supplierId) throw new ValidationError(`Component ${row}: Supplier is required`);
   if (!Number.isFinite(component.percentComposition)) throw new ValidationError(`Component ${row}: Percent Composition must be numeric`);
   if (component.percentComposition < 0) throw new ValidationError(`Component ${row}: Percent Composition cannot be negative`);
   if (component.percentComposition > 100) throw new ValidationError(`Component ${row}: Percent Composition cannot exceed 100%`);

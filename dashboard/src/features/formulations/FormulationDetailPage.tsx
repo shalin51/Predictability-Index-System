@@ -22,6 +22,8 @@ import { ReadOnlyLabResultsPanel } from '../lab-testing/components/ReadOnlyLabRe
 import { formatValue, formulationStyles, labelize, totalTone } from './formulationUi';
 
 type DetailTab = 'Overview' | 'Recipe Components' | 'Production Runs' | 'Lab Results' | 'Scores';
+const draftTabs: DetailTab[] = ['Overview', 'Recipe Components'];
+const approvedTabs: DetailTab[] = ['Overview', 'Recipe Components', 'Production Runs', 'Lab Results', 'Scores'];
 
 export function FormulationDetailPage({
   id,
@@ -45,6 +47,7 @@ export function FormulationDetailPage({
   const [tab, setTab] = useState<DetailTab>('Overview');
   const [editing, setEditing] = useState(false);
   const [approvedBy, setApprovedBy] = useState('');
+  const [approvalRequested, setApprovalRequested] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -84,6 +87,7 @@ export function FormulationDetailPage({
 
   const total = components.reduce((sum, component) => sum + Number(component.percentComposition || 0), 0);
   const canApprove = record.status === 'draft' && Math.abs(total - 100) < 0.0001;
+  const tabs = record.status === 'draft' ? draftTabs : approvedTabs;
 
   const save = async () => {
     try {
@@ -103,6 +107,10 @@ export function FormulationDetailPage({
   };
 
   const approve = async () => {
+    if (!approvalRequested) {
+      setApprovalRequested(true);
+      return;
+    }
     if (!approvedBy.trim()) {
       setError('Approved By is required when approving a formulation');
       return;
@@ -131,8 +139,8 @@ export function FormulationDetailPage({
           </div>
           <div style={formulationStyles.actions}>
             {record.status === 'draft' && <button onClick={() => setEditing(true)} style={controlStyles.secondaryButton} type="button">Edit</button>}
-            {record.status === 'draft' && <label style={controlStyles.field}><span style={controlStyles.fieldLabel}>Approved By (required to approve)</span><input onChange={(event) => setApprovedBy(event.target.value)} style={controlStyles.input} value={approvedBy} /></label>}
-            {record.status === 'draft' && <button disabled={!canApprove} onClick={() => void approve()} style={{ ...controlStyles.primaryButton, ...(canApprove ? {} : styles.disabled) }} type="button">Approve</button>}
+            {record.status === 'draft' && approvalRequested && <label style={controlStyles.field}><span style={controlStyles.fieldLabel}>Approved By (required to approve)</span><input autoFocus onChange={(event) => setApprovedBy(event.target.value)} style={controlStyles.input} value={approvedBy} /></label>}
+            {record.status === 'draft' && <button disabled={!canApprove} onClick={() => void approve()} style={{ ...controlStyles.primaryButton, ...(canApprove ? {} : styles.disabled) }} type="button">{approvalRequested ? 'Confirm Approval' : 'Approve'}</button>}
             {record.status === 'approved' && <button onClick={onCreateProductionRun} style={controlStyles.secondaryButton} type="button">Create Production Run</button>}
           </div>
         </div>
@@ -140,7 +148,7 @@ export function FormulationDetailPage({
         {error && <MessageBanner tone="danger">{error}</MessageBanner>}
         {message && <MessageBanner tone="success">{message}</MessageBanner>}
         <div style={styles.tabs}>
-          {(['Overview', 'Recipe Components', 'Production Runs', 'Lab Results', 'Scores'] as DetailTab[]).map((item) => (
+          {tabs.map((item) => (
             <button key={item} onClick={() => setTab(item)} style={getTabButtonStyle(tab === item)} type="button">{item}</button>
           ))}
         </div>

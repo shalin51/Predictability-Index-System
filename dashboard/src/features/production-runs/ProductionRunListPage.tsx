@@ -22,7 +22,7 @@ const defaultFilters: ProductionRunFiltersState = {
   status: 'all',
 };
 
-export function ProductionRunListPage({ onCreate, onImport, onOpen }: { onCreate: () => void; onImport?: () => void; onOpen: (id: string) => void }) {
+export function ProductionRunListPage({ onCreate, onOpen }: { onCreate: () => void; onOpen: (id: string) => void }) {
   const [records, setRecords] = useState<ProductionRunRecord[]>([]);
   const [formulations, setFormulations] = useState<LibraryRecord[]>([]);
   const [machines, setMachines] = useState<LibraryRecord[]>([]);
@@ -56,7 +56,6 @@ export function ProductionRunListPage({ onCreate, onImport, onOpen }: { onCreate
             <p style={runStyles.subtitle}>Approved formulations molded into traceable batches and samples.</p>
           </div>
           <div style={runStyles.actions}>
-            {onImport && <button onClick={onImport} style={controlStyles.secondaryButton} type="button">Import Setup Sheet</button>}
             <button onClick={onCreate} style={controlStyles.primaryButton} type="button">New Production Run</button>
           </div>
         </div>

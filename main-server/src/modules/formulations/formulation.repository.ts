@@ -1,5 +1,6 @@
 import type { PoolClient } from 'pg';
 import { getPool } from '../../infrastructure/database/pg-pool';
+import { formatCode } from '../../core/code-format';
 import type {
   FormulationComponentInput,
   FormulationListQuery,
@@ -208,7 +209,7 @@ export class FormulationRepository {
               fc.percent_composition::float AS "percentComposition", fc.basis, fc.sort_order AS "sortOrder"
        FROM formulation_components fc
        JOIN materials m ON m.id = fc.material_id
-       JOIN suppliers s ON s.id = fc.supplier_id
+       LEFT JOIN suppliers s ON s.id = fc.supplier_id
        LEFT JOIN material_lots ml ON ml.id = fc.material_lot_id
        WHERE fc.formulation_id = $1
        ORDER BY fc.sort_order, fc.created_at`,
@@ -227,7 +228,7 @@ export class FormulationRepository {
         [
           id,
           component.materialId,
-          component.supplierId,
+          component.supplierId || null,
           component.materialLotId || null,
           component.percentComposition,
           component.basis || 'weight_percent',
@@ -245,7 +246,7 @@ export class FormulationRepository {
        WHERE formulation_code LIKE $1`,
       [`F-${year}-%`]
     );
-    return `F-${year}-${result.rows[0]?.next_value ?? '001'}`;
+    return formatCode(`F-${year}-${result.rows[0]?.next_value ?? '001'}`, 'F');
   }
 
   private async withTransaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> {

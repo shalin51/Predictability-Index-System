@@ -30,7 +30,7 @@ export const runStyles: Record<string, CSSProperties> = {
   badge: { borderRadius: radius.sm, display: 'inline-flex', fontSize: font.size.small, fontWeight: font.weight.semibold, padding: '5px 8px' },
   filters: { display: 'grid', gap: spacing.space3, gridTemplateColumns: '2fr repeat(5, 1fr)', marginBottom: spacing.space4 },
   formGrid: { display: 'grid', gap: spacing.space4, gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' },
-  header: { alignItems: 'flex-start', display: 'flex', gap: spacing.space4, justifyContent: 'space-between' },
+  header: { alignItems: 'center', display: 'grid', gap: spacing.space4, gridTemplateColumns: 'minmax(0, 20%) minmax(0, 50%) minmax(0, 30%)' },
   muted: { color: colors.text.muted, fontSize: font.size.small },
   panel: { border: `1px solid ${colors.border}`, borderRadius: radius.md, padding: spacing.space4 },
   stack: { display: 'grid', gap: spacing.space4 },

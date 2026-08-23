@@ -1,4 +1,5 @@
 import { ValidationError } from '../../errors/app-error';
+import { formatCode } from '../../core/code-format';
 import { PRODUCTION_RUN_STATUSES } from '../../constants/domain.constants';
 import type { ProductionRunInput, ProductionRunStatus, SampleGenerationInput } from './productionRun.types';
 
@@ -21,7 +22,7 @@ export function normalizeProductionRunInput(input: Record<string, unknown>): Pro
     meltTemperature: nullableNumber(input['meltTemperature']),
     meltTemperatureUnit: stringValue(input['meltTemperatureUnit']) || 'C',
     moldId: stringValue(input['moldId']),
-    runCode: stringValue(input['runCode']),
+    runCode: formatCode(stringValue(input['runCode']), 'PR'),
     sampleGeneration: normalizeSampleGeneration(input['sampleGeneration']),
     status: normalizeStatus(input['status']),
   };

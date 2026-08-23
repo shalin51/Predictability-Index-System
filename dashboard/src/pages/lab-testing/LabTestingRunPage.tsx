@@ -7,23 +7,16 @@ import {
   completeLabTesting,
   generateSamples,
   getLabTestingResults,
-  saveEnvironmentalResult,
-  saveObservation,
   saveSampleResult,
-  saveSubjectiveRating,
   startLabTesting,
   type LabMetric,
   type LabTestingResultsResponse,
   type SampleRecord,
 } from '../../services/api';
-import { EnvironmentalResultGrid } from '../../features/lab-testing/components/EnvironmentalResultGrid';
 import { LabResultGrid } from '../../features/lab-testing/components/LabResultGrid';
 import { LabRunHeader } from '../../features/lab-testing/components/LabRunHeader';
 import { MissingRequiredMetricsPanel } from '../../features/lab-testing/components/MissingRequiredMetricsPanel';
-import { ObservationPanel } from '../../features/lab-testing/components/ObservationPanel';
-import { SubjectiveRatingForm } from '../../features/lab-testing/components/SubjectiveRatingForm';
-import { LAB_RESULT_CATEGORIES, labStyles } from '../../features/lab-testing/labTestingUi';
-import { colors } from '../../theme/tokens';
+import { labStyles } from '../../features/lab-testing/labTestingUi';
 
 export function LabTestingRunPage({
   id,
@@ -40,7 +33,6 @@ export function LabTestingRunPage({
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [selectedSampleId, setSelectedSampleId] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<LabMetric['category'] | 'observations'>('physical');
 
   const load = () => {
     setError('');
@@ -54,22 +46,6 @@ export function LabTestingRunPage({
       await saveSampleResult({
         metricId: metric.id,
         sampleId: sample.id,
-        testMethodId: metric.testMethodId ?? null,
-        unit: metric.defaultUnit ?? '',
-        valueNumeric: value,
-      });
-      load();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Save failed');
-    }
-  };
-
-  const saveEnvironmental = async (sample: SampleRecord, metric: LabMetric, value: number, testConditionId?: string | null) => {
-    try {
-      await saveEnvironmentalResult({
-        metricId: metric.id,
-        sampleId: sample.id,
-        testConditionId: testConditionId ?? null,
         testMethodId: metric.testMethodId ?? null,
         unit: metric.defaultUnit ?? '',
         valueNumeric: value,
@@ -102,11 +78,6 @@ export function LabTestingRunPage({
   });
   const sampleProgress = data.samples.map((sample) => ({ completed: resultMetricIdsBySample.get(sample.id)?.size ?? 0, sampleCode: sample.sampleCode, total: perSampleTotal }));
   const overallProgress = { completed: sampleProgress.reduce((total, sample) => total + sample.completed, 0), total: run.requiredResultCount || sampleProgress.reduce((total, sample) => total + sample.total, 0) };
-  const categoryComplete = (category: LabMetric['category']) => {
-    const metricIds = data.metrics.filter((metric) => metric.category === category && progressMetricIds.has(metric.id)).map((metric) => metric.id);
-    const completed = resultMetricIdsBySample.get(selectedSample?.id ?? '') ?? new Set<string>();
-    return metricIds.length > 0 && metricIds.every((metricId) => completed.has(metricId));
-  };
   const disabledComplete = data.samples.length === 0 || run.missingRequiredMetrics > 0;
   return (
     <DashboardPage maxWidth="100%">
@@ -143,18 +114,10 @@ export function LabTestingRunPage({
               <aside style={styles.sidebar}>
                 <strong>Samples</strong>
                 {data.samples.map((sample) => <button key={sample.id} onClick={() => setSelectedSampleId(sample.id)} style={{ ...styles.navButton, ...(sample.id === selectedSample.id ? styles.selectedNavButton : {}) }} type="button">{sample.sampleCode}</button>)}
-                <strong style={styles.categoryHeading}>Categories</strong>
-                {LAB_RESULT_CATEGORIES.map((category) => { const complete = categoryComplete(category.id); return <button key={category.id} onClick={() => setSelectedCategory(category.id)} style={{ ...styles.navButton, ...(selectedCategory === category.id ? styles.selectedNavButton : {}), ...(complete ? styles.completedNavButton : {}) }} type="button">{complete && <span aria-label="Complete" style={styles.check}>✓</span>}{category.label}</button>; })}
-                <button onClick={() => setSelectedCategory('observations')} style={{ ...styles.navButton, ...(selectedCategory === 'observations' ? styles.selectedNavButton : {}) }} type="button">Observations</button>
               </aside>
               <Card>
-                <h2 style={labStyles.title}>{selectedSample.sampleCode} — {selectedCategory === 'observations' ? 'Observations' : LAB_RESULT_CATEGORIES.find((category) => category.id === selectedCategory)?.label}</h2>
-                {selectedCategory === 'physical' && <LabResultGrid category="physical" hideSampleColumn metrics={data.metrics} onSave={saveNumeric} results={data.numericResults} samples={[selectedSample]} />}
-                {selectedCategory === 'performance' && <LabResultGrid category="performance" hideSampleColumn metrics={data.metrics} onSave={saveNumeric} results={data.numericResults} samples={[selectedSample]} />}
-                {selectedCategory === 'durability' && <div style={labStyles.stack}><LabResultGrid category="durability" hideSampleColumn metrics={data.metrics} onSave={saveNumeric} results={data.numericResults} samples={[selectedSample]} /><ObservationPanel observations={data.observations.filter((item) => item.sampleId === selectedSample.id && item['observationType'] === 'crack_propagation')} onSave={(sampleId, observationType, observationText) => void saveObservation({ observationText, observationType, sampleId }).then(load).catch((err: Error) => setError(err.message))} sample={selectedSample} samples={[selectedSample]} /></div>}
-                {selectedCategory === 'environmental' && <EnvironmentalResultGrid hideSampleColumn metrics={data.metrics} onSave={saveEnvironmental} results={data.environmentalResults} samples={[selectedSample]} testConditions={data.testConditions} />}
-                {selectedCategory === 'subjective' && <SubjectiveRatingForm hideSampleColumn metrics={data.metrics} onFeedbackSave={(item, feedbackText) => void saveSubjectiveRating({ feedbackText, sampleId: item.id }).then(load).catch((err: Error) => setError(err.message))} onRatingSave={(item, metric, value) => void saveSubjectiveRating({ metricId: metric.id, ratingValue: value, sampleId: item.id }).then(load).catch((err: Error) => setError(err.message))} ratings={data.subjectiveRatings} samples={[selectedSample]} />}
-                {selectedCategory === 'observations' && <ObservationPanel observations={data.observations.filter((item) => item.sampleId === selectedSample.id)} onSave={(sampleId, observationType, observationText) => void saveObservation({ observationText, observationType, sampleId }).then(load).catch((err: Error) => setError(err.message))} sample={selectedSample} samples={[selectedSample]} />}
+                <h2 style={labStyles.title}>{selectedSample.sampleCode}</h2>
+                <LabResultGrid hideSampleColumn metrics={data.metrics} onSave={saveNumeric} results={data.numericResults} samples={[selectedSample]} />
               </Card>
             </div>}
             <MissingRequiredMetricsPanel metrics={data.metrics} results={data.numericResults} samples={data.samples} />
@@ -166,9 +129,6 @@ export function LabTestingRunPage({
 }
 
 const styles: Record<string, CSSProperties> = {
-  categoryHeading: { marginTop: 16 },
-  check: { color: colors.status.ok, fontWeight: 700, marginRight: 8 },
-  completedNavButton: { borderColor: colors.text.primary },
   navButton: { ...controlStyles.secondaryButton, textAlign: 'left', width: '100%' },
   selectedNavButton: { ...controlStyles.primaryButton },
   sidebar: { display: 'grid', alignContent: 'start', gap: 8 },

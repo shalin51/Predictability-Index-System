@@ -15,7 +15,7 @@ export interface FormulationComponentInput {
   materialId: string;
   materialLotId?: string | null;
   percentComposition: number;
-  supplierId: string;
+  supplierId?: string | null;
 }
 
 export interface FormulationSaveInput {

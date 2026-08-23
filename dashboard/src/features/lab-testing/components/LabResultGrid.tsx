@@ -1,16 +1,14 @@
-import type { LabMetric, LabMetricCategory, LabResultRecord, SampleRecord } from '../../../services/api';
-import { METRIC_ORDER, labStyles } from '../labTestingUi';
+import type { LabMetric, LabResultRecord, SampleRecord } from '../../../services/api';
+import { LAB_TEST_METRIC_KEYS, labStyles } from '../labTestingUi';
 import { SampleResultInput } from './SampleResultInput';
 
 export function LabResultGrid({
-  category,
   metrics,
   onSave,
   results,
   hideSampleColumn = false,
   samples,
 }: {
-  category: LabMetricCategory;
   metrics: LabMetric[];
   onSave: (sample: SampleRecord, metric: LabMetric, value: number) => void;
   results: LabResultRecord[];
@@ -18,9 +16,8 @@ export function LabResultGrid({
   samples: SampleRecord[];
 }) {
   const ordered = metrics
-    .filter((metric) => metric.category === category)
-    .filter((metric) => METRIC_ORDER[category].includes(metric.metricKey))
-    .sort((a, b) => METRIC_ORDER[category].indexOf(a.metricKey) - METRIC_ORDER[category].indexOf(b.metricKey));
+    .filter((metric) => LAB_TEST_METRIC_KEYS.includes(metric.metricKey as typeof LAB_TEST_METRIC_KEYS[number]))
+    .sort((a, b) => LAB_TEST_METRIC_KEYS.indexOf(a.metricKey as typeof LAB_TEST_METRIC_KEYS[number]) - LAB_TEST_METRIC_KEYS.indexOf(b.metricKey as typeof LAB_TEST_METRIC_KEYS[number]));
 
   return (
     <div style={labStyles.tableWrap}>

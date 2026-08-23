@@ -107,7 +107,7 @@ export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenL
     <DashboardPage maxWidth="100%">
       <Card>
         <div style={runStyles.header}>
-          <div>
+          <div style={styles.headerStart}>
             <button onClick={onBack} style={controlStyles.subtleButton} type="button">Back</button>
             <div style={styles.titleRow}>
               <h1 style={runStyles.title}>{record.runCode}</h1>
@@ -115,8 +115,11 @@ export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenL
             </div>
             <p style={runStyles.subtitle}>{record.formulation} | Samples: {record.sampleCount}</p>
           </div>
-          <div style={styles.actionArea}>
-            <div style={{ ...runStyles.actions, justifyContent: 'center' }}>
+          <div style={styles.headerTimeline}>
+            <ProductionRunTimeline status={record.status} />
+          </div>
+          <div style={styles.headerActions}>
+            <div style={{ ...runStyles.actions, justifyContent: 'flex-end' }}>
               <button onClick={() => onOpenFormulation(record.formulationId)} style={controlStyles.secondaryButton} type="button">View Formulation</button>
               {previousAction && <button onClick={() => void updateProductionRunStatus(record.id, previousAction.status).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.secondaryButton} type="button">{previousAction.label}</button>}
               {nextAction && <button onClick={() => void updateProductionRunStatus(record.id, nextAction.status).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.primaryButton} type="button">{nextAction.label}</button>}
@@ -125,7 +128,6 @@ export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenL
               {(record.status === 'completed' || record.status === 'scored') && <button onClick={() => setTab('Scores')} style={controlStyles.secondaryButton} type="button">Scores</button>}
               {(record.status === 'completed' || record.status === 'scored') && onOpenReport && <button onClick={() => onOpenReport(record.id)} style={controlStyles.secondaryButton} type="button">Report</button>}
             </div>
-            <ProductionRunTimeline status={record.status} />
           </div>
         </div>
         <Divider />
@@ -190,7 +192,9 @@ function toPayload(record: ProductionRunRecord): ProductionRunPayload {
 }
 
 const styles: Record<string, CSSProperties> = {
-  actionArea: { alignItems: 'center', display: 'flex', flexDirection: 'column', gap: spacing.space2 },
+  headerActions: { alignItems: 'flex-end', display: 'flex', justifyContent: 'flex-end', minWidth: 0 },
+  headerStart: { minWidth: 0 },
+  headerTimeline: { alignItems: 'center', display: 'flex', justifyContent: 'center', minWidth: 0 },
   overviewGrid: { display: 'grid', gap: spacing.space4, gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' },
   tabs: { display: 'flex', flexWrap: 'wrap', gap: spacing.space3 },
   titleRow: { alignItems: 'center', display: 'flex', gap: spacing.space2, marginTop: spacing.space4 },

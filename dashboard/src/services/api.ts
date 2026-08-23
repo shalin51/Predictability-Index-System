@@ -51,7 +51,7 @@ export interface FormulationComponentPayload {
   materialId: string;
   materialLotId?: string | null;
   percentComposition: number;
-  supplierId: string;
+  supplierId?: string | null;
 }
 
 export interface FormulationPayload {
@@ -90,8 +90,8 @@ export interface FormulationComponentRecord {
   materialLotId?: string | null;
   materialName: string;
   percentComposition: number;
-  supplierId: string;
-  supplierName: string;
+  supplierId?: string | null;
+  supplierName?: string | null;
 }
 
 
@@ -900,6 +900,10 @@ export async function updateProductionRunProcessValues(runId: string, payload: R
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
+}
+
+export async function initializeProductionRunProcessValues(runId: string): Promise<ProcessSetupDetail> {
+  return fetchJSON<ProcessSetupDetail>(`/production-runs/${runId}/process-values/initialize`, { method: 'POST' });
 }
 
 export async function importProductionRunProcessValues(runId: string, sourceRunId: string): Promise<ProcessSetupDetail> {

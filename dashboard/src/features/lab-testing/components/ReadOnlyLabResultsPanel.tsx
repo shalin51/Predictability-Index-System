@@ -10,7 +10,7 @@ import {
   type SampleRecord,
 } from '../../../services/api';
 import { colors, font, radius, spacing } from '../../../theme/tokens';
-import { formatLabValue, LAB_RESULT_CATEGORIES, labStyles } from '../labTestingUi';
+import { formatLabValue, labStyles } from '../labTestingUi';
 
 interface ReadOnlyLabResultsPanelProps {
   onOpenLabRun?: (runId: string) => void;
@@ -63,7 +63,7 @@ export function ReadOnlyLabResultsPanel({ onOpenLabRun, runId, title }: ReadOnly
         )}
       </div>
 
-      {rows.length === 0 ? <EmptyState>No lab results.</EmptyState> : <div style={styles.resultGroups}>{sampleGroups.map(([sample, sampleRows]) => <section key={sample}><h4 style={styles.sampleTitle}>{sample}</h4>{groupRowsByCategory(sampleRows).map(([category, categoryRows]) => <div key={category} style={styles.category}><h5 style={styles.categoryTitle}>{categoryLabel(category)}</h5><ResultTable rows={categoryRows} /></div>)}</section>)}</div>}
+      {rows.length === 0 ? <EmptyState>No lab results.</EmptyState> : <div style={styles.resultGroups}>{sampleGroups.map(([sample, sampleRows]) => <section key={sample}><h4 style={styles.sampleTitle}>{sample}</h4><ResultTable rows={sampleRows} /></section>)}</div>}
 
       {data.observations.length > 0 && (
         <div style={styles.observations}>
@@ -106,25 +106,10 @@ function ResultTable({ rows }: { rows: DisplayResult[] }) {
   );
 }
 
-function groupRowsByCategory(rows: DisplayResult[]): Array<[string, DisplayResult[]]> {
-  const groups = new Map<string, DisplayResult[]>();
-  rows.forEach((row) => groups.set(row.category, [...(groups.get(row.category) ?? []), row]));
-  const order = new Map<string, number>(LAB_RESULT_CATEGORIES.map((category, index) => [category.id, index]));
-  return Array.from(groups.entries()).sort(([left], [right]) => (
-    (order.get(left) ?? Number.MAX_SAFE_INTEGER) - (order.get(right) ?? Number.MAX_SAFE_INTEGER)
-      || left.localeCompare(right)
-  ));
-}
-
 function groupRowsBySample(rows: DisplayResult[]): Array<[string, DisplayResult[]]> {
   const groups = new Map<string, DisplayResult[]>();
   rows.forEach((row) => groups.set(row.sample, [...(groups.get(row.sample) ?? []), row]));
   return Array.from(groups.entries()).sort(([left], [right]) => left.localeCompare(right));
-}
-
-function categoryLabel(category: string): string {
-  return LAB_RESULT_CATEGORIES.find((item) => item.id === category)?.label
-    ?? category.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 function buildRows(data: LabTestingResultsResponse): DisplayResult[] {
@@ -137,7 +122,6 @@ function buildRows(data: LabTestingResultsResponse): DisplayResult[] {
     .map((result) => resultRow(result, metrics, samples, result['ratingValue']));
   return [...numeric, ...subjective].sort((left, right) => (
     left.sample.localeCompare(right.sample)
-      || left.category.localeCompare(right.category)
       || left.metric.localeCompare(right.metric)
   ));
 }
@@ -166,8 +150,6 @@ function sampleName(samples: SampleRecord[], sampleId: string): string {
 }
 
 const styles: Record<string, CSSProperties> = {
-  category: { display: 'grid', gap: spacing.space2 },
-  categoryTitle: { margin: 0 },
   header: { alignItems: 'flex-start', display: 'flex', flexWrap: 'wrap', gap: spacing.space3, justifyContent: 'space-between' },
   observation: { color: colors.text.secondary, fontSize: font.size.small },
   observations: { display: 'grid', gap: spacing.space2 },

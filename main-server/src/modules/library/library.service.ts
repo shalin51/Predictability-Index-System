@@ -1,5 +1,6 @@
 import { ConflictError, NotFoundError, ValidationError } from '../../errors/app-error';
 import { getPool } from '../../infrastructure/database/pg-pool';
+import { formatCode } from '../../core/code-format';
 import { COMPARISON_MODES, CRITICALITY_LEVELS, RECORD_STATUSES } from '../../constants/domain.constants';
 import type { AuditService } from '../audit/audit.service';
 import { getLibraryConfig } from './library.config';
@@ -38,7 +39,7 @@ export class LibraryService {
   async create(resource: string, input: Record<string, unknown>, changedBy: string): Promise<LibraryRecord> {
     const config = this.requireConfig(resource);
     this.validateWritable(config);
-    const payload = this.preparePayload(input);
+    const payload = this.preparePayload(resource, input);
     this.validateRequired(config.requiredFields, payload);
     this.validateEnums(payload);
     await this.validateUnique(resource, payload);
@@ -60,7 +61,7 @@ export class LibraryService {
     const before = await this.repo.rawById(config, id);
     if (!before) throw new NotFoundError(`${config.displayName} ${id}`);
 
-    const payload = this.preparePayload(input);
+    const payload = this.preparePayload(resource, input);
     this.validateEnums(payload);
     await this.validateUnique(resource, { ...before, ...payload }, id);
 
@@ -157,10 +158,22 @@ export class LibraryService {
     }
   }
 
-  private preparePayload(input: Record<string, unknown>): Record<string, unknown> {
+  private preparePayload(resource: string, input: Record<string, unknown>): Record<string, unknown> {
+    const suffixByField: Record<string, { field: string; suffix: string }> = {
+      benchmarks: { field: 'benchmarkCode', suffix: 'BN' },
+      materials: { field: 'materialCode', suffix: 'M' },
+      machines: { field: 'machineCode', suffix: 'MC' },
+      molds: { field: 'moldCode', suffix: 'MD' },
+      'test-conditions': { field: 'conditionCode', suffix: 'T' },
+      'test-methods': { field: 'methodCode', suffix: 'T' },
+    };
+    const codeRule = suffixByField[resource];
     return {
       status: 'active',
       ...input,
+      ...(codeRule && input[codeRule.field] !== undefined
+        ? { [codeRule.field]: formatCode(String(input[codeRule.field]), codeRule.suffix) }
+        : {}),
     };
   }
 }

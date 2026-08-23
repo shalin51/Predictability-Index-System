@@ -4,7 +4,7 @@ import { Card, Divider } from '../../../components/ui/Card';
 import { controlStyles } from '../../../components/ui/controls';
 import { DataTable, DataTableBody, DataTableCell, DataTableHead, DataTableHeader, DataTableRow } from '../../../components/ui/DataTable';
 import { EmptyState, MessageBanner } from '../../../components/ui/Page';
-import { getProductionRunProcessSetup, importProductionRunProcessValues, listProductionRuns, updateProductionRunProcessValues, type ProcessSetupDetail, type ProductionRunRecord } from '../../../services/api';
+import { getProductionRunProcessSetup, importProductionRunProcessValues, initializeProductionRunProcessValues, listProductionRuns, updateProductionRunProcessValues, type ProcessSetupDetail, type ProductionRunRecord } from '../../../services/api';
 import { colors, spacing } from '../../../theme/tokens';
 import { formatValue, runStyles } from '../productionRunUi';
 
@@ -24,6 +24,9 @@ export function ProcessSetupPanel({ runId }: { runId: string }) {
     if (!sourceRunId) return;
     try { setBusy(true); setError(''); const next = await importProductionRunProcessValues(runId, sourceRunId); setRecord(next); setDraft(next.values ?? []); setEditing(false); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not import process setup'); } finally { setBusy(false); }
   };
+  const initializeManualSetup = async () => {
+    try { setBusy(true); setError(''); const next = await initializeProductionRunProcessValues(runId); setRecord(next); setDraft(next.values ?? []); setEditing(true); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not initialize process values'); } finally { setBusy(false); }
+  };
   const save = async () => {
     try { setBusy(true); setError(''); const next = await updateProductionRunProcessValues(runId, { values: draft }); setRecord(next); setDraft(next.values ?? []); setEditing(false); } catch (caught) { setError(caught instanceof Error ? caught.message : 'Could not save process values'); } finally { setBusy(false); }
   };
@@ -35,14 +38,15 @@ export function ProcessSetupPanel({ runId }: { runId: string }) {
         <div style={styles.importRow}>
           <label style={controlStyles.field}><span style={controlStyles.fieldLabel}>Import process setup from a scored production run</span><select disabled={busy} onChange={(event) => setSourceRunId(event.target.value)} style={controlStyles.input} value={sourceRunId}><option value="">Select a production run</option>{runs.filter((run) => run.id !== runId && run.status === 'scored').slice(0, 10).map((run) => <option key={run.id} value={run.id}>{run.runCode} — {run.formulation}</option>)}</select></label>
           <button disabled={!sourceRunId || busy} onClick={() => void importSetup()} style={controlStyles.secondaryButton} type="button">Import Setup</button>
-          {Boolean(record.processSetupRevisionId) && !editing && <button onClick={() => setEditing(true)} style={controlStyles.primaryButton} type="button">Edit Values</button>}
+          {!record.processSetupRevisionId && (record.values?.length ?? 0) === 0 && <button disabled={busy} onClick={() => void initializeManualSetup()} style={controlStyles.primaryButton} type="button">Set Up Manually</button>}
+          {(record.values?.length ?? 0) > 0 && !editing && <button onClick={() => setEditing(true)} style={controlStyles.primaryButton} type="button">Edit Values</button>}
           {editing && <><button disabled={busy} onClick={() => { setDraft(record.values ?? []); setEditing(false); }} style={controlStyles.secondaryButton} type="button">Cancel</button><button disabled={busy} onClick={() => void save()} style={controlStyles.primaryButton} type="button">Save Changes</button></>}
         </div>
       </Card>}
-      {!record.processSetupRevisionId && <EmptyState>Import a process setup to add and edit process values for this run.</EmptyState>}
-      {Boolean(record.processSetupRevisionId) && <>
+      {(record.values?.length ?? 0) === 0 && <EmptyState>Import a process setup or set up the machine and mold values manually.</EmptyState>}
+      {(record.values?.length ?? 0) > 0 && <>
       <div style={styles.summary}>
-        <div style={runStyles.panel}>Revision<br /><strong>{formatValue(record.revisionNo)}</strong></div>
+        <div style={runStyles.panel}>Setup Source<br /><strong>{record.processSetupRevisionId ? `Revision ${formatValue(record.revisionNo)}` : 'Manual entry'}</strong></div>
         <div style={runStyles.panel}>Approved By<br /><strong>{formatValue(record.approvedBy)}</strong></div>
         <div style={runStyles.panel}>Source File<br /><strong>{formatValue(record.sourceFilename)}</strong></div>
         <div style={runStyles.panel}>SHA-256<br /><strong style={styles.hash}>{formatValue(record.sourceSha256)}</strong></div>
