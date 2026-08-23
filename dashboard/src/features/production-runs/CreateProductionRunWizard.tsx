@@ -141,7 +141,7 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
               </label>
             )}
             <label style={controlStyles.field}>
-              <span style={controlStyles.fieldLabel}>Formulation</span>
+              <span style={controlStyles.fieldLabel}>Formulation *</span>
               <select onChange={(event) => update({ formulationId: event.target.value })} style={controlStyles.input} value={payload.formulationId}>
                 <option value="">Select approved formulation</option>
                 {formulations.map((item) => <option key={item.id} value={item.id}>{String(item['label'])}</option>)}
@@ -160,7 +160,7 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
               <input onChange={(event) => update({ runCode: event.target.value })} placeholder="Auto if blank" style={controlStyles.input} value={payload.runCode ?? ''} />
             </label>
             <label style={controlStyles.field}>
-              <span style={controlStyles.fieldLabel}>Date Produced</span>
+              <span style={controlStyles.fieldLabel}>Date Produced *</span>
               <input onChange={(event) => update({ dateProduced: event.target.value })} style={controlStyles.input} type="date" value={payload.dateProduced} />
             </label>
           </div>

@@ -38,7 +38,7 @@ export function LibraryRecordForm({
     <>
       {fields.map((field) => (
         <label key={field.key} style={controlStyles.field}>
-          <span style={controlStyles.fieldLabel}>{field.label}</span>
+          <span style={controlStyles.fieldLabel}>{field.label}{field.required ? ' *' : ''}</span>
           <Field
             field={field}
             onChange={(value) => onChange(field.key, value)}
@@ -56,16 +56,16 @@ export function coerceLibraryPayload(fields: LibraryFieldDefinition[], form: Rec
 }
 
 function Field({ field, onChange, options, value }: { field: LibraryFieldDefinition; onChange: (value: unknown) => void; options: LibraryRecord[]; value: unknown }) {
-  if (field.type === 'textarea') return <textarea onChange={(event) => onChange(event.target.value)} style={controlStyles.textarea} value={String(value ?? '')} />;
+  if (field.type === 'textarea') return <textarea onChange={(event) => onChange(event.target.value)} required={field.required} style={controlStyles.textarea} value={String(value ?? '')} />;
   if (field.type === 'boolean') return <input checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} type="checkbox" />;
   if (field.type === 'select') {
     return (
-      <select onChange={(event) => onChange(event.target.value)} style={controlStyles.input} value={String(value ?? '')}>
+      <select onChange={(event) => onChange(event.target.value)} required={field.required} style={controlStyles.input} value={String(value ?? '')}>
         <option value="">Select</option>
         {(enumOptions[field.key] ?? []).map((item) => <option key={item} value={item}>{labelize(item)}</option>)}
         {options.map((item) => <option key={item.id} value={item.id}>{String(item['label'] ?? item['code'] ?? item.id)}</option>)}
       </select>
     );
   }
-  return <input onChange={(event) => onChange(event.target.value)} style={controlStyles.input} type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'} value={String(value ?? '')} />;
+  return <input onChange={(event) => onChange(event.target.value)} required={field.required} style={controlStyles.input} type={field.type === 'number' ? 'number' : field.type === 'date' ? 'date' : 'text'} value={String(value ?? '')} />;
 }

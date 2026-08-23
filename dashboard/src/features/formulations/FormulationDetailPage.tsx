@@ -131,7 +131,7 @@ export function FormulationDetailPage({
           </div>
           <div style={formulationStyles.actions}>
             {record.status === 'draft' && <button onClick={() => setEditing(true)} style={controlStyles.secondaryButton} type="button">Edit</button>}
-            {record.status === 'draft' && <label style={controlStyles.field}><span style={controlStyles.fieldLabel}>Approved By</span><input onChange={(event) => setApprovedBy(event.target.value)} style={controlStyles.input} value={approvedBy} /></label>}
+            {record.status === 'draft' && <label style={controlStyles.field}><span style={controlStyles.fieldLabel}>Approved By (required to approve)</span><input onChange={(event) => setApprovedBy(event.target.value)} style={controlStyles.input} value={approvedBy} /></label>}
             {record.status === 'draft' && <button disabled={!canApprove} onClick={() => void approve()} style={{ ...controlStyles.primaryButton, ...(canApprove ? {} : styles.disabled) }} type="button">Approve</button>}
             {record.status === 'approved' && <button onClick={onCreateProductionRun} style={controlStyles.secondaryButton} type="button">Create Production Run</button>}
           </div>

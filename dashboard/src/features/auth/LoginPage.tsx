@@ -38,7 +38,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
 
         <form className="auth-form" onSubmit={(event) => void handleSubmit(event)}>
           <label>
-            <span>Username</span>
+            <span>Username *</span>
             <input
               autoComplete="username"
               autoFocus
@@ -50,7 +50,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
           </label>
 
           <label>
-            <span>Password</span>
+            <span>Password *</span>
             <input
               autoComplete="current-password"
               onChange={(event) => setPassword(event.target.value)}

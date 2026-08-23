@@ -16,7 +16,7 @@ export function SampleGenerationForm({
     <div style={runStyles.stack}>
       <div style={runStyles.formGrid}>
         <label style={controlStyles.field}>
-          <span style={controlStyles.fieldLabel}>Number of Samples</span>
+          <span style={controlStyles.fieldLabel}>Number of Samples *</span>
           <input min={1} onChange={(event) => onChange({ ...value, count: Number(event.target.value), cavityAssignments: [] })} style={controlStyles.input} type="number" value={value.count} />
         </label>
       </div>

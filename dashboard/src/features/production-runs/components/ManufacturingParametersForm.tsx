@@ -20,20 +20,20 @@ export function ManufacturingParametersForm({
   return (
     <div style={runStyles.formGrid}>
       {formulations.length > 0 && <label style={controlStyles.field}>
-        <span style={controlStyles.fieldLabel}>Formulation</span>
+        <span style={controlStyles.fieldLabel}>Formulation *</span>
         <select disabled={readOnly} onChange={(event) => onChange({ formulationId: event.target.value })} style={controlStyles.input} value={value.formulationId}>
           {formulations.map((item) => <option key={item.id} value={item.id}>{String(item['label'])}</option>)}
         </select>
       </label>}
       <label style={controlStyles.field}>
-        <span style={controlStyles.fieldLabel}>Machine Used</span>
+        <span style={controlStyles.fieldLabel}>Machine Used *</span>
         <select disabled={readOnly} onChange={(event) => onChange({ machineId: event.target.value })} style={controlStyles.input} value={value.machineId}>
           <option value="">Select</option>
           {machines.map((item) => <option key={item.id} value={item.id}>{String(item['code'] ?? item['label'])}</option>)}
         </select>
       </label>
       <label style={controlStyles.field}>
-        <span style={controlStyles.fieldLabel}>Mold Used</span>
+        <span style={controlStyles.fieldLabel}>Mold Used *</span>
         <select disabled={readOnly} onChange={(event) => onChange({ moldId: event.target.value })} style={controlStyles.input} value={value.moldId}>
           <option value="">Select</option>
           {molds.map((item) => <option key={item.id} value={item.id}>{String(item['code'] ?? item['label'])}</option>)}

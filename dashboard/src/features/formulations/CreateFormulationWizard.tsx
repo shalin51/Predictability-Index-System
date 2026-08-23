@@ -106,7 +106,7 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
               <input onChange={(event) => setForm((current) => ({ ...current, formulationCode: event.target.value }))} placeholder="Auto if blank" style={controlStyles.input} value={form.formulationCode ?? ''} />
             </label>
             <label style={controlStyles.field}>
-              <span style={controlStyles.fieldLabel}>Approved By</span>
+              <span style={controlStyles.fieldLabel}>Approved By (required to approve)</span>
               <input onChange={(event) => setApprovedBy(event.target.value)} placeholder="Required when approving" style={controlStyles.input} value={approvedBy} />
             </label>
             <label style={controlStyles.field}>

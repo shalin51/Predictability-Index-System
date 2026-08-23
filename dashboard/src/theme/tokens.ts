@@ -63,16 +63,18 @@ const THEME_PRESETS = {
 
 export type ThemeName = keyof typeof THEME_PRESETS;
 
+export const DEFAULT_THEME: ThemeName = 'obsidian';
+
 export const themeOptions: Array<{ id: ThemeName; label: string; description: string }> = [
-  {
-    id: 'dark',
-    label: 'Lab Console',
-    description: 'Dark navy monitor-grade monitoring theme.',
-  },
   {
     id: 'obsidian',
     label: 'Obsidian Lab',
     description: 'High-contrast dark laboratory interface with neon cyan actions.',
+  },
+  {
+    id: 'dark',
+    label: 'Lab Console',
+    description: 'Dark navy monitor-grade monitoring theme.',
   },
 ];
 
@@ -82,7 +84,7 @@ export function isThemeName(value: string | null | undefined): value is ThemeNam
 
 export function getStoredTheme(): ThemeName {
   if (typeof window === 'undefined') {
-    return 'obsidian';
+    return DEFAULT_THEME;
   }
 
   const stored = window.localStorage.getItem('dashboard-theme');
@@ -99,7 +101,7 @@ export function getStoredTheme(): ThemeName {
     return stored;
   }
 
-  return 'obsidian';
+  return DEFAULT_THEME;
 }
 
 export function applyTheme(themeName: ThemeName) {

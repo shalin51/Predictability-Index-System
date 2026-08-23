@@ -43,10 +43,10 @@ export function FormulationComponentsEditor({
         <table style={formulationStyles.table}>
           <thead>
             <tr>
-              <th style={formulationStyles.th}>Material</th>
-              <th style={formulationStyles.th}>Supplier</th>
+              <th style={formulationStyles.th}>Material *</th>
+              <th style={formulationStyles.th}>Supplier *</th>
               <th style={formulationStyles.th}>Lot Number</th>
-              <th style={formulationStyles.th}>Percent Composition</th>
+              <th style={formulationStyles.th}>Percent Composition *</th>
               <th style={formulationStyles.th}>Basis</th>
               {!readOnly && <th style={formulationStyles.th}>Actions</th>}
             </tr>

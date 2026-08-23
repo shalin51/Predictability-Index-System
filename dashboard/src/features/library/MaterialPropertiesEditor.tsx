@@ -115,9 +115,9 @@ export function MaterialPropertiesEditor({ materialId, onChanged, properties }: 
       {creatingDefinition && (
         <div style={{ display: 'grid', gap: spacing.space3 }}>
           <h3 style={{ margin: 0 }}>Create Property Definition</h3>
-          <Field label="Property Name"><input onChange={(event) => setDefinitionForm((current) => ({ ...current, propertyName: event.target.value }))} style={controlStyles.input} value={definitionForm.propertyName} /></Field>
+          <Field label="Property Name *"><input onChange={(event) => setDefinitionForm((current) => ({ ...current, propertyName: event.target.value }))} required style={controlStyles.input} value={definitionForm.propertyName} /></Field>
           <Field label="Property Key"><input onChange={(event) => setDefinitionForm((current) => ({ ...current, propertyKey: event.target.value }))} placeholder="Generated from name when blank" style={controlStyles.input} value={definitionForm.propertyKey ?? ''} /></Field>
-          <Field label="Category"><input onChange={(event) => setDefinitionForm((current) => ({ ...current, category: event.target.value }))} style={controlStyles.input} value={definitionForm.category} /></Field>
+          <Field label="Category *"><input onChange={(event) => setDefinitionForm((current) => ({ ...current, category: event.target.value }))} required style={controlStyles.input} value={definitionForm.category} /></Field>
           <Field label="Common Units"><input onChange={(event) => setDefinitionForm((current) => ({ ...current, commonUnits: event.target.value }))} style={controlStyles.input} value={definitionForm.commonUnits ?? ''} /></Field>
           <Field label="Value Type"><select onChange={(event) => setDefinitionForm((current) => ({ ...current, valueType: event.target.value }))} style={controlStyles.input} value={definitionForm.valueType}><option value="Numeric">Numeric</option><option value="Text">Text</option><option value="Boolean">Boolean</option></select></Field>
           <Field label="Notes"><textarea onChange={(event) => setDefinitionForm((current) => ({ ...current, implementationNotes: event.target.value }))} style={controlStyles.textarea} value={definitionForm.implementationNotes ?? ''} /></Field>
@@ -126,7 +126,7 @@ export function MaterialPropertiesEditor({ materialId, onChanged, properties }: 
       )}
       {editingId !== null && (
         <div style={{ display: 'grid', gap: spacing.space3 }}>
-          {!editingId && <Field label="Property"><select onChange={(event) => setForm((current) => ({ ...current, propertyDefinitionId: event.target.value }))} style={controlStyles.input} value={form.propertyDefinitionId}><option value="">Select property</option>{definitions.map((item) => <option key={item.id} value={item.id}>{item.category} / {item.propertyName}</option>)}</select></Field>}
+          {!editingId && <Field label="Property *"><select onChange={(event) => setForm((current) => ({ ...current, propertyDefinitionId: event.target.value }))} required style={controlStyles.input} value={form.propertyDefinitionId}><option value="">Select property</option>{definitions.map((item) => <option key={item.id} value={item.id}>{item.category} / {item.propertyName}</option>)}</select></Field>}
           <Field label="Numeric Value"><input onChange={(event) => setForm((current) => ({ ...current, valueNumeric: event.target.value }))} style={controlStyles.input} type="number" value={String(form.valueNumeric ?? '')} /></Field>
           <Field label="Text Value"><input onChange={(event) => setForm((current) => ({ ...current, valueText: event.target.value }))} style={controlStyles.input} value={String(form.valueText ?? '')} /></Field>
           <Field label="Qualifier"><input onChange={(event) => setForm((current) => ({ ...current, qualifier: event.target.value }))} placeholder="e.g. >, <, approximately" style={controlStyles.input} value={String(form.qualifier ?? '')} /></Field>
