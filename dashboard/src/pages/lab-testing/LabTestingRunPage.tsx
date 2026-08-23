@@ -23,6 +23,7 @@ import { MissingRequiredMetricsPanel } from '../../features/lab-testing/componen
 import { ObservationPanel } from '../../features/lab-testing/components/ObservationPanel';
 import { SubjectiveRatingForm } from '../../features/lab-testing/components/SubjectiveRatingForm';
 import { LAB_RESULT_CATEGORIES, labStyles } from '../../features/lab-testing/labTestingUi';
+import { colors } from '../../theme/tokens';
 
 export function LabTestingRunPage({
   id,
@@ -90,14 +91,22 @@ export function LabTestingRunPage({
   const run = data.run;
   const selectedSample = data.samples.find((sample) => sample.id === selectedSampleId) ?? data.samples[0];
   const requiredMetricIds = new Set(data.metrics.filter((metric) => metric.requiredForScoring).map((metric) => metric.id));
+  const progressMetricIds = requiredMetricIds.size > 0 ? requiredMetricIds : new Set(data.metrics.map((metric) => metric.id));
+  const perSampleTotal = progressMetricIds.size || (data.samples.length ? Math.ceil(run.requiredResultCount / data.samples.length) : 0);
   const resultMetricIdsBySample = new Map<string, Set<string>>();
   [...data.numericResults, ...data.environmentalResults, ...data.subjectiveRatings].forEach((result) => {
-    if (!result.metricId || !requiredMetricIds.has(result.metricId)) return;
+    if (!result.metricId || (progressMetricIds.size > 0 && !progressMetricIds.has(result.metricId))) return;
     const ids = resultMetricIdsBySample.get(result.sampleId) ?? new Set<string>();
     ids.add(result.metricId);
     resultMetricIdsBySample.set(result.sampleId, ids);
   });
-  const sampleProgress = data.samples.map((sample) => ({ completed: resultMetricIdsBySample.get(sample.id)?.size ?? 0, sampleCode: sample.sampleCode, total: requiredMetricIds.size }));
+  const sampleProgress = data.samples.map((sample) => ({ completed: resultMetricIdsBySample.get(sample.id)?.size ?? 0, sampleCode: sample.sampleCode, total: perSampleTotal }));
+  const overallProgress = { completed: sampleProgress.reduce((total, sample) => total + sample.completed, 0), total: run.requiredResultCount || sampleProgress.reduce((total, sample) => total + sample.total, 0) };
+  const categoryComplete = (category: LabMetric['category']) => {
+    const metricIds = data.metrics.filter((metric) => metric.category === category && progressMetricIds.has(metric.id)).map((metric) => metric.id);
+    const completed = resultMetricIdsBySample.get(selectedSample?.id ?? '') ?? new Set<string>();
+    return metricIds.length > 0 && metricIds.every((metricId) => completed.has(metricId));
+  };
   const disabledComplete = data.samples.length === 0 || run.missingRequiredMetrics > 0;
   return (
     <DashboardPage maxWidth="100%">
@@ -113,6 +122,7 @@ export function LabTestingRunPage({
           }}
           onOpenFormulation={onOpenFormulation}
           onOpenProductionRun={onOpenProductionRun}
+          overallProgress={overallProgress}
           onStart={() => void startLabTesting(id).then(() => { setMessage('Testing started'); load(); }).catch((err: Error) => setError(err.message))}
           run={run}
           sampleProgress={sampleProgress}
@@ -134,7 +144,7 @@ export function LabTestingRunPage({
                 <strong>Samples</strong>
                 {data.samples.map((sample) => <button key={sample.id} onClick={() => setSelectedSampleId(sample.id)} style={{ ...styles.navButton, ...(sample.id === selectedSample.id ? styles.selectedNavButton : {}) }} type="button">{sample.sampleCode}</button>)}
                 <strong style={styles.categoryHeading}>Categories</strong>
-                {LAB_RESULT_CATEGORIES.map((category) => <button key={category.id} onClick={() => setSelectedCategory(category.id)} style={{ ...styles.navButton, ...(selectedCategory === category.id ? styles.selectedNavButton : {}) }} type="button">{category.label}</button>)}
+                {LAB_RESULT_CATEGORIES.map((category) => { const complete = categoryComplete(category.id); return <button key={category.id} onClick={() => setSelectedCategory(category.id)} style={{ ...styles.navButton, ...(selectedCategory === category.id ? styles.selectedNavButton : {}), ...(complete ? styles.completedNavButton : {}) }} type="button">{complete && <span aria-label="Complete" style={styles.check}>✓</span>}{category.label}</button>; })}
                 <button onClick={() => setSelectedCategory('observations')} style={{ ...styles.navButton, ...(selectedCategory === 'observations' ? styles.selectedNavButton : {}) }} type="button">Observations</button>
               </aside>
               <Card>
@@ -157,6 +167,8 @@ export function LabTestingRunPage({
 
 const styles: Record<string, CSSProperties> = {
   categoryHeading: { marginTop: 16 },
+  check: { color: colors.status.ok, fontWeight: 700, marginRight: 8 },
+  completedNavButton: { borderColor: colors.text.primary },
   navButton: { ...controlStyles.secondaryButton, textAlign: 'left', width: '100%' },
   selectedNavButton: { ...controlStyles.primaryButton },
   sidebar: { display: 'grid', alignContent: 'start', gap: 8 },

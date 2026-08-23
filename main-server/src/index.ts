@@ -22,13 +22,15 @@ async function start(): Promise<void> {
     console.log('[main-server] ─────────────────────────────────────');
     console.log('');
   });
+  let shuttingDown = false;
 
   async function shutdown(signal: string): Promise<void> {
+    if (shuttingDown) return;
+    shuttingDown = true;
     console.log(`[main-server] ${signal} received — shutting down gracefully`);
-    server.close(async () => {
-      await closePool();
-      process.exit(0);
-    });
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    await closePool().catch((error: unknown) => console.error('[main-server] Pool close failed:', error));
+    process.exitCode = 0;
   }
 
   process.on('SIGTERM', () => void shutdown('SIGTERM'));

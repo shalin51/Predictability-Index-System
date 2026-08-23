@@ -173,10 +173,17 @@ export class LabTestingRepository {
 
   async missingRequiredMetricCount(runId: string): Promise<number> {
     const result = await getPool().query<{ count: string }>(
-      `SELECT COALESCE(SUM(CASE WHEN str.id IS NULL THEN 1 ELSE 0 END), 0)::text AS count
+      `WITH completed AS (
+         SELECT sample_id, metric_id FROM sample_test_results
+         UNION
+         SELECT sample_id, metric_id FROM environmental_test_results
+         UNION
+         SELECT sample_id, metric_id FROM sample_subjective_ratings WHERE metric_id IS NOT NULL
+       )
+       SELECT COALESCE(SUM(CASE WHEN completed.metric_id IS NULL THEN 1 ELSE 0 END), 0)::text AS count
        FROM samples s
        CROSS JOIN metric_definitions md
-       LEFT JOIN sample_test_results str ON str.sample_id = s.id AND str.metric_id = md.id
+       LEFT JOIN completed ON completed.sample_id = s.id AND completed.metric_id = md.id
        WHERE s.production_run_id = $1
          AND s.status <> 'archived'
          AND md.required_for_scoring = true
@@ -209,29 +216,36 @@ export class LabTestingRepository {
   }
 
   private baseRunSelect(): string {
-    return `WITH required AS (
-              SELECT COUNT(*)::int AS required_metric_count
+    return `WITH completed AS (
+              SELECT sample_id, metric_id FROM sample_test_results
+              UNION
+              SELECT sample_id, metric_id FROM environmental_test_results
+              UNION
+              SELECT sample_id, metric_id FROM sample_subjective_ratings WHERE metric_id IS NOT NULL
+            ),
+            required AS (
+              SELECT COALESCE(NULLIF(COUNT(*) FILTER (WHERE required_for_scoring = true), 0), COUNT(*))::int AS required_metric_count
               FROM metric_definitions
-              WHERE required_for_scoring = true AND status = 'active'
+              WHERE status = 'active'
             ),
             progress AS (
               SELECT s.production_run_id,
                      COUNT(DISTINCT s.id)::int AS sample_count,
-                     COUNT(str.id) FILTER (
-                       WHERE md.required_for_scoring = true AND md.status = 'active'
+                     COUNT(DISTINCT (s.id, completed.metric_id)) FILTER (
+                       WHERE completed.metric_id IS NOT NULL
                      )::int AS completed_results
               FROM samples s
-              LEFT JOIN sample_test_results str ON str.sample_id = s.id
-              LEFT JOIN metric_definitions md ON md.id = str.metric_id
+              LEFT JOIN completed ON completed.sample_id = s.id
+              LEFT JOIN metric_definitions md ON md.id = completed.metric_id
               WHERE s.status <> 'archived'
               GROUP BY s.production_run_id
             ),
             missing AS (
               SELECT s.production_run_id,
-                     SUM(CASE WHEN str.id IS NULL THEN 1 ELSE 0 END)::int AS required_missing
+                     SUM(CASE WHEN completed.metric_id IS NULL THEN 1 ELSE 0 END)::int AS required_missing
               FROM samples s
               CROSS JOIN metric_definitions md
-              LEFT JOIN sample_test_results str ON str.sample_id = s.id AND str.metric_id = md.id
+              LEFT JOIN completed ON completed.sample_id = s.id AND completed.metric_id = md.id
               WHERE s.status <> 'archived'
                 AND md.required_for_scoring = true
                 AND md.status = 'active'

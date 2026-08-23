@@ -14,9 +14,6 @@ export function DashboardHomePage({
   autoRefresh = false,
 }: {
   autoRefresh?: boolean;
-  onOpenLabRun: (id: string) => void;
-  onOpenProductionRun: (id: string) => void;
-  onOpenReport: (id: string) => void;
 }) {
   const [data, setData] = useState<DashboardOverview | null>(null);
   const [error, setError] = useState('');

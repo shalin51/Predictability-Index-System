@@ -59,13 +59,6 @@ export const NAV: ReadonlyArray<ShellNavItem<DashboardView>> = [
     icon: 'pulse',
   },
   {
-    id: 'reports',
-    label: 'Reports',
-    description: 'Reporting workspace.',
-    group: 'Workspace',
-    icon: 'layers',
-  },
-  {
     id: 'imports',
     label: 'Imports',
     description: 'Import data from Excel templates.',

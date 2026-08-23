@@ -60,9 +60,6 @@ function AuthenticatedApp({ onLogout, session }: AuthenticatedAppProps) {
     navigate,
     productionRunId,
     productionRunMode,
-    reportId,
-    reportMode,
-    reportRunId,
     setHasUnsavedChanges,
     view,
   } = useDashboardRoute(preferences.defaultView);
@@ -126,9 +123,6 @@ function AuthenticatedApp({ onLogout, session }: AuthenticatedAppProps) {
           preferences={preferences}
           productionRunId={productionRunId}
           productionRunMode={productionRunMode}
-          reportId={reportId}
-          reportMode={reportMode}
-          reportRunId={reportRunId}
           setHasUnsavedChanges={setHasUnsavedChanges}
           theme={theme}
           view={view}

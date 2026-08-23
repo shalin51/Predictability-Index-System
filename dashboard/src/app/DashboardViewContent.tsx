@@ -13,8 +13,6 @@ import { ImportSetupSheetPage } from '../features/production-runs/ImportSetupShe
 import { SettingsPage } from '../features/settings/SettingsPage';
 import { LabTestingQueuePage } from '../pages/lab-testing/LabTestingQueuePage';
 import { LabTestingRunPage } from '../pages/lab-testing/LabTestingRunPage';
-import { ReportDetailPage } from '../pages/reports/ReportDetailPage';
-import { ReportListPage } from '../pages/reports/ReportListPage';
 import type { DashboardPreferences } from './dashboardPreferences';
 import type { DashboardRouteState, DashboardView, ImportResource } from '../routing/dashboardRoute';
 import { themeOptions, type ThemeName } from '../theme/tokens';
@@ -37,9 +35,6 @@ interface DashboardViewContentProps {
   materialMode?: DashboardRouteState['materialMode'];
   productionRunId?: string;
   productionRunMode?: DashboardRouteState['productionRunMode'];
-  reportId?: string;
-  reportMode?: DashboardRouteState['reportMode'];
-  reportRunId?: string;
   navigate: (route: DashboardRouteState, options?: { replace?: boolean; skipConfirm?: boolean }) => boolean;
   goBack: (fallback: DashboardRouteState) => void;
 }
@@ -77,9 +72,6 @@ export function DashboardViewContent({
   librarySection,
   productionRunId,
   productionRunMode,
-  reportId,
-  reportMode,
-  reportRunId,
   goBack,
   navigate,
 }: DashboardViewContentProps) {
@@ -108,9 +100,6 @@ export function DashboardViewContent({
     return (
       <DashboardLandingPage
         autoRefresh={preferences.autoRefresh}
-        onOpenLabRun={(id) => navigate({ labRunId: id, labTestingMode: 'detail', view: 'lab-testing' })}
-        onOpenProductionRun={(id) => navigate({ productionRunId: id, productionRunMode: 'detail', view: 'production-runs' })}
-        onOpenReport={(id) => navigate({ reportId: id, reportMode: 'detail', view: 'reports' })}
       />
     );
   }
@@ -217,7 +206,6 @@ export function DashboardViewContent({
           onBack={() => goBack({ productionRunMode: 'list', view: 'production-runs' })}
           onOpenFormulation={(id) => navigate({ formulationId: id, formulationMode: 'detail', view: 'formulations' })}
           onOpenLabRun={(runId) => navigate({ labRunId: runId, labTestingMode: 'detail', view: 'lab-testing' })}
-          onOpenReport={(runId) => navigate({ reportMode: 'run', reportRunId: runId, view: 'reports' })}
         />
       );
     }
@@ -244,18 +232,7 @@ export function DashboardViewContent({
     return <LabTestingQueuePage onOpen={(id) => navigate({ labRunId: id, labTestingMode: 'detail', view: 'lab-testing' })} />;
   }
 
-  if (view === 'reports') {
-    if (reportMode === 'detail' && reportId) {
-      return <ReportDetailPage reportId={reportId} onBack={() => goBack({ reportMode: 'list', view: 'reports' })} />;
-    }
-    if (reportMode === 'run' && reportRunId) {
-      return <ReportDetailPage productionRunId={reportRunId} onBack={() => goBack({ productionRunId: reportRunId, productionRunMode: 'detail', view: 'production-runs' })} />;
-    }
-    return <ReportListPage
-      onOpen={(id) => navigate({ reportId: id, reportMode: 'detail', view: 'reports' })}
-      onOpenProductionRuns={() => navigate({ productionRunMode: 'list', view: 'production-runs' })}
-    />;
-  }
+  if (view === 'reports') return null;
 
   return (
     <SettingsPage
