@@ -19,21 +19,6 @@ export function DashboardPage({ children, maxWidth = '100%' }: DashboardPageProp
   );
 }
 
-export function SectionHeading({
-  action,
-  title,
-}: {
-  action?: ReactNode;
-  title: string;
-}) {
-  return (
-    <div style={styles.sectionHeading}>
-      <h2 style={styles.sectionTitle}>{title}</h2>
-      {action}
-    </div>
-  );
-}
-
 export function EmptyState({ children }: { children: ReactNode }) {
   return <div style={styles.emptyState}>{children}</div>;
 }
@@ -76,18 +61,6 @@ const styles: Record<string, CSSProperties> = {
   inner: {
     minHeight: '100%',
     width: '100%',
-  },
-  sectionHeading: {
-    alignItems: 'center',
-    display: 'flex',
-    gap: spacing.space4,
-    justifyContent: 'space-between',
-  },
-  sectionTitle: {
-    color: colors.text.primary,
-    fontSize: font.size.h2,
-    fontWeight: font.weight.bold,
-    margin: 0,
   },
   emptyState: {
     color: colors.text.muted,

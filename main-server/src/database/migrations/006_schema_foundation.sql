@@ -9,15 +9,6 @@ BEGIN
   END IF;
 END $$;
 
-CREATE TABLE IF NOT EXISTS roles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  role_key VARCHAR(50) UNIQUE NOT NULL,
-  role_name VARCHAR(100) NOT NULL,
-  description TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
 CREATE TABLE IF NOT EXISTS app_users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email VARCHAR(255) UNIQUE NOT NULL,
@@ -25,13 +16,6 @@ CREATE TABLE IF NOT EXISTS app_users (
   status record_status NOT NULL DEFAULT 'active',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE TABLE IF NOT EXISTS user_roles (
-  user_id UUID NOT NULL REFERENCES app_users(id),
-  role_id UUID NOT NULL REFERENCES roles(id),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  PRIMARY KEY (user_id, role_id)
 );
 
 CREATE TABLE IF NOT EXISTS audit_logs (
@@ -130,7 +114,6 @@ DECLARE
   tbl TEXT;
 BEGIN
   FOREACH tbl IN ARRAY ARRAY[
-    'roles',
     'app_users',
     'supplier_materials',
     'material_lots',

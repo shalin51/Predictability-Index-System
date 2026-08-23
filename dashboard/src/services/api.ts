@@ -762,13 +762,6 @@ export async function updateLibraryRecord(resource: string, id: string, payload:
   });
 }
 
-export async function archiveLibraryRecord(resource: string, id: string): Promise<LibraryRecord> {
-  return fetchJSON<LibraryRecord>(`/library/${resource}/${id}/archive`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-  });
-}
-
 export async function listLibraryOptions(resource: string): Promise<LibraryRecord[]> {
   return fetchJSON<LibraryRecord[]>(`/library/${resource}/options`);
 }
@@ -808,10 +801,6 @@ export async function updateFormulation(id: string, payload: FormulationPayload)
 
 export async function approveFormulation(id: string, approvedBy: string): Promise<FormulationRecord> {
   return fetchJSON<FormulationRecord>(`/formulations/${id}/approve`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ approvedBy }) });
-}
-
-export async function archiveFormulation(id: string): Promise<FormulationRecord> {
-  return fetchJSON<FormulationRecord>(`/formulations/${id}/archive`, { method: 'PUT' });
 }
 
 export async function duplicateFormulation(id: string): Promise<FormulationRecord> {
@@ -922,10 +911,6 @@ export async function listProcessSetups(): Promise<LibraryRecord[]> {
   return fetchJSON<LibraryRecord[]>('/process-setups');
 }
 
-export async function getProcessSetup(id: string): Promise<ProcessSetupDetail> {
-  return fetchJSON<ProcessSetupDetail>(`/process-setups/${id}`);
-}
-
 export async function createProductionRun(payload: ProductionRunPayload): Promise<ProductionRunRecord> {
   return fetchJSON<ProductionRunRecord>('/production-runs', {
     method: 'POST',
@@ -940,10 +925,6 @@ export async function updateProductionRun(id: string, payload: ProductionRunPayl
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-}
-
-export async function archiveProductionRun(id: string): Promise<ProductionRunRecord> {
-  return fetchJSON<ProductionRunRecord>(`/production-runs/${id}/archive`, { method: 'POST' });
 }
 
 export async function updateProductionRunStatus(id: string, status: ProductionRunStatus): Promise<ProductionRunRecord> {
@@ -983,10 +964,6 @@ export async function listLabTestingQueue(filters: Record<string, string> = {}):
   return fetchJSON<LabTestingQueueRecord[]>(`/lab-testing/queue${suffix}`);
 }
 
-export async function getLabTestingRun(runId: string): Promise<LabTestingQueueRecord> {
-  return fetchJSON<LabTestingQueueRecord>(`/lab-testing/runs/${runId}`);
-}
-
 export async function getLabTestingResults(runId: string): Promise<LabTestingResultsResponse> {
   return fetchJSON<LabTestingResultsResponse>(`/lab-testing/runs/${runId}/results`);
 }
@@ -1007,30 +984,6 @@ export async function saveSampleResult(payload: SampleResultPayload): Promise<La
   });
 }
 
-export async function saveEnvironmentalResult(payload: SampleResultPayload): Promise<LabResultRecord> {
-  return fetchJSON<LabResultRecord>('/lab-testing/environmental-results', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-}
-
-export async function saveSubjectiveRating(payload: SubjectiveRatingPayload): Promise<LabResultRecord> {
-  return fetchJSON<LabResultRecord>('/lab-testing/subjective-ratings', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-}
-
-export async function saveObservation(payload: ObservationPayload): Promise<LabResultRecord> {
-  return fetchJSON<LabResultRecord>('/lab-testing/observations', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload),
-  });
-}
-
 export async function getRunSummary(runId: string): Promise<RunSummaryDetail> {
   return fetchJSON<RunSummaryDetail>(`/run-summaries/runs/${runId}`);
 }
@@ -1039,24 +992,12 @@ export async function generateRunSummary(runId: string): Promise<RunSummaryDetai
   return fetchJSON<RunSummaryDetail>(`/run-summaries/runs/${runId}/generate`, { method: 'POST' });
 }
 
-export async function regenerateRunSummary(runId: string): Promise<RunSummaryDetail> {
-  return fetchJSON<RunSummaryDetail>(`/run-summaries/runs/${runId}/regenerate`, { method: 'POST' });
-}
-
-export async function getRunSummaryMissingRequiredMetrics(runId: string): Promise<MissingRequiredMetricRecord[]> {
-  return fetchJSON<MissingRequiredMetricRecord[]>(`/run-summaries/runs/${runId}/missing-required-metrics`);
-}
-
 export async function getBenchmarkScoring(runId: string): Promise<BenchmarkScoringRunDetail> {
   return fetchJSON<BenchmarkScoringRunDetail>(`/benchmark-scoring/runs/${runId}`);
 }
 
 export async function generateBenchmarkScoring(runId: string): Promise<BenchmarkScoringRunDetail> {
   return fetchJSON<BenchmarkScoringRunDetail>(`/benchmark-scoring/runs/${runId}/generate`, { method: 'POST' });
-}
-
-export async function regenerateBenchmarkScoring(runId: string): Promise<BenchmarkScoringRunDetail> {
-  return fetchJSON<BenchmarkScoringRunDetail>(`/benchmark-scoring/runs/${runId}/regenerate`, { method: 'POST' });
 }
 
 export async function regenerateBenchmarkGlobally(benchmarkId: string): Promise<GlobalBenchmarkRegenerationResult> {
@@ -1096,10 +1037,6 @@ export function reportExportUrl(reportId: string, format: 'csv' | 'pdf' | 'xlsx'
   return `${env.apiBaseUrl}/reports/${encodeURIComponent(reportId)}/export/${format}`;
 }
 
-export function databaseExportUrl(): string {
-  return `${env.apiBaseUrl}/reports/export/database/xlsx`;
-}
-
 export async function downloadDatabaseWorkbook(category?: string): Promise<void> {
   const headers = new Headers();
   const accessToken = getAccessToken();
@@ -1133,40 +1070,4 @@ function downloadFilename(contentDisposition: string, name: string, extension: s
 
 export async function getDashboardOverview(): Promise<DashboardOverview> {
   return fetchJSON<DashboardOverview>('/dashboard');
-}
-
-export async function getDashboardSummary(): Promise<DashboardSummary> {
-  return fetchJSON<DashboardSummary>('/dashboard/summary');
-}
-
-export async function getDashboardWorkflowStatus(): Promise<DashboardWorkflowStage[]> {
-  return fetchJSON<DashboardWorkflowStage[]>('/dashboard/workflow-status');
-}
-
-export async function getDashboardLabQueue(): Promise<DashboardLabQueueItem[]> {
-  return fetchJSON<DashboardLabQueueItem[]>('/dashboard/lab-queue');
-}
-
-export async function getDashboardLatestScores(): Promise<DashboardLatestScore[]> {
-  return fetchJSON<DashboardLatestScore[]>('/dashboard/latest-scores');
-}
-
-export async function getDashboardRiskAlerts(): Promise<DashboardRiskAlert[]> {
-  return fetchJSON<DashboardRiskAlert[]>('/dashboard/risk-alerts');
-}
-
-export async function getDashboardRecentReports(): Promise<DashboardRecentReport[]> {
-  return fetchJSON<DashboardRecentReport[]>('/dashboard/recent-reports');
-}
-
-export async function getDashboardBenchmarkOverview(): Promise<DashboardBenchmarkOverview> {
-  return fetchJSON<DashboardBenchmarkOverview>('/dashboard/benchmark-overview');
-}
-
-export async function getDashboardDataInventory(): Promise<DashboardDataInventoryItem[]> {
-  return fetchJSON<DashboardDataInventoryItem[]>('/dashboard/data-inventory');
-}
-
-export async function getDashboardSimilarityAnalysis(): Promise<DashboardSimilarityAnalysis | null> {
-  return fetchJSON<DashboardSimilarityAnalysis | null>('/dashboard/similarity-analysis');
 }

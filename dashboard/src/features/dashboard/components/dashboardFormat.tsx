@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { TrafficLight } from '../../../services/api';
-import { getBadgeToneStyle, getTextToneColor, getTrafficTone } from '../../../theme/semantic';
+import { getBadgeToneStyle, getTrafficTone } from '../../../theme/semantic';
 import { colors, font, radius, spacing } from '../../../theme/tokens';
 
 export function formatDashValue(value: unknown) {
@@ -16,14 +16,6 @@ export function formatDashScore(value: unknown) {
 
 export function formatDashPercent(value: unknown) {
   return typeof value === 'number' ? `${Math.round(value)}%` : formatDashValue(value);
-}
-
-export function trafficColor(value?: TrafficLight | string | null) {
-  return getTextToneColor(getTrafficTone(value));
-}
-
-export function trafficBg(value?: TrafficLight | string | null) {
-  return getBadgeToneStyle(getTrafficTone(value)).backgroundColor;
 }
 
 export function TrafficBadge({ value }: { value?: TrafficLight | string | null }) {

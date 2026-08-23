@@ -1,28 +1,4 @@
--- Migration 002: API versioning, users, request logging
-
-CREATE TABLE api_versions (
-  version     TEXT PRIMARY KEY,
-  status      TEXT NOT NULL DEFAULT 'active',
-  released_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  sunset_at   TIMESTAMPTZ,
-  notes       TEXT
-);
-
-INSERT INTO api_versions (version, status, notes) VALUES
-  ('v1', 'active', 'Initial release');
-
-CREATE TABLE users (
-  id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
-  username      TEXT        NOT NULL UNIQUE,
-  email         TEXT        NOT NULL UNIQUE,
-  role          TEXT        NOT NULL DEFAULT 'viewer',
-  is_active     BOOLEAN     NOT NULL DEFAULT TRUE,
-  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-INSERT INTO users (username, email, role) VALUES
-  ('system', 'system@amfpi.internal', 'admin');
+-- Migration 002: request logging
 
 CREATE TABLE request_logs (
   id            BIGSERIAL   PRIMARY KEY,

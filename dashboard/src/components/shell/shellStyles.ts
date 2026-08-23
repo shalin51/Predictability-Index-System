@@ -2,18 +2,6 @@ import type { CSSProperties } from 'react';
 import { createInteractiveButtonStyle } from '../../theme/buttonStyles';
 import { colors, font, radius, shadow, spacing } from '../../theme/tokens';
 
-export function getNotificationToneStyle(tone: 'info' | 'warning' | 'success'): CSSProperties {
-  if (tone === 'warning') {
-    return { backgroundColor: colors.status.warning };
-  }
-
-  if (tone === 'success') {
-    return { backgroundColor: colors.status.ok };
-  }
-
-  return { backgroundColor: colors.brand.primary };
-}
-
 export const shellStyles: Record<string, CSSProperties> = {
   badge: {
     alignItems: 'center',
