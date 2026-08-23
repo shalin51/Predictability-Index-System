@@ -4,7 +4,7 @@ import { colors, font, radius, spacing } from '../../../theme/tokens';
 import { statusLabels } from '../productionRunUi';
 import { ProductionRunStatusBadge } from './ProductionRunStatusBadge';
 
-const flow: ProductionRunStatus[] = ['planned', 'molded', 'curing', 'ready_for_testing', 'testing', 'completed', 'scored'];
+const flow: ProductionRunStatus[] = ['planned', 'molded', 'curing', 'ready_for_testing', 'testing', 'scored'];
 
 export function ProductionRunTimeline({ status }: { status: ProductionRunStatus }) {
   const currentIndex = flow.indexOf(status);

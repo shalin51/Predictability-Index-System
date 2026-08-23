@@ -11,11 +11,11 @@ export class DashboardRepository {
            (SELECT COUNT(*)::int FROM production_runs WHERE status = 'ready_for_testing') AS "runsReadyForTesting",
            (SELECT COUNT(*)::int
             FROM production_runs pr
-            WHERE pr.status = 'completed'
+            WHERE pr.status = 'scored'
               AND NOT EXISTS (SELECT 1 FROM run_metric_summaries rms WHERE rms.production_run_id = pr.id)) AS "runsAwaitingSummary",
            (SELECT COUNT(*)::int
             FROM production_runs pr
-            WHERE pr.status IN ('completed', 'scored')
+            WHERE pr.status = 'scored'
               AND EXISTS (SELECT 1 FROM run_metric_summaries rms WHERE rms.production_run_id = pr.id)
               AND NOT EXISTS (SELECT 1 FROM score_reports sr WHERE sr.production_run_id = pr.id)) AS "runsAwaitingScoring",
            (SELECT COUNT(DISTINCT production_run_id)::int FROM score_reports) AS "scoredRuns",
@@ -47,16 +47,13 @@ export class DashboardRepository {
          SELECT 5, 'Testing', COUNT(*)::int
          FROM production_runs WHERE status = 'testing'
          UNION ALL
-         SELECT 6, 'Completed', COUNT(*)::int
-         FROM production_runs WHERE status = 'completed'
-         UNION ALL
-         SELECT 7, 'Summary Generated', COUNT(DISTINCT production_run_id)::int
+         SELECT 6, 'Summary Generated', COUNT(DISTINCT production_run_id)::int
          FROM run_metric_summaries
          UNION ALL
-         SELECT 8, 'Scored', COUNT(DISTINCT production_run_id)::int
+         SELECT 7, 'Scored', COUNT(DISTINCT production_run_id)::int
          FROM score_reports
          UNION ALL
-         SELECT 9, 'Report Generated', COUNT(DISTINCT production_run_id)::int
+         SELECT 8, 'Report Generated', COUNT(DISTINCT production_run_id)::int
          FROM generated_reports
        ) stages
        ORDER BY sort_order`

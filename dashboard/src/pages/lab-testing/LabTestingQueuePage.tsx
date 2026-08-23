@@ -60,7 +60,6 @@ export function LabTestingQueuePage({ onOpen }: { onOpen: (id: string) => void }
             <option value="all">All Statuses</option>
             <option value="ready_for_testing">Ready</option>
             <option value="testing">Testing</option>
-            <option value="completed">Completed</option>
             <option value="scored">Scored</option>
           </select>
           <input onChange={(event) => setFilters((current) => ({ ...current, dateProduced: event.target.value }))} style={{ ...controlStyles.input, ...labStyles.filterControl }} type="date" value={filters.dateProduced} />

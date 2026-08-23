@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import { controlStyles } from '../../../../components/ui/controls';
 import { EmptyState, MessageBanner } from '../../../../components/ui/Page';
 import {
-  generateBenchmarkScoring,
   getBenchmarkScoring,
   getScoreReport,
   type BenchmarkScoringRunDetail,
@@ -16,7 +14,6 @@ export function BenchmarkScoringPanel({ runId }: { runId: string }) {
   const [detail, setDetail] = useState<BenchmarkScoringRunDetail | null>(null);
   const [selectedReport, setSelectedReport] = useState<ScoreReport | null>(null);
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
 
   const load = () => {
     setError('');
@@ -38,25 +35,9 @@ export function BenchmarkScoringPanel({ runId }: { runId: string }) {
   }
   const selectedPoints = selectedReport?.metrics?.reduce((sum, metric) => sum + points(metric), 0) ?? 0;
 
-  const generate = async () => {
-    try {
-      const next = await generateBenchmarkScoring(runId);
-      setDetail(next);
-      setMessage('Score generated');
-      const selected = next.bestMatch ?? next.reports[0] ?? null;
-      setSelectedReport(selected ? await getScoreReport(selected.id) : null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Scoring failed');
-    }
-  };
-
   return (
     <div style={runStyles.stack}>
       {error && <MessageBanner tone="danger">{error}</MessageBanner>}
-      {message && <MessageBanner tone="success">{message}</MessageBanner>}
-      <div style={runStyles.actions}>
-        <button disabled={!detail.scoringReady} onClick={() => void generate()} style={{ ...controlStyles.primaryButton, ...(!detail.scoringReady ? styles.disabled : {}) }} type="button">Generate Score</button>
-      </div>
       {detail.reports.length === 0 ? (
         <EmptyState>No score reports.</EmptyState>
       ) : (
@@ -128,6 +109,5 @@ function formatRunName(runCode: string) {
 
 const styles = {
   clickRow: { cursor: 'pointer' },
-  disabled: { cursor: 'not-allowed', opacity: 0.5 },
   reportTitle: { fontWeight: font.weight.semibold, padding: spacing.space3 },
 };

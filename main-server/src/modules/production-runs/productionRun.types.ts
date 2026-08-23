@@ -4,7 +4,6 @@ export type ProductionRunStatus =
   | 'curing'
   | 'ready_for_testing'
   | 'testing'
-  | 'completed'
   | 'scored'
   | 'archived';
 

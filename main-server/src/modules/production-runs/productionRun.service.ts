@@ -52,8 +52,8 @@ export class ProductionRunService {
   async update(id: string, input: Record<string, unknown>, changedBy: string): Promise<ProductionRunRecord> {
     const before = await this.repo.findById(id);
     if (!before) throw new NotFoundError(`Production Run ${id}`);
-    if (before['status'] === 'completed' || before['status'] === 'scored') {
-      throw new ConflictError('Completed production runs are locked');
+    if (before['status'] === 'scored') {
+      throw new ConflictError('Scored production runs are locked');
     }
 
     const payload = normalizeProductionRunInput(input);
@@ -84,7 +84,6 @@ export class ProductionRunService {
     const allowedBackwards: Partial<Record<ProductionRunStatus, ProductionRunStatus>> = {
       molded: 'planned',
       ready_for_testing: 'curing',
-      completed: 'testing',
     };
     if (allowedBackwards[currentStatus] !== status) nextProductionRunStatus(currentStatus, status);
     if (status === 'ready_for_testing' && await this.sampleRepo.countByRun(id) === 0) {

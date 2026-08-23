@@ -51,7 +51,7 @@ export class SampleService {
   async archive(id: string, changedBy: string): Promise<ProductionRunRecord> {
     const runStatus = await this.repo.productionRunStatus(id);
     if (runStatus == null) throw new NotFoundError(`Sample ${id}`);
-    if (['completed', 'scored', 'archived'].includes(runStatus)) throw new ConflictError('Samples cannot be deleted after the run is completed');
+    if (['scored', 'archived'].includes(runStatus)) throw new ConflictError('Samples cannot be deleted after the run is scored');
     const record = await this.repo.archive(id);
     if (!record) throw new NotFoundError(`Sample ${id}`);
     await this.auditService.log({

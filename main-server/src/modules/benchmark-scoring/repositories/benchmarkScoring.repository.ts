@@ -66,7 +66,7 @@ export class BenchmarkScoringRepository {
     const result = await getPool().query(
       `SELECT id
        FROM production_runs
-       WHERE status IN ('completed', 'scored')
+       WHERE status = 'scored'
        ORDER BY created_at, id`
     );
     return result.rows as BenchmarkScoringRecord[];
@@ -249,7 +249,7 @@ export class BenchmarkScoringRepository {
       await client.query(
         `UPDATE production_runs
          SET status = 'scored', updated_at = now()
-         WHERE id = $1 AND status IN ('completed', 'scored')`,
+         WHERE id = $1 AND status = 'scored'`,
         [runId]
       );
     });
@@ -301,7 +301,7 @@ export class BenchmarkScoringRepository {
       );
       await client.query(
         `UPDATE production_runs SET status = 'scored', updated_at = now()
-         WHERE id = $1 AND status IN ('completed', 'scored')`,
+         WHERE id = $1 AND status = 'scored'`,
         [runId]
       );
     });

@@ -48,10 +48,9 @@ export function nextProductionRunStatus(current: ProductionRunStatus, requested:
   const allowedBackwards: Partial<Record<ProductionRunStatus, ProductionRunStatus>> = {
     molded: 'planned',
     ready_for_testing: 'curing',
-    completed: 'testing',
   };
   if (allowedBackwards[current] === requested) return;
-  const flow: ProductionRunStatus[] = ['planned', 'molded', 'curing', 'ready_for_testing', 'testing', 'completed', 'scored'];
+  const flow: ProductionRunStatus[] = ['planned', 'molded', 'curing', 'ready_for_testing', 'testing', 'scored'];
   const currentIndex = flow.indexOf(current);
   const requestedIndex = flow.indexOf(requested);
   if (currentIndex < 0 || requestedIndex !== currentIndex + 1) {

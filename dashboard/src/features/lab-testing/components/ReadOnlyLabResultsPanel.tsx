@@ -40,7 +40,6 @@ export function ReadOnlyLabResultsPanel({ onOpenLabRun, runId, title }: ReadOnly
   }, [runId]);
 
   const rows = useMemo(() => data ? buildRows(data) : [], [data]);
-  const sampleGroups = useMemo(() => groupRowsBySample(rows), [rows]);
 
   if (error) return <MessageBanner tone="danger">{error}</MessageBanner>;
   if (!data) return <div style={labStyles.muted}>Loading lab results...</div>;
@@ -63,7 +62,7 @@ export function ReadOnlyLabResultsPanel({ onOpenLabRun, runId, title }: ReadOnly
         )}
       </div>
 
-      {rows.length === 0 ? <EmptyState>No lab results.</EmptyState> : <div style={styles.resultGroups}>{sampleGroups.map(([sample, sampleRows]) => <section key={sample}><h4 style={styles.sampleTitle}>{sample}</h4><ResultTable rows={sampleRows} /></section>)}</div>}
+      {rows.length === 0 ? <EmptyState>No lab results.</EmptyState> : <ComparisonTable rows={rows} samples={data.samples} />}
 
       {data.observations.length > 0 && (
         <div style={styles.observations}>
@@ -79,25 +78,24 @@ export function ReadOnlyLabResultsPanel({ onOpenLabRun, runId, title }: ReadOnly
   );
 }
 
-function ResultTable({ rows }: { rows: DisplayResult[] }) {
+function ComparisonTable({ rows, samples }: { rows: DisplayResult[]; samples: SampleRecord[] }) {
+  const comparisons = buildComparisons(rows);
   return (
     <div style={labStyles.tableWrap}>
       <table style={labStyles.table}>
         <thead>
           <tr>
-            {['Metric', 'Value', 'Unit', 'Method', 'Tested At'].map((column) => (
-              <th key={column} style={labStyles.th}>{column}</th>
-            ))}
+            <th style={labStyles.th}>Metric</th>
+            {samples.map((sample) => <th key={sample.id} style={labStyles.th}>{sample.sampleCode}</th>)}
+            <th style={labStyles.th}>Unit</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={row.id}>
-              <td style={labStyles.td}>{row.metric}</td>
-              <td style={labStyles.td}>{formatLabValue(row.value)}</td>
-              <td style={labStyles.td}>{row.unit || '-'}</td>
-              <td style={labStyles.td}>{row.method || '-'}</td>
-              <td style={labStyles.td}>{formatLabValue(row.testedAt)}</td>
+          {comparisons.map((comparison) => (
+            <tr key={`${comparison.category}-${comparison.metric}-${comparison.unit}`}>
+              <td style={labStyles.td}><strong>{comparison.metric}</strong></td>
+              {samples.map((sample) => <td key={sample.id} style={labStyles.td}>{comparison.values.get(sample.sampleCode) ?? '-'}</td>)}
+              <td style={labStyles.td}>{comparison.unit || '-'}</td>
             </tr>
           ))}
         </tbody>
@@ -106,10 +104,16 @@ function ResultTable({ rows }: { rows: DisplayResult[] }) {
   );
 }
 
-function groupRowsBySample(rows: DisplayResult[]): Array<[string, DisplayResult[]]> {
-  const groups = new Map<string, DisplayResult[]>();
-  rows.forEach((row) => groups.set(row.sample, [...(groups.get(row.sample) ?? []), row]));
-  return Array.from(groups.entries()).sort(([left], [right]) => left.localeCompare(right));
+function buildComparisons(rows: DisplayResult[]) {
+  const comparisons = new Map<string, { category: string; metric: string; unit: string; values: Map<string, string> }>();
+  rows.forEach((row) => {
+    const key = `${row.category}\u0000${row.metric}\u0000${row.unit}`;
+    const comparison = comparisons.get(key) ?? { category: row.category, metric: row.metric, unit: row.unit, values: new Map<string, string>() };
+    const existing = comparison.values.get(row.sample);
+    comparison.values.set(row.sample, existing ? `${existing} / ${formatLabValue(row.value)}` : formatLabValue(row.value));
+    comparisons.set(key, comparison);
+  });
+  return Array.from(comparisons.values()).sort((left, right) => left.category.localeCompare(right.category) || left.metric.localeCompare(right.metric));
 }
 
 function buildRows(data: LabTestingResultsResponse): DisplayResult[] {
@@ -154,8 +158,6 @@ const styles: Record<string, CSSProperties> = {
   observation: { color: colors.text.secondary, fontSize: font.size.small },
   observations: { display: 'grid', gap: spacing.space2 },
   panel: { border: `1px solid ${colors.border}`, borderRadius: radius.md, display: 'grid', gap: spacing.space4, padding: spacing.space4 },
-  resultGroups: { display: 'grid', gap: spacing.space5 },
-  sampleTitle: { color: colors.text.primary, margin: 0 },
   summary: { color: colors.text.muted, display: 'flex', flexWrap: 'wrap', fontSize: font.size.small, gap: spacing.space4 },
   title: { color: colors.text.primary, fontSize: font.size.h3, margin: 0 },
 };

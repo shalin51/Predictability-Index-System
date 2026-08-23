@@ -132,8 +132,8 @@ export class BenchmarkScoringService {
 
   private async assertScoringReady(runId: string): Promise<void> {
     const run = await this.requireRun(runId);
-    if (run['status'] !== 'completed' && run['status'] !== 'scored') {
-      throw new ConflictError('Only completed summarized runs can be scored');
+    if (run['status'] !== 'scored') {
+      throw new ConflictError('Only scored summarized runs can be scored');
     }
     const missing = await this.repo.missingRequiredSummaries(runId);
     if (missing.length > 0) throw new ConflictError('Required run metric summaries are missing');

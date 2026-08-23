@@ -97,7 +97,7 @@ export function getTrafficTone(value?: TrafficLight | string | null): SemanticTo
 export function getProductionRunTone(status: ProductionRunStatus): SemanticTone {
   if (status === 'planned') return 'info';
   if (status === 'archived') return 'neutral';
-  if (status === 'completed' || status === 'scored') return 'success';
+  if (status === 'scored') return 'success';
   return 'warning';
 }
 

@@ -55,7 +55,7 @@ export function ProductionRunListPage({ onCreate, onOpen }: { onCreate: () => vo
             <h1 style={runStyles.title}>Production Runs</h1>
             <p style={runStyles.subtitle}>Approved formulations molded into traceable batches and samples.</p>
           </div>
-          <div style={runStyles.actions}>
+          <div style={{ ...runStyles.actions, gridColumn: '3', justifyContent: 'flex-end', justifySelf: 'end', width: '100%' }}>
             <button onClick={onCreate} style={controlStyles.primaryButton} type="button">New Production Run</button>
           </div>
         </div>

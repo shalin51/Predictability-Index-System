@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Divider } from '../../../components/ui/Card';
-import { controlStyles } from '../../../components/ui/controls';
 import { EmptyState, MessageBanner } from '../../../components/ui/Page';
 import {
-  generateRunSummary,
   getRunSummary,
   type RunSummaryDetail,
   type RunSummaryStatus,
@@ -19,10 +17,9 @@ const statusLabels: Record<RunSummaryStatus, string> = {
   stale: 'Stale',
 };
 
-export function RunSummaryPanel({ onContinueToScoring, runId }: { onContinueToScoring?: () => void; runId: string }) {
+export function RunSummaryPanel({ runId }: { runId: string }) {
   const [detail, setDetail] = useState<RunSummaryDetail | null>(null);
   const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
 
   const load = () => {
     setError('');
@@ -35,31 +32,15 @@ export function RunSummaryPanel({ onContinueToScoring, runId }: { onContinueToSc
     return error ? <MessageBanner tone="danger">{error}</MessageBanner> : <div style={runStyles.muted}>Loading...</div>;
   }
 
-  const canGenerate = detail.run.labTestingStatus === 'completed' && detail.missingRequiredMetrics.length === 0;
-  const generate = async () => {
-    try {
-      const next = await generateRunSummary(runId);
-      setDetail(next);
-      setMessage('Summary generated');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Summary generation failed');
-    }
-  };
-
   return (
     <div style={runStyles.stack}>
       {error && <MessageBanner tone="danger">{error}</MessageBanner>}
-      {message && <MessageBanner tone="success">{message}</MessageBanner>}
       <div style={styles.headerGrid}>
         <div style={runStyles.panel}>Run Code<br /><strong>{detail.run.runCode}</strong></div>
         <div style={runStyles.panel}>Formulation<br /><strong>{detail.run.formulation}</strong></div>
         <div style={runStyles.panel}>Lab Testing Status<br /><strong>{detail.run.labTestingStatus}</strong></div>
         <div style={runStyles.panel}>Summary Status<br /><strong>{statusLabels[detail.status]}</strong></div>
         <div style={runStyles.panel}>Last Generated<br /><strong>{formatValue(detail.run.lastGeneratedAt)}</strong></div>
-      </div>
-      <div style={runStyles.actions}>
-        <button disabled={!canGenerate} onClick={() => void generate()} style={{ ...controlStyles.primaryButton, ...(!canGenerate ? styles.disabled : {}) }} type="button">Generate Summary</button>
-        <button disabled={!detail.canContinueToScoring || !onContinueToScoring} onClick={onContinueToScoring} style={{ ...controlStyles.secondaryButton, ...(!detail.canContinueToScoring || !onContinueToScoring ? styles.disabled : {}) }} type="button">Continue to Benchmark Scoring</button>
       </div>
       <Divider />
       {detail.summaries.length === 0 ? (
@@ -96,7 +77,6 @@ export function RunSummaryPanel({ onContinueToScoring, runId }: { onContinueToSc
 }
 
 const styles = {
-  disabled: { cursor: 'not-allowed', opacity: 0.5 },
   headerGrid: { display: 'grid', gap: spacing.space4, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' },
   ready: {
     backgroundColor: colors.status.okBg,

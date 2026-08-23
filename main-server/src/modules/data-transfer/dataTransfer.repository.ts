@@ -570,6 +570,9 @@ export class DataTransferRepository {
                  NULL::float AS "percentComposition", NULL::text AS basis, NULL::int AS "sortOrder",
                  0 AS row_sort, 0 AS component_sort
           FROM formulations f
+          WHERE NOT EXISTS (
+            SELECT 1 FROM formulation_components fc WHERE fc.formulation_id = f.id
+          )
           UNION ALL
           SELECT f.formulation_code AS "formulationCode", f.formulation_name AS "formulationName", f.version_no AS "versionNo",
                  f.status::text AS status, f.approved_by AS "approvedBy", f.notes,

@@ -27,21 +27,19 @@ import { ProductionRunStatusBadge } from './components/ProductionRunStatusBadge'
 import { ProductionRunTimeline } from './components/ProductionRunTimeline';
 import { RunSummaryPanel } from './components/RunSummaryPanel';
 import { SampleTable } from './components/SampleTable';
-import { ProcessSetupPanel } from './components/ProcessSetupPanel';
 import { ReadOnlyLabResultsPanel } from '../lab-testing/components/ReadOnlyLabResultsPanel';
 import { formatValue, runStyles, statusLabels } from './productionRunUi';
 
-type DetailTab = 'Overview' | 'Manufacturing Parameters' | 'Process Setup' | 'Samples' | 'Lab Results' | 'Run Summary' | 'Scores';
+type DetailTab = 'Overview' | 'Manufacturing Parameters' | 'Samples' | 'Lab Results' | 'Run Summary' | 'Scores';
 
 const tabsByStatus: Record<ProductionRunStatus, DetailTab[]> = {
-  planned: ['Overview', 'Manufacturing Parameters', 'Process Setup'],
-  molded: ['Overview', 'Manufacturing Parameters', 'Process Setup'],
-  curing: ['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples'],
-  ready_for_testing: ['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples', 'Lab Results'],
-  testing: ['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples', 'Lab Results'],
-  completed: ['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples', 'Lab Results', 'Run Summary', 'Scores'],
-  scored: ['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples', 'Lab Results', 'Run Summary', 'Scores'],
-  archived: ['Overview', 'Manufacturing Parameters', 'Process Setup', 'Samples', 'Lab Results', 'Run Summary', 'Scores'],
+  planned: ['Overview', 'Manufacturing Parameters'],
+  molded: ['Overview', 'Manufacturing Parameters'],
+  curing: ['Overview', 'Manufacturing Parameters', 'Samples'],
+  ready_for_testing: ['Overview', 'Manufacturing Parameters', 'Samples', 'Lab Results'],
+  testing: ['Overview', 'Manufacturing Parameters', 'Samples', 'Lab Results'],
+  scored: ['Overview', 'Manufacturing Parameters', 'Samples', 'Lab Results', 'Run Summary', 'Scores'],
+  archived: ['Overview', 'Manufacturing Parameters', 'Samples', 'Lab Results', 'Run Summary', 'Scores'],
 };
 
 const nextActions: Partial<Record<ProductionRunStatus, { label: string; status: ProductionRunStatus }>> = {
@@ -54,7 +52,6 @@ const nextActions: Partial<Record<ProductionRunStatus, { label: string; status: 
 const previousActions: Partial<Record<ProductionRunStatus, { label: string; status: ProductionRunStatus }>> = {
   molded: { label: 'Return to Planning', status: 'planned' },
   ready_for_testing: { label: 'Return to Curing', status: 'curing' },
-  completed: { label: 'Return to Testing', status: 'testing' },
 };
 
 export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenLabRun, onOpenReport }: { id: string; onBack: () => void; onOpenFormulation: (formulationId: string) => void; onOpenLabRun?: (runId: string) => void; onOpenReport?: (runId: string) => void }) {
@@ -93,7 +90,7 @@ export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenL
   }
 
   const payload = toPayload(record);
-  const locked = record.status === 'completed' || record.status === 'scored' || record.status === 'archived';
+  const locked = record.status === 'scored' || record.status === 'archived';
   const nextAction = nextActions[record.status];
   const previousAction = previousActions[record.status];
   const availableTabs = tabsByStatus[record.status];
@@ -109,21 +106,12 @@ export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenL
     }
   };
 
-  const generateSummary = async () => {
-    try {
-      await generateRunSummary(record.id);
-      setTab('Run Summary');
-      setMessage('Summary generated');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Summary generation failed');
-    }
-  };
-
   const generateScore = async () => {
     try {
+      await generateRunSummary(record.id);
       await generateBenchmarkScoring(record.id);
       setTab('Scores');
-      setMessage('Score generated');
+      setMessage('Summary and score generated');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Score generation failed');
     }
@@ -150,9 +138,8 @@ export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenL
               {previousAction && <button onClick={() => void updateProductionRunStatus(record.id, previousAction.status).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.secondaryButton} type="button">{previousAction.label}</button>}
               {nextAction && <button onClick={() => void updateProductionRunStatus(record.id, nextAction.status).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.primaryButton} type="button">{nextAction.label}</button>}
               {record.status === 'testing' && onOpenLabRun && <button onClick={() => onOpenLabRun(record.id)} style={controlStyles.primaryButton} type="button">Continue Lab Testing</button>}
-              {record.status === 'completed' && tab === 'Run Summary' && <button onClick={() => void generateSummary()} style={controlStyles.primaryButton} type="button">Generate Summary</button>}
-              {(record.status === 'completed' || record.status === 'scored') && tab === 'Scores' && <button onClick={() => void generateScore()} style={controlStyles.primaryButton} type="button">Generate Score</button>}
-              {(record.status === 'completed' || record.status === 'scored') && onOpenReport && <button onClick={() => onOpenReport(record.id)} style={controlStyles.secondaryButton} type="button">Report</button>}
+              {record.status === 'scored' && tab === 'Scores' && <button onClick={() => void generateScore()} style={controlStyles.primaryButton} type="button">Generate Score</button>}
+              {record.status === 'scored' && onOpenReport && <button onClick={() => onOpenReport(record.id)} style={controlStyles.secondaryButton} type="button">Report</button>}
             </div>
           </div>
         </div>
@@ -194,9 +181,8 @@ export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenL
         {tab === 'Samples' && (record.samples?.length
           ? <SampleTable canDelete={!locked} editable={!locked} onDelete={(sampleId) => void archiveSample(sampleId).then(() => { setRecord((current) => current ? { ...current, samples: current.samples?.filter((sample) => sample.id !== sampleId), sampleCount: Math.max(0, current.sampleCount - 1) } : current); setMessage('Sample deleted'); }).catch((err: Error) => setError(err.message))} onUpdate={(sample, patch) => void updateSample(sample.id, { cavityNumber: patch.cavityNumber === undefined ? sample.cavityNumber : patch.cavityNumber, sampleCode: patch.sampleCode ?? sample.sampleCode, status: patch.status ?? sample.status as import('../../services/api').SamplePayload['status'] }).then((updated) => { setRecord((current) => current ? { ...current, samples: current.samples?.map((item) => item.id === updated.id ? updated : item) } : current); setMessage('Sample saved'); }).catch((err: Error) => setError(err.message))} samples={record.samples} />
           : <EmptyState>Samples are automatically generated when this run is marked Ready for Testing.</EmptyState>)}
-        {tab === 'Process Setup' && <ProcessSetupPanel runId={record.id} />}
         {tab === 'Lab Results' && <ReadOnlyLabResultsPanel onOpenLabRun={onOpenLabRun} runId={record.id} />}
-        {tab === 'Run Summary' && <RunSummaryPanel onContinueToScoring={() => setTab('Scores')} runId={record.id} />}
+        {tab === 'Run Summary' && <RunSummaryPanel runId={record.id} />}
         {tab === 'Scores' && <BenchmarkScoringPanel runId={record.id} />}
       </Card>
     </DashboardPage>

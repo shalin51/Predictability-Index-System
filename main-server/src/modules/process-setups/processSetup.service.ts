@@ -93,7 +93,7 @@ export class ProcessSetupService {
   async updateRunValues(runId: string, raw: Record<string, unknown>, actor: string) {
     const state = await this.repo.runState(runId);
     if (!state) throw new NotFoundError(`Production run ${runId}`);
-    if (['completed', 'scored', 'archived'].includes(state.status)) throw new ConflictError('Completed or archived production runs are locked');
+    if (['scored', 'archived'].includes(state.status)) throw new ConflictError('Scored or archived production runs are locked');
     if (!['planned', 'molded'].includes(state.status)) throw new ConflictError('Process setups can only be imported while a run is planned or molded');
     const auditReason = String(raw['auditReason'] ?? '').trim();
     if (state.status === 'testing' && !auditReason) throw new ValidationError('Audit reason is required after testing starts');
@@ -120,7 +120,7 @@ export class ProcessSetupService {
     if (!sourceRunId || sourceRunId === runId) throw new ValidationError('Select a different production run to import');
     const state = await this.repo.runState(runId);
     if (!state) throw new NotFoundError(`Production run ${runId}`);
-    if (['completed', 'scored', 'archived'].includes(state.status)) throw new ConflictError('Completed or archived production runs are locked');
+    if (['scored', 'archived'].includes(state.status)) throw new ConflictError('Scored or archived production runs are locked');
     const before = await this.runProcessSetup(runId);
     try {
       await this.repo.importRunValues(runId, sourceRunId);

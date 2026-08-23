@@ -36,7 +36,8 @@ export function ManufacturingParametersForm({
           onChange={(event) => {
             const machineId = event.target.value;
             const machineProfileStillValid = machineSetupProfiles.some((item) => item.id === value.machineSetupProfileId && String(item['machineId'] ?? '') === machineId);
-            onChange({ machineId, machineSetupProfileId: machineProfileStillValid ? value.machineSetupProfileId : '' });
+            const defaultProfileId = machineSetupProfiles.find((item) => String(item['machineId'] ?? '') === machineId)?.id ?? null;
+            onChange({ machineId, machineSetupProfileId: machineProfileStillValid ? value.machineSetupProfileId : defaultProfileId });
           }}
           style={controlStyles.input}
           value={value.machineId}

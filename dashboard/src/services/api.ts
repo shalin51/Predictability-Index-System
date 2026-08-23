@@ -318,7 +318,7 @@ export interface LabTestingQueueRecord {
   requiredResultCount: number;
   runCode: string;
   sampleCount: number;
-  status: 'ready_for_testing' | 'testing' | 'completed' | 'scored';
+  status: 'ready_for_testing' | 'testing' | 'scored';
   targetBenchmark: string | null;
 }
 
