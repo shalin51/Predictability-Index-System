@@ -188,7 +188,6 @@ export function DashboardViewContent({
           id={formulationId}
           onBack={() => goBack({ formulationMode: 'list', view: 'formulations' })}
           onCreateProductionRun={() => navigate({ productionRunMode: 'new', view: 'production-runs' })}
-          onOpenLabRun={(id) => navigate({ labRunId: id, labTestingMode: 'detail', view: 'lab-testing' })}
           onOpenProductionRun={(id) => navigate({ productionRunId: id, productionRunMode: 'detail', view: 'production-runs' })}
         />
       );

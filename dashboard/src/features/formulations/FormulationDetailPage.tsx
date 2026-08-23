@@ -17,25 +17,21 @@ import {
 import { spacing } from '../../theme/tokens';
 import { FormulationComponentsEditor } from './FormulationComponentsEditor';
 import { ProductionRunTable } from '../production-runs/components/ProductionRunTable';
-import { BenchmarkScoringPanel } from '../production-runs/components/scores/BenchmarkScoringPanel';
-import { ReadOnlyLabResultsPanel } from '../lab-testing/components/ReadOnlyLabResultsPanel';
 import { formatValue, formulationStyles, labelize, totalTone } from './formulationUi';
 
-type DetailTab = 'Overview' | 'Recipe Components' | 'Production Runs' | 'Lab Results' | 'Scores';
+type DetailTab = 'Overview' | 'Recipe Components' | 'Production Runs';
 const draftTabs: DetailTab[] = ['Overview', 'Recipe Components'];
-const approvedTabs: DetailTab[] = ['Overview', 'Recipe Components', 'Production Runs', 'Lab Results', 'Scores'];
+const approvedTabs: DetailTab[] = ['Overview', 'Recipe Components', 'Production Runs'];
 
 export function FormulationDetailPage({
   id,
   onBack,
   onCreateProductionRun,
-  onOpenLabRun,
   onOpenProductionRun,
 }: {
   id: string;
   onBack: () => void;
   onCreateProductionRun: () => void;
-  onOpenLabRun: (id: string) => void;
   onOpenProductionRun: (id: string) => void;
 }) {
   const [record, setRecord] = useState<FormulationRecord | null>(null);
@@ -186,12 +182,6 @@ export function FormulationDetailPage({
         {tab === 'Production Runs' && (productionRuns.length > 0
           ? <ProductionRunTable onOpen={onOpenProductionRun} records={productionRuns} />
           : <EmptyState>No production runs.</EmptyState>)}
-        {tab === 'Lab Results' && (productionRuns.length > 0
-          ? <div style={formulationStyles.stack}>{productionRuns.map((run) => <ReadOnlyLabResultsPanel key={run.id} onOpenLabRun={onOpenLabRun} runId={run.id} title={run.runCode} />)}</div>
-          : <EmptyState>No production runs or lab results.</EmptyState>)}
-        {tab === 'Scores' && (productionRuns.length > 0
-          ? <div style={formulationStyles.stack}>{productionRuns.map((run) => <BenchmarkScoringPanel key={run.id} runId={run.id} />)}</div>
-          : <EmptyState>No production runs or scores.</EmptyState>)}
       </Card>
     </DashboardPage>
   );
