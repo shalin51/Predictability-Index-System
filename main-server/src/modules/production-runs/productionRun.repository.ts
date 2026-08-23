@@ -95,7 +95,7 @@ export class ProductionRunRepository {
 
   async create(input: ProductionRunInput): Promise<ProductionRunRecord> {
     const id = await this.withTransaction(async (client) => {
-      const runCode = await this.nextRunCode(client, input.formulationId);
+      const runCode = await this.nextRunCode(client, input.formulationId, input.runCode);
       const inserted = await client.query<{ id: string }>(
         `INSERT INTO production_runs
          (run_code, formulation_id, date_produced, machine_id, machine_setup_profile_id, mold_id,
@@ -210,10 +210,18 @@ export class ProductionRunRepository {
     return (result.rowCount ?? 0) > 0;
   }
 
-  private async nextRunCode(client: PoolClient, formulationId: string): Promise<string> {
+  private async nextRunCode(client: PoolClient, formulationId: string, requestedCode?: string): Promise<string> {
     const formulation = await client.query<{ formulation_code: string }>('SELECT formulation_code FROM formulations WHERE id = $1', [formulationId]);
-    const code = formulation.rows[0]?.formulation_code ?? 'RUN';
-    return formatProductionRunCode(code);
+    const baseCode = requestedCode || formatProductionRunCode(formulation.rows[0]?.formulation_code ?? 'RUN');
+
+    // Serialise only requests for the same base code so concurrent run creation
+    // cannot select the same version suffix.
+    await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [baseCode]);
+    for (let version = 1; ; version += 1) {
+      const candidate = version === 1 ? baseCode : `${baseCode}-V${version}`;
+      const exists = await client.query('SELECT 1 FROM production_runs WHERE run_code = $1', [candidate]);
+      if ((exists.rowCount ?? 0) === 0) return candidate;
+    }
   }
 
   private async withTransaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> {

@@ -129,7 +129,6 @@ export class ProductionRunService {
   }
 
   private async validateUniqueCodes(payload: ReturnType<typeof normalizeProductionRunInput>): Promise<void> {
-    if (payload.runCode && await this.repo.existsByRunCode(payload.runCode)) throw new ConflictError('Run code must be unique');
     if (!payload.sampleGeneration) return;
     for (const sample of buildSamples(payload.sampleGeneration)) {
       if (await this.sampleRepo.existsByCode(sample.sampleCode)) throw new ConflictError(`Sample code ${sample.sampleCode} must be unique`);
