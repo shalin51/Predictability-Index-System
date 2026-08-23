@@ -1,5 +1,5 @@
 import { ValidationError } from '../../errors/app-error';
-import { formatCode } from '../../core/code-format';
+import { formatCode, formatFormulationCode } from '../../core/code-format';
 import type { FormulationComponentInput, FormulationSaveInput } from './formulation.types';
 
 const totalTolerance = 0.0001;
@@ -7,12 +7,13 @@ const totalTolerance = 0.0001;
 export function normalizeFormulationInput(input: Record<string, unknown>): FormulationSaveInput {
   const components = Array.isArray(input['components']) ? input['components'] : [];
 
+  const formulationName = stringValue(input['formulationName']);
   return {
     approve: Boolean(input['approve']),
     approvedBy: stringOrNull(input['approvedBy']),
     components: components.map(normalizeComponent),
-    formulationCode: formatCode(stringValue(input['formulationCode']), 'F'),
-    formulationName: stringValue(input['formulationName']),
+    formulationCode: formulationName ? formatFormulationCode(formulationName) : formatCode(stringValue(input['formulationCode']), 'F'),
+    formulationName,
     notes: input['notes'] == null ? null : String(input['notes']),
   };
 }

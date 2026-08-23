@@ -1,7 +1,7 @@
 import { createHash } from 'crypto';
 import type { PoolClient } from 'pg';
 import { getPool } from '../../infrastructure/database/pg-pool';
-import { formatCode } from '../../core/code-format';
+import { formatProductionRunCode } from '../../core/code-format';
 import type { ParsedSetupWorkbook, ProcessSetupRecord, SetupImportCommitInput } from './processSetup.types';
 
 interface ImportRow extends ProcessSetupRecord {
@@ -370,12 +370,8 @@ export class ProcessSetupRepository {
   }
 
   private async createRun(client: PoolClient, revisionId: string, snapshot: ParsedSetupWorkbook, input: SetupImportCommitInput): Promise<string> {
-    let runCode = input.runCode?.trim();
-    if (!runCode) {
-      const formulation = await client.query<{ formulation_code: string }>(`SELECT formulation_code FROM formulations WHERE id = $1`, [input.formulationId]);
-      const count = await client.query<{ count: string }>(`SELECT COUNT(*)::text AS count FROM production_runs WHERE formulation_id = $1`, [input.formulationId]);
-      runCode = formatCode(`${formulation.rows[0]?.formulation_code ?? 'RUN'}-${String.fromCharCode(65 + Number(count.rows[0]?.count ?? 0))}`, 'PR');
-    }
+    const formulation = await client.query<{ formulation_code: string }>(`SELECT formulation_code FROM formulations WHERE id = $1`, [input.formulationId]);
+    const runCode = formatProductionRunCode(formulation.rows[0]?.formulation_code ?? 'RUN');
     const coolingParameter = snapshot.parameters.find((item) => item.key === 'cycle.cooling_time');
     const cycleParameter = snapshot.parameters.find((item) => item.key === 'cycle.total_time');
     const cooling = coolingParameter?.actual;

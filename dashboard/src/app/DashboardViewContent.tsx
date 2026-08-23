@@ -119,7 +119,7 @@ export function DashboardViewContent({
   }
 
   if (view === 'benchmarks') {
-    const section = librarySection === 'scoring-rules' ? librarySection : 'benchmarks';
+    const section = 'benchmarks';
     return (
       <MasterDataPage
         activeSection={section}
@@ -127,7 +127,7 @@ export function DashboardViewContent({
         onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'benchmarks' })}
         onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'benchmarks' })}
         recordId={libraryRecordId}
-        sections={['benchmarks', 'scoring-rules']}
+        sections={['benchmarks']}
       />
     );
   }

@@ -157,7 +157,7 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
             </label>
             <label style={controlStyles.field}>
               <span style={controlStyles.fieldLabel}>Run Code</span>
-              <input onChange={(event) => update({ runCode: event.target.value })} placeholder="Auto if blank" style={controlStyles.input} value={payload.runCode ?? ''} />
+              <input disabled placeholder="Generated from formulation code" style={controlStyles.input} value="" />
             </label>
             <label style={controlStyles.field}>
               <span style={controlStyles.fieldLabel}>Date Produced *</span>

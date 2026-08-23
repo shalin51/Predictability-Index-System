@@ -10,6 +10,16 @@ import type { LibraryCollectionResponse, LibraryEntityConfig, LibraryListQuery, 
 const statuses = new Set<string>(RECORD_STATUSES);
 const comparisonModes = new Set<string>(COMPARISON_MODES);
 const criticalityLevels = new Set<string>(CRITICALITY_LEVELS);
+const benchmarkMetricKeys = [
+  'weight',
+  'compression',
+  'stretch',
+  'full_stretch_max',
+  'hardness',
+  'wall_thickness',
+  'diameter',
+  'drop_test',
+] as const;
 
 export class LibraryService {
   constructor(
@@ -39,8 +49,10 @@ export class LibraryService {
   async create(resource: string, input: Record<string, unknown>, changedBy: string): Promise<LibraryRecord> {
     const config = this.requireConfig(resource);
     this.validateWritable(config);
-    const payload = this.preparePayload(resource, input);
+    let payload = this.preparePayload(resource, input);
     this.validateRequired(config.requiredFields, payload);
+    await this.validateBenchmarkMetric(resource, payload['metricId']);
+    payload = await this.enrichBenchmarkProperty(resource, payload, payload['metricId']);
     this.validateEnums(payload);
     await this.validateUnique(resource, payload);
 
@@ -61,7 +73,9 @@ export class LibraryService {
     const before = await this.repo.rawById(config, id);
     if (!before) throw new NotFoundError(`${config.displayName} ${id}`);
 
-    const payload = this.preparePayload(resource, input);
+    let payload = this.preparePayload(resource, input);
+    await this.validateBenchmarkMetric(resource, payload['metricId'] ?? before['metric_id']);
+    payload = await this.enrichBenchmarkProperty(resource, payload, payload['metricId'] ?? before['metric_id']);
     this.validateEnums(payload);
     await this.validateUnique(resource, { ...before, ...payload }, id);
 
@@ -144,6 +158,39 @@ export class LibraryService {
     if (payload['criticality'] != null && !criticalityLevels.has(String(payload['criticality']))) {
       throw new ValidationError('criticality must be low, medium, high, or critical');
     }
+  }
+
+  private async validateBenchmarkMetric(resource: string, metricId: unknown): Promise<void> {
+    if (resource !== 'scoring-rules') return;
+    const result = await getPool().query(
+      `SELECT 1
+       FROM metric_definitions
+       WHERE id = $1
+         AND status = 'active'
+         AND metric_key = ANY($2::text[])`,
+      [metricId, benchmarkMetricKeys]
+    );
+    if ((result.rowCount ?? 0) === 0) {
+      throw new ValidationError('Benchmark properties must use a supported Lab Testing metric');
+    }
+  }
+
+  private async enrichBenchmarkProperty(resource: string, payload: Record<string, unknown>, metricId: unknown): Promise<Record<string, unknown>> {
+    if (resource !== 'scoring-rules') return payload;
+    const result = await getPool().query<{ metric_key: string; category: string; default_unit: string | null }>(
+      `SELECT metric_key, category::text AS category, default_unit
+       FROM metric_definitions
+       WHERE id = $1`,
+      [metricId]
+    );
+    const metric = result.rows[0];
+    if (!metric) throw new ValidationError('Metric not found');
+    return {
+      ...payload,
+      metricName: metric.metric_key,
+      metricCategory: metric.category,
+      unit: metric.default_unit,
+    };
   }
 
   private async validateUnique(resource: string, payload: Record<string, unknown>, excludeId?: string): Promise<void> {

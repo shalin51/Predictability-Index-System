@@ -2,7 +2,6 @@ import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 import { Button } from '../../components/ui/Button';
 import { Card, CardHeader, CardSubtitle, CardTitle, Divider } from '../../components/ui/Card';
-import { DataTable, DataTableBody, DataTableCell, DataTableHead, DataTableHeader, DataTableRow } from '../../components/ui/DataTable';
 import { DashboardPage, MessageBanner } from '../../components/ui/Page';
 import {
   getLibraryRecord,
@@ -20,8 +19,8 @@ import { coerceLibraryPayload, LibraryRecordForm, libraryOptionResources } from 
 import { labelize, LibrarySectionNav } from './LibrarySectionNav';
 import { MachineParametersAccordion } from './MachineParametersAccordion';
 import { RelatedMaterialsTable } from './RelatedMaterialsTable';
-import { BenchmarkPropertiesEditor } from './BenchmarkPropertiesEditor';
 import { MaterialPropertiesEditor } from './MaterialPropertiesEditor';
+import { BenchmarkPropertiesEditor } from './BenchmarkPropertiesEditor';
 
 export function LibraryRecordDetailPage({
   id,
@@ -47,7 +46,6 @@ export function LibraryRecordDetailPage({
   const [message, setMessage] = useState('');
   const [machineParameters, setMachineParameters] = useState<LibraryRecord[]>([]);
   const [benchmarkProperties, setBenchmarkProperties] = useState<LibraryRecord[]>([]);
-  const [benchmarkPropertyFields, setBenchmarkPropertyFields] = useState<LibraryFieldDefinition[]>([]);
   const [rerunningBenchmark, setRerunningBenchmark] = useState(false);
   const [relatedMaterials, setRelatedMaterials] = useState<LibraryRecord[]>([]);
   const [relatedError, setRelatedError] = useState('');
@@ -60,7 +58,6 @@ export function LibraryRecordDetailPage({
     setMessage('');
     setMachineParameters([]);
     setBenchmarkProperties([]);
-    setBenchmarkPropertyFields([]);
     setRelatedMaterials([]);
     setRelatedError('');
     setBenchmarkPropertiesError('');
@@ -112,10 +109,8 @@ export function LibraryRecordDetailPage({
     if (resource === 'benchmarks') {
       void listLibraryRecords('scoring-rules', { category: id })
         .then((response) => {
-          if (active) {
-            setBenchmarkProperties(response.data);
-            setBenchmarkPropertyFields(response.fields);
-          }
+          if (!active) return;
+          setBenchmarkProperties(response.data);
         })
         .catch((reason: unknown) => {
           if (active) setBenchmarkPropertiesError(getErrorMessage(reason, 'Unable to load benchmark properties'));
@@ -190,14 +185,6 @@ export function LibraryRecordDetailPage({
                 onChange={(key, value) => setForm((current) => ({ ...current, [key]: value }))}
                 options={options}
               />
-              {resource === 'benchmarks' && (
-                <BenchmarkPropertiesEditor
-                  fields={benchmarkPropertyFields}
-                  onSaved={(property) => setBenchmarkProperties((current) => current.map((item) => item.id === property.id ? property : item))}
-                  options={options}
-                  properties={benchmarkProperties}
-                />
-              )}
               <div style={styles.actions}>
                 <Button onClick={() => { setForm(record); setEditing(false); }} type="button" variant="secondary">Cancel</Button>
                 <Button onClick={() => void save()} type="button" variant="primary">Save</Button>
@@ -224,15 +211,23 @@ export function LibraryRecordDetailPage({
               {resource === 'material-suppliers' && (
                 <RelatedMaterialsTable error={relatedError} materials={relatedMaterials} />
               )}
-              {resource === 'benchmarks' && (
-                <BenchmarkPropertiesTable error={benchmarkPropertiesError} properties={benchmarkProperties} />
-              )}
               {resource === 'materials' && (
                 <MaterialPropertiesEditor
                   materialId={id}
                   onChanged={async () => setRecord(await getMaterialCatalog(id))}
                   properties={(record as MaterialCatalogDetail).properties ?? []}
                 />
+              )}
+              {resource === 'benchmarks' && (
+                <>
+                  {benchmarkPropertiesError && <MessageBanner tone="danger">{benchmarkPropertiesError}</MessageBanner>}
+                  <BenchmarkPropertiesEditor
+                    benchmarkProfileId={id}
+                    onSaved={(property, isNew) => setBenchmarkProperties((current) => isNew ? [...current, property] : current.map((item) => item.id === property.id ? property : item))}
+                    options={options}
+                    properties={benchmarkProperties}
+                  />
+                </>
               )}
             </>
           )}
@@ -246,51 +241,6 @@ function getRecordTitle(record: LibraryRecord, resource: string) {
   const titleKeys = ['benchmarkName', 'materialName', 'propertyName', 'supplierName', 'machineName', 'displayName', 'moldName', 'zoneName', 'name', 'code'];
   const value = titleKeys.map((key) => record[key]).find((item) => item !== null && item !== undefined && item !== '');
   return value ? String(value) : `${labelize(resource)} ${record.id}`;
-}
-
-function BenchmarkPropertiesTable({ error, properties }: { error: string; properties: LibraryRecord[] }) {
-  const groups = properties.reduce<Record<string, LibraryRecord[]>>((result, property) => {
-    const category = String(property['metricCategory'] ?? 'Other');
-    (result[category] ??= []).push(property);
-    return result;
-  }, {});
-
-  return (
-    <section style={styles.properties}>
-      <h2 style={styles.sectionTitle}>Benchmark Properties</h2>
-      {error && <MessageBanner tone="danger">{error}</MessageBanner>}
-      {Object.entries(groups).map(([category, items]) => (
-        <div key={category} style={styles.properties}>
-          <h3 style={styles.propertyGroupTitle}>{labelize(category)}</h3>
-          <DataTable compact minWidth={920}>
-            <DataTableHeader>
-              <tr>
-                <DataTableHead>Property</DataTableHead>
-                <DataTableHead>Target Mean</DataTableHead>
-                <DataTableHead>Min</DataTableHead>
-                <DataTableHead>Max</DataTableHead>
-                <DataTableHead>Weight</DataTableHead>
-                <DataTableHead>Comparison</DataTableHead>
-              </tr>
-            </DataTableHeader>
-            <DataTableBody>
-              {items.map((property) => (
-                <DataTableRow key={String(property['id'])}>
-                  <DataTableCell>{String(property['metricName'] ?? property['metricKey'] ?? '-')}</DataTableCell>
-                  <DataTableCell>{formatValue(property['targetMean'])}</DataTableCell>
-                  <DataTableCell>{formatValue(property['minAcceptable'])}</DataTableCell>
-                  <DataTableCell>{formatValue(property['maxAcceptable'])}</DataTableCell>
-                  <DataTableCell>{typeof property['weight'] === 'number' ? `${(property['weight'] * 100).toFixed(0)}%` : formatValue(property['weight'])}</DataTableCell>
-                  <DataTableCell>{formatValue(property['comparisonMode'])}</DataTableCell>
-                </DataTableRow>
-              ))}
-            </DataTableBody>
-          </DataTable>
-        </div>
-      ))}
-      {properties.length === 0 && !error && <div style={styles.muted}>No benchmark properties found.</div>}
-    </section>
-  );
 }
 
 function formatValue(value: unknown) {
@@ -312,8 +262,6 @@ const styles: Record<string, CSSProperties> = {
   label: { color: colors.text.muted, fontSize: font.size.small, marginBottom: spacing.space1 },
   muted: { color: colors.text.muted },
   page: { display: 'flex', flexDirection: 'column', gap: spacing.space5, minHeight: '100%' },
-  properties: { display: 'grid', gap: spacing.space4, minWidth: 0, overflow: 'auto' },
-  propertyGroupTitle: { color: colors.text.secondary, fontSize: font.size.h3, margin: 0 },
   machineParameters: { display: 'grid', gap: spacing.space3, marginTop: spacing.space5, minWidth: 0 },
   sectionTitle: { color: colors.text.primary, fontSize: font.size.h2, margin: 0 },
   summary: { display: 'grid', gap: spacing.space5, gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' },

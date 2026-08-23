@@ -1,6 +1,6 @@
 import type { PoolClient } from 'pg';
 import { getPool } from '../../infrastructure/database/pg-pool';
-import { formatCode } from '../../core/code-format';
+import { formatProductionRunCode } from '../../core/code-format';
 import type { ProductionRunInput, ProductionRunListQuery, ProductionRunRecord, ProductionRunStatus } from './productionRun.types';
 import { buildSamples } from './sample.repository';
 
@@ -95,7 +95,7 @@ export class ProductionRunRepository {
 
   async create(input: ProductionRunInput): Promise<ProductionRunRecord> {
     const id = await this.withTransaction(async (client) => {
-      const runCode = input.runCode || await this.nextRunCode(client, input.formulationId);
+      const runCode = await this.nextRunCode(client, input.formulationId);
       const inserted = await client.query<{ id: string }>(
         `INSERT INTO production_runs
           (run_code, formulation_id, date_produced, machine_id, mold_id,
@@ -210,9 +210,7 @@ export class ProductionRunRepository {
   private async nextRunCode(client: PoolClient, formulationId: string): Promise<string> {
     const formulation = await client.query<{ formulation_code: string }>('SELECT formulation_code FROM formulations WHERE id = $1', [formulationId]);
     const code = formulation.rows[0]?.formulation_code ?? 'RUN';
-    const result = await client.query<{ count: string }>('SELECT COUNT(*)::text AS count FROM production_runs WHERE formulation_id = $1', [formulationId]);
-    const suffix = String.fromCharCode(65 + Number(result.rows[0]?.count ?? 0));
-    return formatCode(`${code}-${suffix}`, 'PR');
+    return formatProductionRunCode(code);
   }
 
   private async withTransaction<T>(work: (client: PoolClient) => Promise<T>): Promise<T> {

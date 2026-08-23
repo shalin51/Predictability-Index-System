@@ -1,73 +1,103 @@
-import { useState } from 'react';
-import { Button } from '../../components/ui/Button';
+import { useEffect, useMemo, useState } from 'react';
+import { controlStyles } from '../../components/ui/controls';
+import { DataTable, DataTableBody, DataTableCell, DataTableHead, DataTableHeader, DataTableRow } from '../../components/ui/DataTable';
 import { MessageBanner } from '../../components/ui/Page';
 import {
+  createLibraryRecord,
   updateLibraryRecord,
-  type LibraryFieldDefinition,
   type LibraryRecord,
 } from '../../services/api';
 import { spacing } from '../../theme/tokens';
-import { coerceLibraryPayload, LibraryRecordForm } from './LibraryRecordForm';
+
+const benchmarkMetricKeys = [
+  'weight', 'compression', 'stretch', 'full_stretch_max',
+  'hardness', 'wall_thickness', 'diameter', 'drop_test',
+] as const;
 
 export function BenchmarkPropertiesEditor({
-  fields,
+  benchmarkProfileId,
   onSaved,
   options,
   properties,
 }: {
-  fields: LibraryFieldDefinition[];
-  onSaved: (property: LibraryRecord) => void;
+  benchmarkProfileId: string;
+  onSaved: (property: LibraryRecord, isNew: boolean) => void;
   options: Record<string, LibraryRecord[]>;
   properties: LibraryRecord[];
 }) {
-  const [editing, setEditing] = useState<LibraryRecord | null>(null);
-  const [form, setForm] = useState<Record<string, unknown>>({});
   const [error, setError] = useState('');
-  const editableFields = fields.filter((field) => !['benchmarkProfileId', 'metricId'].includes(field.key));
+  const [savingMetricId, setSavingMetricId] = useState('');
+  const [values, setValues] = useState<Record<string, string>>({});
+  const metrics = useMemo(() => {
+    const byKey = new Map((options.metrics ?? []).map((metric) => [String(metric.code), metric]));
+    return benchmarkMetricKeys.map((key) => byKey.get(key)).filter((metric): metric is LibraryRecord => Boolean(metric));
+  }, [options.metrics]);
 
-  const startEdit = (property: LibraryRecord) => {
-    setEditing(property);
-    setForm(property);
+  useEffect(() => {
+    setValues(Object.fromEntries(properties.map((property) => [String(property.metricId), formatValue(property.targetMean)])));
+  }, [properties]);
+
+  const save = async (metric: LibraryRecord) => {
+    const metricId = String(metric.id);
+    const property = properties.find((item) => item.metricId === metricId);
+    const value = values[metricId] ?? '';
+    if (value === formatValue(property?.targetMean)) return;
+
+    setSavingMetricId(metricId);
     setError('');
-  };
-
-  const save = async () => {
-    if (!editing) return;
     try {
-      const updated = await updateLibraryRecord('scoring-rules', editing.id, coerceLibraryPayload(editableFields, form));
-      onSaved(updated);
-      setEditing(null);
+      const targetMean = value === '' ? null : Number(value);
+      const saved = property
+        ? await updateLibraryRecord('scoring-rules', property.id, { targetMean })
+        : await createLibraryRecord('scoring-rules', { benchmarkProfileId, metricId, targetMean });
+      onSaved(saved, !property);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Unable to save benchmark property');
+    } finally {
+      setSavingMetricId('');
     }
   };
 
   return (
     <section style={{ display: 'grid', gap: spacing.space4 }}>
       <h2 style={{ margin: 0 }}>Benchmark Properties</h2>
+      <div>All properties use the shared Lab Testing definitions. Values save automatically after editing.</div>
       {error && <MessageBanner tone="danger">{error}</MessageBanner>}
-      {properties.map((property) => (
-        <div key={property.id} style={{ alignItems: 'center', display: 'flex', gap: spacing.space3, justifyContent: 'space-between' }}>
-          <span>{String(property['metricName'] ?? property['metricKey'] ?? property.id)}</span>
-          <Button onClick={() => startEdit(property)} size="sm" type="button" variant="secondary">Edit Property</Button>
-        </div>
-      ))}
-      {properties.length === 0 && <div>No benchmark properties found.</div>}
-      {editing && (
-        <div style={{ display: 'grid', gap: spacing.space3 }}>
-          <h3 style={{ margin: 0 }}>Edit {String(editing['metricName'] ?? editing['metricKey'] ?? 'Property')}</h3>
-          <LibraryRecordForm
-            fields={editableFields}
-            form={form}
-            onChange={(key, value) => setForm((current) => ({ ...current, [key]: value }))}
-            options={options}
-          />
-          <div style={{ display: 'flex', gap: spacing.space3, justifyContent: 'flex-end' }}>
-            <Button onClick={() => setEditing(null)} type="button" variant="secondary">Cancel Property Edit</Button>
-            <Button onClick={() => void save()} type="button" variant="primary">Save Property</Button>
-          </div>
-        </div>
-      )}
+      <DataTable compact minWidth={560}>
+        <DataTableHeader>
+          <tr>
+            <DataTableHead>Property</DataTableHead>
+            <DataTableHead>Value</DataTableHead>
+          </tr>
+        </DataTableHeader>
+        <DataTableBody>
+          {metrics.map((metric) => {
+            const metricId = String(metric.id);
+            const saving = savingMetricId === metricId;
+            return (
+              <DataTableRow key={metricId}>
+                <DataTableCell>{String(metric.label ?? metric.code)}</DataTableCell>
+                <DataTableCell>
+                  <input
+                    disabled={saving}
+                    inputMode="decimal"
+                    onBlur={() => void save(metric)}
+                    onChange={(event) => setValues((current) => ({ ...current, [metricId]: event.target.value }))}
+                    style={controlStyles.input}
+                    type="number"
+                    value={values[metricId] ?? ''}
+                  />
+                  {saving && ' Saving…'}
+                </DataTableCell>
+              </DataTableRow>
+            );
+          })}
+        </DataTableBody>
+      </DataTable>
     </section>
   );
+}
+
+function formatValue(value: unknown): string {
+  return value === null || value === undefined || value === '' ? '' : String(value);
 }

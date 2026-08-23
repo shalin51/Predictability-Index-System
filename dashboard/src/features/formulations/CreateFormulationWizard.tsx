@@ -108,7 +108,7 @@ export function CreateFormulationWizard({ onCancel, onSaved }: { onCancel: () =>
             </label>
             <label style={controlStyles.field}>
               <span style={controlStyles.fieldLabel}>Formulation Code</span>
-              <input onChange={(event) => setForm((current) => ({ ...current, formulationCode: event.target.value }))} placeholder="Auto if blank" style={controlStyles.input} value={form.formulationCode ?? ''} />
+              <input disabled placeholder="Generated from formulation name" style={controlStyles.input} value="" />
             </label>
             <label style={controlStyles.field}>
               <span style={controlStyles.fieldLabel}>Duplicate Existing Formulation</span>
