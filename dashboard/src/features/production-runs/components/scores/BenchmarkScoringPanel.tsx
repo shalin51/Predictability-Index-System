@@ -92,7 +92,7 @@ export function BenchmarkScoringPanel({ runId }: { runId: string }) {
 }
 
 function formatPercent(value?: number) {
-  return value == null ? '-' : `${Math.round(value)}%`;
+  return value == null ? '-' : `${value.toFixed(2)}%`;
 }
 
 function formatPoints(value?: number) {
