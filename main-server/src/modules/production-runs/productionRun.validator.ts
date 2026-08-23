@@ -19,6 +19,7 @@ export function normalizeProductionRunInput(input: Record<string, unknown>): Pro
     injectionPressure: nullableNumber(input['injectionPressure']),
     injectionPressureUnit: stringValue(input['injectionPressureUnit']) || 'psi',
     machineId: stringValue(input['machineId']),
+    machineSetupProfileId: stringValue(input['machineSetupProfileId']) || null,
     meltTemperature: nullableNumber(input['meltTemperature']),
     meltTemperatureUnit: stringValue(input['meltTemperatureUnit']) || 'C',
     moldId: stringValue(input['moldId']),

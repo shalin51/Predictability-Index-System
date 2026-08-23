@@ -46,13 +46,13 @@ function importViewRoute(resource: ImportResource): DashboardRouteState {
     case 'materials':          return { view: 'materials', librarySection: 'materials' };
     case 'material-properties': return { view: 'materials', librarySection: 'material-properties' };
     case 'machines':           return { view: 'machines', librarySection: 'machines' };
-    case 'machine-parameters': return { view: 'machines', librarySection: 'machine-parameters' };
+    case 'machine-setup-profiles': return { view: 'machines', librarySection: 'machine-setup-profiles' };
     case 'molds':              return { view: 'molds', librarySection: 'molds' };
-    case 'mold-zones':         return { view: 'molds', librarySection: 'molds' };
     case 'benchmarks':         return { view: 'benchmarks', librarySection: 'benchmarks' };
-    case 'scoring-rules':      return { view: 'benchmarks', librarySection: 'scoring-rules' };
+    case 'scoring-profiles':   return { view: 'scoring', librarySection: 'scoring-profiles' };
     case 'formulations':       return { view: 'formulations', formulationMode: 'list' };
     case 'production-runs':    return { view: 'production-runs', productionRunMode: 'list' };
+    case 'testing':            return { view: 'lab-testing', labTestingMode: 'list' };
   }
 }
 
@@ -147,7 +147,7 @@ export function DashboardViewContent({
   }
 
   if (view === 'machines') {
-    const section = librarySection === 'machine-parameters' ? librarySection : 'machines';
+    const section = librarySection === 'machine-parameters' || librarySection === 'machine-setup-profiles' ? librarySection : 'machines';
     return (
       <MasterDataPage
         activeSection={section}
@@ -155,7 +155,7 @@ export function DashboardViewContent({
         onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'machines' })}
         onSectionChange={(nextSection) => navigate({ librarySection: nextSection as DashboardRouteState['librarySection'], view: 'machines' })}
         recordId={libraryRecordId}
-        sections={['machines', 'machine-parameters']}
+        sections={['machines', 'machine-parameters', 'machine-setup-profiles']}
       />
     );
   }

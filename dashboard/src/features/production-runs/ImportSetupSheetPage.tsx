@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { useMemo, useState } from 'react';
+import { Button } from '../../components/ui/Button';
 import { Card, Divider } from '../../components/ui/Card';
 import { controlStyles } from '../../components/ui/controls';
 import { DashboardPage, MessageBanner } from '../../components/ui/Page';
@@ -91,7 +92,9 @@ export function ImportSetupSheetPage({ onCancel, onSaved }: { onCancel: () => vo
       <Card>
         <div style={runStyles.header}>
           <div><h1 style={runStyles.title}>Import Production Run</h1><p style={runStyles.subtitle}>Upload the fixed BOY 125E Production Run v1 workbook, validate it, and create a traceable run.</p></div>
-          <button onClick={onCancel} style={controlStyles.secondaryButton} type="button">Cancel</button>
+          <div style={styles.headerActions}>
+            <Button onClick={onCancel} type="button" variant="secondary">Back</Button>
+          </div>
         </div>
         <Divider />
         {error && <MessageBanner tone="danger">{error}</MessageBanner>}
@@ -141,6 +144,7 @@ function NumberField({ label: fieldLabel, value, onChange }: { label: string; va
 const styles: Record<string, CSSProperties> = {
   disabled: { cursor: 'not-allowed', opacity: 0.5 },
   formGrid: { display: 'grid', gap: spacing.space4, gridTemplateColumns: 'repeat(3, minmax(0, 1fr))' },
+  headerActions: { display: 'flex', justifyContent: 'flex-end' },
   sectionTitle: { color: colors.text.primary, margin: 0 },
   summaryGrid: { display: 'grid', gap: spacing.space3, gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' },
   uploadRow: { alignItems: 'center', display: 'flex', gap: spacing.space4, marginBottom: spacing.space5 },

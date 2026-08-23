@@ -17,20 +17,6 @@ export const NAV: ReadonlyArray<ShellNavItem<DashboardView>> = [
     icon: 'upload',
   },
   {
-    id: 'benchmarks',
-    label: 'Benchmarks',
-    description: 'Benchmark profiles and scoring targets.',
-    group: 'Operations',
-    icon: 'layers',
-  },
-  {
-    id: 'scoring',
-    label: 'Scoring',
-    description: 'Scoring profiles and metric weights.',
-    group: 'Operations',
-    icon: 'layers',
-  },
-  {
     id: 'machines',
     label: 'Machines',
     description: 'Machine models, specifications, and capabilities.',
@@ -43,6 +29,20 @@ export const NAV: ReadonlyArray<ShellNavItem<DashboardView>> = [
     description: 'Mold configuration.',
     group: 'Operations',
     icon: 'grid',
+  },
+  {
+    id: 'benchmarks',
+    label: 'Benchmarks',
+    description: 'Benchmark profiles and scoring targets.',
+    group: 'Operations',
+    icon: 'layers',
+  },
+  {
+    id: 'scoring',
+    label: 'Scoring',
+    description: 'Scoring profiles and metric weights.',
+    group: 'Operations',
+    icon: 'layers',
   },
   {
     id: 'formulations',

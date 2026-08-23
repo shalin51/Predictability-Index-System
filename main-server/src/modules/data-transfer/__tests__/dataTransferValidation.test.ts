@@ -85,7 +85,7 @@ describe('parseTransferWorkbookSafe', () => {
   });
 
   it('flags invalid number type per field without throwing', () => {
-    const definition = transferDefinitions['machine-parameters']!;
+    const definition = transferDefinitions['machines']!;
     const bytes = createTransferWorkbook(definition, {
       'Machine Parameters': [
         {
@@ -138,8 +138,13 @@ function makeLibraryService(overrides: Partial<typeof LibraryService.prototype> 
   } as unknown as LibraryService;
 }
 
-function makeRepo(): DataTransferRepository {
-  return {} as unknown as DataTransferRepository;
+function makeRepo(overrides: Partial<DataTransferRepository> = {}): DataTransferRepository {
+  return {
+    exportRows: vi.fn().mockResolvedValue({}),
+    importMachinesWithParameters: vi.fn().mockResolvedValue({ created: 0, updated: 0, processed: 0, skipped: 0, errors: [] }),
+    saveToHistoric: vi.fn().mockResolvedValue(undefined),
+    ...overrides,
+  } as unknown as DataTransferRepository;
 }
 
 describe('DataTransferService.validate', () => {
@@ -163,7 +168,10 @@ describe('DataTransferService.validate', () => {
     const libraryService = makeLibraryService({
       list: vi.fn().mockResolvedValue({ data: [], fields: [] }),
     });
-    const service = new DataTransferService(makeRepo(), libraryService);
+    const repo = makeRepo({
+      exportRows: vi.fn().mockResolvedValue({ Machines: [], 'Machine Parameters': [] }),
+    });
+    const service = new DataTransferService(repo, libraryService);
 
     const definition = transferDefinitions['machines']!;
     const bytes = createTransferWorkbook(definition, {
@@ -182,13 +190,13 @@ describe('DataTransferService.validate', () => {
   });
 
   it('detects existing records as update actions', async () => {
-    const libraryService = makeLibraryService({
-      list: vi.fn().mockResolvedValue({
-        data: [{ id: 'existing-id', machineCode: 'MC-001', machineName: 'Old Name' }],
-        fields: [],
+    const repo = makeRepo({
+      exportRows: vi.fn().mockResolvedValue({
+        Machines: [{ id: 'existing-id', machineCode: 'MC-001', machineName: 'Old Name' }],
+        'Machine Parameters': [],
       }),
     });
-    const service = new DataTransferService(makeRepo(), libraryService);
+    const service = new DataTransferService(repo, makeLibraryService());
 
     const definition = transferDefinitions['machines']!;
     const bytes = createTransferWorkbook(definition, {
@@ -202,23 +210,27 @@ describe('DataTransferService.validate', () => {
     expect(result.canImport).toBe(true);
   });
 
-  it('flags missing FK reference for machine-parameters', async () => {
+  it('flags missing FK reference for merged machine parameter rows', async () => {
     const libraryService = makeLibraryService({
       list: vi.fn().mockImplementation(async (resource: string) => {
         if (resource === 'machines') return { data: [], fields: [] };
         return { data: [], fields: [] };
       }),
     });
-    const service = new DataTransferService(makeRepo(), libraryService);
+    const repo = makeRepo({
+      exportRows: vi.fn().mockResolvedValue({ Machines: [], 'Machine Parameters': [] }),
+    });
+    const service = new DataTransferService(repo, libraryService);
 
-    const definition = transferDefinitions['machine-parameters']!;
+    const definition = transferDefinitions['machines']!;
     const bytes = createTransferWorkbook(definition, {
+      Machines: [],
       'Machine Parameters': [
         { machineCode: 'MC-NONEXISTENT', parameterKey: 'test_param', displayName: 'Test Param', sectionKey: 'injection', positionType: 'single', positionIndex: 1, positionLabel: '', minimumValue: 0, maximumValue: 100, unit: 'bar', sortOrder: 1, notes: '', status: 'active' },
       ],
     });
 
-    const result = await service.validate('machine-parameters', bytes);
+    const result = await service.validate('machines', bytes);
     expect(result.totalErrors).toBe(1);
     expect(result.rows[0]?.action).toBe('error');
     expect(result.rows[0]?.errors[0]).toMatch(/MC-NONEXISTENT/);
@@ -250,7 +262,10 @@ describe('DataTransferService.validate', () => {
     const libraryService = makeLibraryService({
       list: vi.fn().mockResolvedValue({ data: [], fields: [] }),
     });
-    const service = new DataTransferService(makeRepo(), libraryService);
+    const repo = makeRepo({
+      exportRows: vi.fn().mockResolvedValue({ Machines: [], 'Machine Parameters': [] }),
+    });
+    const service = new DataTransferService(repo, libraryService);
 
     const definition = transferDefinitions['machines']!;
     const bytes = createTransferWorkbook(definition, {
@@ -267,30 +282,106 @@ describe('DataTransferService.validate', () => {
     expect(dupRow?.action).toBe('error');
   });
 
-  it('validates mold-zones with missing mold FK', async () => {
+  it('validates merged mold zone rows with missing mold FK', async () => {
     const libraryService = makeLibraryService({
       list: vi.fn().mockImplementation(async (resource: string) => {
         if (resource === 'molds') return { data: [], fields: [] };
         return { data: [], fields: [] };
       }),
     });
-    const service = new DataTransferService(makeRepo(), libraryService);
+    const repo = makeRepo({
+      exportRows: vi.fn().mockResolvedValue({ Molds: [], 'Mold Zones': [] }),
+    });
+    const service = new DataTransferService(repo, libraryService);
 
-    const definition = transferDefinitions['mold-zones']!;
+    const definition = transferDefinitions['molds']!;
     const bytes = createTransferWorkbook(definition, {
+      Molds: [],
       'Mold Zones': [
         { moldCode: 'MOLD-NONEXISTENT', zoneNumber: 1, zoneName: 'Zone 1', zoneType: 'hot', minimumTemperature: 150, maximumTemperature: 250, temperatureUnit: '°F', notes: '', status: 'active' },
       ],
     });
 
-    const result = await service.validate('mold-zones', bytes);
+    const result = await service.validate('molds', bytes);
     expect(result.totalErrors).toBe(1);
     expect(result.rows[0]?.errors[0]).toMatch(/MOLD-NONEXISTENT/);
   });
 
+  it('validates machine setup profiles when machine references exist', async () => {
+    const libraryService = makeLibraryService({
+      list: vi.fn().mockImplementation(async (resource: string) => {
+        if (resource === 'machines') return { data: [{ id: 'machine-1', machineCode: 'MC-001' }], fields: [] };
+        return { data: [], fields: [] };
+      }),
+    });
+    const repo = makeRepo({
+      exportRows: vi.fn().mockResolvedValue({ 'Machine Setup Profiles': [] }),
+    });
+    const service = new DataTransferService(repo, libraryService);
+
+    const definition = transferDefinitions['machine-setup-profiles']!;
+    const bytes = createTransferWorkbook(definition, {
+      'Machine Setup Profiles': [
+        { machineCode: 'MC-001', profileCode: 'PROFILE-001', profileName: 'Default Setup', parameterKey: 'temp', positionLabel: 'Zone 1', unit: 'C', value: '220', status: 'active', notes: '' },
+      ],
+    });
+
+    const result = await service.validate('machine-setup-profiles', bytes);
+    expect(result.totalErrors).toBe(0);
+    expect(result.canImport).toBe(true);
+    expect(result.rows[0]?.action).toBe('create');
+  });
+
+  it('validates scoring profiles when metric references exist', async () => {
+    const libraryService = makeLibraryService({
+      list: vi.fn().mockImplementation(async (resource: string) => {
+        if (resource === 'metrics') return { data: [{ id: 'metric-1', metricKey: 'compression' }], fields: [] };
+        return { data: [], fields: [] };
+      }),
+    });
+    const repo = makeRepo({
+      exportRows: vi.fn().mockResolvedValue({ 'Scoring Profiles': [] }),
+    });
+    const service = new DataTransferService(repo, libraryService);
+
+    const definition = transferDefinitions['scoring-profiles']!;
+    const bytes = createTransferWorkbook(definition, {
+      'Scoring Profiles': [
+        { scoringProfileId: 'SP-001', scoringProfileName: 'Default', metricKey: 'compression', weight: 50, status: 'active' },
+      ],
+    });
+
+    const result = await service.validate('scoring-profiles', bytes);
+    expect(result.totalErrors).toBe(0);
+    expect(result.canImport).toBe(true);
+    expect(result.rows[0]?.action).toBe('create');
+  });
+
+  it('validates testing imports against exported test rows', async () => {
+    const repo = makeRepo({
+      exportRows: vi.fn().mockResolvedValue({ 'Ball Tests': [] }),
+    });
+    const service = new DataTransferService(repo, makeLibraryService());
+
+    const definition = transferDefinitions['testing']!;
+    const bytes = createTransferWorkbook(definition, {
+      'Ball Tests': [
+        { productionRunCode: 'PR-001', ballTestType: 'compression', sample1: 1, sample2: 2, sample3: 3, sample4: 4, sample5: 5, sample6: 6 },
+      ],
+    });
+
+    const result = await service.validate('testing', bytes);
+    expect(result.totalErrors).toBe(0);
+    expect(result.canImport).toBe(true);
+    expect(result.rows[0]?.action).toBe('create');
+  });
+
   it('returns empty result with zero rows when no data rows exist', async () => {
     const libraryService = makeLibraryService();
-    const service = new DataTransferService(makeRepo(), libraryService);
+    const repo = makeRepo({
+      exportRows: vi.fn().mockResolvedValue({ Machines: [], 'Machine Parameters': [] }),
+    });
+    const service = new DataTransferService(repo, libraryService);
 
     const definition = transferDefinitions['machines']!;
     const bytes = createTransferWorkbook(definition, { Machines: [] });
@@ -303,10 +394,13 @@ describe('DataTransferService.validate', () => {
 
   it('includes existingRecord in validation response for update rows', async () => {
     const existing = { id: 'existing-id', machineCode: 'MC-001', machineName: 'Old Name', manufacturer: 'OldCo' };
-    const libraryService = makeLibraryService({
-      list: vi.fn().mockResolvedValue({ data: [existing], fields: [] }),
+    const repo = makeRepo({
+      exportRows: vi.fn().mockResolvedValue({
+        Machines: [existing],
+        'Machine Parameters': [],
+      }),
     });
-    const service = new DataTransferService(makeRepo(), libraryService);
+    const service = new DataTransferService(repo, makeLibraryService());
 
     const definition = transferDefinitions['machines']!;
     const bytes = createTransferWorkbook(definition, {
@@ -328,76 +422,76 @@ describe('DataTransferService.validate', () => {
 describe('DataTransferService.import (duplicate resolutions)', () => {
   it('calls saveToHistoric before overwriting an existing record', async () => {
     const saveToHistoric = vi.fn().mockResolvedValue(undefined);
-    const repo = { saveToHistoric } as unknown as DataTransferRepository;
+    const repo = makeRepo({ saveToHistoric });
 
-    const existingRecord = { id: 'existing-id', machineCode: 'MC-001', machineName: 'Old Name', status: 'active' };
-    const updatedRecord = { id: 'existing-id', machineCode: 'MC-001', machineName: 'New Name', status: 'active' };
+    const existingRecord = { id: 'existing-id', supplierCode: 'SUP-001', supplierName: 'Old Name', status: 'active' };
+    const updatedRecord = { id: 'existing-id', supplierCode: 'SUP-001', supplierName: 'New Name', status: 'active' };
     const libraryService = makeLibraryService({
       list: vi.fn().mockResolvedValue({ data: [existingRecord], fields: [] }),
       update: vi.fn().mockResolvedValue(updatedRecord),
     });
 
     const service = new DataTransferService(repo, libraryService);
-    const definition = transferDefinitions['machines']!;
+    const definition = transferDefinitions['material-suppliers']!;
     const bytes = createTransferWorkbook(definition, {
-      Machines: [{ machineCode: 'MC-001', machineName: 'New Name', manufacturer: 'ACME', machineType: 'injection', modelNumber: 'M100', serialNumber: 'SN-001', location: 'Bay 1', status: 'active' }],
+      Suppliers: [{ supplierCode: 'SUP-001', supplierName: 'New Name', supplierRole: 'Primary', contactName: '', contactEmail: '', contactPhone: '', address: '', website: '', contactInfo: '', supplierNotes: '', status: 'active' }],
     });
 
     // rowIndex 0 → 'overwrite' resolution
-    await service.import('machines', bytes, 'test-actor', [{ rowIndex: 0, action: 'overwrite' }]);
+    await service.import('material-suppliers', bytes, 'test-actor', [{ rowIndex: 0, action: 'overwrite' }]);
 
     expect(saveToHistoric).toHaveBeenCalledOnce();
-    expect(saveToHistoric).toHaveBeenCalledWith('machines', 'existing-id', 'overwrite', existingRecord, 'test-actor');
+    expect(saveToHistoric).toHaveBeenCalledWith('material-suppliers', 'existing-id', 'overwrite', existingRecord, 'test-actor');
     expect(libraryService.update).toHaveBeenCalledOnce();
     expect(libraryService.create).not.toHaveBeenCalled();
   });
 
   it('creates a new record with a modified code when resolution is create-new', async () => {
-    const repo = { saveToHistoric: vi.fn() } as unknown as DataTransferRepository;
+    const repo = makeRepo();
 
-    const existingRecord = { id: 'existing-id', machineCode: 'MC-001', machineName: 'Existing', status: 'active' };
+    const existingRecord = { id: 'existing-id', supplierCode: 'SUP-001', supplierName: 'Existing', status: 'active' };
     const libraryService = makeLibraryService({
       list: vi.fn().mockResolvedValue({ data: [existingRecord], fields: [] }),
       create: vi.fn().mockResolvedValue({ id: 'new-id' }),
     });
 
     const service = new DataTransferService(repo, libraryService);
-    const definition = transferDefinitions['machines']!;
+    const definition = transferDefinitions['material-suppliers']!;
     const bytes = createTransferWorkbook(definition, {
-      Machines: [{ machineCode: 'MC-001', machineName: 'Duplicate Import', manufacturer: 'ACME', machineType: 'injection', modelNumber: 'M100', serialNumber: 'SN-002', location: 'Bay 2', status: 'active' }],
+      Suppliers: [{ supplierCode: 'SUP-001', supplierName: 'Duplicate Import', supplierRole: 'Primary', contactName: '', contactEmail: '', contactPhone: '', address: '', website: '', contactInfo: '', supplierNotes: '', status: 'active' }],
     });
 
     // rowIndex 0 → 'create-new' resolution
-    const result = await service.import('machines', bytes, 'test-actor', [{ rowIndex: 0, action: 'create-new' }]);
+    const result = await service.import('material-suppliers', bytes, 'test-actor', [{ rowIndex: 0, action: 'create-new' }]);
 
     expect(result.created).toBe(1);
     expect(result.updated).toBe(0);
     expect(repo.saveToHistoric).not.toHaveBeenCalled();
 
-    // The created record's machineCode should have a suffix added
+    // The created record's supplierCode should have a suffix added
     const createCall = (libraryService.create as ReturnType<typeof vi.fn>).mock.calls[0];
     const createdPayload = createCall?.[1] as Record<string, unknown>;
-    expect(String(createdPayload['machineCode'])).toMatch(/^MC-001-copy-/);
+    expect(String(createdPayload['supplierCode'])).toMatch(/^SUP-001-copy-/);
   });
 
   it('defaults to overwrite when no resolution provided for update row', async () => {
     const saveToHistoric = vi.fn().mockResolvedValue(undefined);
-    const repo = { saveToHistoric } as unknown as DataTransferRepository;
+    const repo = makeRepo({ saveToHistoric });
 
-    const existingRecord = { id: 'existing-id', machineCode: 'MC-001', machineName: 'Old', status: 'active' };
+    const existingRecord = { id: 'existing-id', supplierCode: 'SUP-001', supplierName: 'Old', status: 'active' };
     const libraryService = makeLibraryService({
       list: vi.fn().mockResolvedValue({ data: [existingRecord], fields: [] }),
       update: vi.fn().mockResolvedValue(existingRecord),
     });
 
     const service = new DataTransferService(repo, libraryService);
-    const definition = transferDefinitions['machines']!;
+    const definition = transferDefinitions['material-suppliers']!;
     const bytes = createTransferWorkbook(definition, {
-      Machines: [{ machineCode: 'MC-001', machineName: 'Updated', manufacturer: 'ACME', machineType: 'injection', modelNumber: 'M100', serialNumber: 'SN-001', location: 'Bay 1', status: 'active' }],
+      Suppliers: [{ supplierCode: 'SUP-001', supplierName: 'Updated', supplierRole: 'Primary', contactName: '', contactEmail: '', contactPhone: '', address: '', website: '', contactInfo: '', supplierNotes: '', status: 'active' }],
     });
 
     // Pass empty resolutions — should default to 'overwrite'
-    const result = await service.import('machines', bytes, 'test-actor', []);
+    const result = await service.import('material-suppliers', bytes, 'test-actor', []);
 
     expect(result.updated).toBe(1);
     expect(saveToHistoric).toHaveBeenCalledOnce();

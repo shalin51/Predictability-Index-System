@@ -35,6 +35,7 @@ export async function resetDatabase(client: Client): Promise<void> {
       material_source_documents,
       material_external_identifiers,
       material_catalog_imports,
+      machine_setup_profiles,
       mold_zones,
       machine_parameter_capabilities,
       material_drying_events,

@@ -45,6 +45,7 @@ export interface ProductionRunInput {
   injectionPressure?: number | null;
   injectionPressureUnit?: string;
   machineId: string;
+  machineSetupProfileId?: string | null;
   meltTemperature?: number | null;
   meltTemperatureUnit?: string;
   moldId: string;
@@ -58,6 +59,8 @@ export interface ProductionRunRecord {
   id: string;
   processSetupRevisionId?: string | null;
   jobName?: string | null;
+  machineSetupProfileId?: string | null;
+  machineSetupProfileName?: string | null;
   partNumber?: string | null;
   operatorName?: string | null;
   shiftCode?: string | null;

@@ -30,6 +30,7 @@ export function duplicateProductionRunDraft(source: ProductionRunRecord, datePro
     injectionPressure: source.injectionPressure ?? null,
     injectionPressureUnit: source.injectionPressureUnit,
     machineId: source.machineId,
+    machineSetupProfileId: source.machineSetupProfileId ?? null,
     meltTemperature: source.meltTemperature ?? null,
     meltTemperatureUnit: source.meltTemperatureUnit,
     moldId: source.moldId,

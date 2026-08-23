@@ -1,11 +1,14 @@
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
+import { Button } from '../../components/ui/Button';
 import { Card, Divider } from '../../components/ui/Card';
 import { controlStyles, getTabButtonStyle } from '../../components/ui/controls';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
 import {
   getProductionRun,
   archiveSample,
+  generateBenchmarkScoring,
+  generateRunSummary,
   listApprovedFormulationOptions,
   listLibraryOptions,
   updateProductionRun,
@@ -18,6 +21,7 @@ import {
 } from '../../services/api';
 import { spacing } from '../../theme/tokens';
 import { ManufacturingParametersForm } from './components/ManufacturingParametersForm';
+import { SetupProfileParametersTable } from './components/SetupProfileParametersTable';
 import { BenchmarkScoringPanel } from './components/scores/BenchmarkScoringPanel';
 import { ProductionRunStatusBadge } from './components/ProductionRunStatusBadge';
 import { ProductionRunTimeline } from './components/ProductionRunTimeline';
@@ -56,6 +60,7 @@ const previousActions: Partial<Record<ProductionRunStatus, { label: string; stat
 export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenLabRun, onOpenReport }: { id: string; onBack: () => void; onOpenFormulation: (formulationId: string) => void; onOpenLabRun?: (runId: string) => void; onOpenReport?: (runId: string) => void }) {
   const [record, setRecord] = useState<ProductionRunRecord | null>(null);
   const [machines, setMachines] = useState<LibraryRecord[]>([]);
+  const [machineSetupProfiles, setMachineSetupProfiles] = useState<LibraryRecord[]>([]);
   const [molds, setMolds] = useState<LibraryRecord[]>([]);
   const [formulations, setFormulations] = useState<LibraryRecord[]>([]);
   const [tab, setTab] = useState<DetailTab>('Overview');
@@ -69,10 +74,11 @@ export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenL
 
   useEffect(load, [id]);
   useEffect(() => {
-    void Promise.all([listApprovedFormulationOptions(), listLibraryOptions('machines'), listLibraryOptions('molds')])
-      .then(([formulationOptions, machineOptions, moldOptions]) => {
+    void Promise.all([listApprovedFormulationOptions(), listLibraryOptions('machines'), listLibraryOptions('machine-setup-profiles'), listLibraryOptions('molds')])
+      .then(([formulationOptions, machineOptions, profileOptions, moldOptions]) => {
         setFormulations(formulationOptions);
         setMachines(machineOptions);
+        setMachineSetupProfiles(profileOptions);
         setMolds(moldOptions);
       })
       .catch(() => undefined);
@@ -103,12 +109,31 @@ export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenL
     }
   };
 
+  const generateSummary = async () => {
+    try {
+      await generateRunSummary(record.id);
+      setTab('Run Summary');
+      setMessage('Summary generated');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Summary generation failed');
+    }
+  };
+
+  const generateScore = async () => {
+    try {
+      await generateBenchmarkScoring(record.id);
+      setTab('Scores');
+      setMessage('Score generated');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Score generation failed');
+    }
+  };
+
   return (
     <DashboardPage maxWidth="100%">
       <Card>
         <div style={runStyles.header}>
           <div style={styles.headerStart}>
-            <button onClick={onBack} style={controlStyles.subtleButton} type="button">Back</button>
             <div style={styles.titleRow}>
               <h1 style={runStyles.title}>{record.runCode}</h1>
               <ProductionRunStatusBadge status={record.status} />
@@ -120,11 +145,13 @@ export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenL
           </div>
           <div style={styles.headerActions}>
             <div style={{ ...runStyles.actions, justifyContent: 'flex-end' }}>
+              <Button onClick={onBack} type="button" variant="secondary">Back</Button>
               <button onClick={() => onOpenFormulation(record.formulationId)} style={controlStyles.secondaryButton} type="button">View Formulation</button>
               {previousAction && <button onClick={() => void updateProductionRunStatus(record.id, previousAction.status).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.secondaryButton} type="button">{previousAction.label}</button>}
               {nextAction && <button onClick={() => void updateProductionRunStatus(record.id, nextAction.status).then(setRecord).catch((err: Error) => setError(err.message))} style={controlStyles.primaryButton} type="button">{nextAction.label}</button>}
               {record.status === 'testing' && onOpenLabRun && <button onClick={() => onOpenLabRun(record.id)} style={controlStyles.primaryButton} type="button">Continue Lab Testing</button>}
-              {record.status === 'completed' && <button onClick={() => setTab('Run Summary')} style={controlStyles.secondaryButton} type="button">Run Summary</button>}
+              {record.status === 'completed' && tab === 'Run Summary' && <button onClick={() => void generateSummary()} style={controlStyles.primaryButton} type="button">Generate Summary</button>}
+              {(record.status === 'completed' || record.status === 'scored') && tab === 'Scores' && <button onClick={() => void generateScore()} style={controlStyles.primaryButton} type="button">Generate Score</button>}
               {(record.status === 'completed' || record.status === 'scored') && onOpenReport && <button onClick={() => onOpenReport(record.id)} style={controlStyles.secondaryButton} type="button">Report</button>}
             </div>
           </div>
@@ -143,18 +170,24 @@ export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenL
             <div style={runStyles.panel}>Date Produced<br /><strong>{formatValue(record.dateProduced)}</strong></div>
             <div style={runStyles.panel}>Status<br /><strong>{statusLabels[record.status]}</strong></div>
             <div style={runStyles.panel}>Approved By<br /><strong>{formatValue(record.approvedBy)}</strong></div>
+            <div style={runStyles.panel}>Machine Setup Profile<br /><strong>{formatValue(record.machineSetupProfileName)}</strong></div>
           </div>
         )}
         {tab === 'Manufacturing Parameters' && (
           <div style={runStyles.stack}>
             <ManufacturingParametersForm
               machines={machines}
+              machineSetupProfiles={machineSetupProfiles}
               molds={molds}
               formulations={formulations}
               onChange={(patch) => setRecord((current) => current ? ({ ...current, ...patch } as ProductionRunRecord) : current)}
               readOnly={!canEditParameters}
               value={payload}
             />
+            <section style={styles.profileValues}>
+              <h2 style={styles.profileTitle}>Setup Profile Values</h2>
+              <SetupProfileParametersTable parameters={record.machineSetupProfileParameters} />
+            </section>
             {canEditParameters && <div style={runStyles.actions}><button onClick={() => void saveParameters()} style={controlStyles.primaryButton} type="button">Save Changes</button></div>}
           </div>
         )}
@@ -183,6 +216,7 @@ function toPayload(record: ProductionRunRecord): ProductionRunPayload {
     injectionPressure: record.injectionPressure ?? null,
     injectionPressureUnit: record.injectionPressureUnit,
     machineId: record.machineId,
+    machineSetupProfileId: record.machineSetupProfileId ?? null,
     meltTemperature: record.meltTemperature ?? null,
     meltTemperatureUnit: record.meltTemperatureUnit,
     moldId: record.moldId,
@@ -195,6 +229,8 @@ const styles: Record<string, CSSProperties> = {
   headerStart: { minWidth: 0 },
   headerTimeline: { alignItems: 'center', display: 'flex', justifyContent: 'center', minWidth: 0 },
   overviewGrid: { display: 'grid', gap: spacing.space4, gridTemplateColumns: 'repeat(4, minmax(0, 1fr))' },
+  profileTitle: { margin: 0 },
+  profileValues: { display: 'grid', gap: spacing.space3 },
   tabs: { display: 'flex', flexWrap: 'wrap', gap: spacing.space3 },
-  titleRow: { alignItems: 'center', display: 'flex', gap: spacing.space2, marginTop: spacing.space4 },
+  titleRow: { alignItems: 'center', display: 'flex', gap: spacing.space2 },
 };

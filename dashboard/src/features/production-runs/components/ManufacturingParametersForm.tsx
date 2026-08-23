@@ -4,6 +4,7 @@ import { runStyles } from '../productionRunUi';
 
 export function ManufacturingParametersForm({
   machines,
+  machineSetupProfiles = [],
   molds,
   formulations = [],
   onChange,
@@ -11,12 +12,15 @@ export function ManufacturingParametersForm({
   value,
 }: {
   machines: LibraryRecord[];
+  machineSetupProfiles?: LibraryRecord[];
   molds: LibraryRecord[];
   formulations?: LibraryRecord[];
   onChange: (patch: Partial<ProductionRunPayload>) => void;
   readOnly?: boolean;
   value: ProductionRunPayload;
 }) {
+  const filteredProfiles = machineSetupProfiles.filter((item) => String(item['machineId'] ?? '') === value.machineId);
+
   return (
     <div style={runStyles.formGrid}>
       {formulations.length > 0 && <label style={controlStyles.field}>
@@ -27,9 +31,30 @@ export function ManufacturingParametersForm({
       </label>}
       <label style={controlStyles.field}>
         <span style={controlStyles.fieldLabel}>Machine Used *</span>
-        <select disabled={readOnly} onChange={(event) => onChange({ machineId: event.target.value })} style={controlStyles.input} value={value.machineId}>
+        <select
+          disabled={readOnly}
+          onChange={(event) => {
+            const machineId = event.target.value;
+            const machineProfileStillValid = machineSetupProfiles.some((item) => item.id === value.machineSetupProfileId && String(item['machineId'] ?? '') === machineId);
+            onChange({ machineId, machineSetupProfileId: machineProfileStillValid ? value.machineSetupProfileId : '' });
+          }}
+          style={controlStyles.input}
+          value={value.machineId}
+        >
           <option value="">Select</option>
           {machines.map((item) => <option key={item.id} value={item.id}>{String(item['code'] ?? item['label'])}</option>)}
+        </select>
+      </label>
+      <label style={controlStyles.field}>
+        <span style={controlStyles.fieldLabel}>Machine Setup Profile</span>
+        <select
+          disabled={readOnly || !value.machineId}
+          onChange={(event) => onChange({ machineSetupProfileId: event.target.value || null })}
+          style={controlStyles.input}
+          value={value.machineSetupProfileId ?? ''}
+        >
+          <option value="">None</option>
+          {filteredProfiles.map((item) => <option key={item.id} value={item.id}>{String(item['code'] ?? item['label'])}</option>)}
         </select>
       </label>
       <label style={controlStyles.field}>

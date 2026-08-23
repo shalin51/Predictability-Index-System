@@ -7,6 +7,7 @@ export interface LibraryListQuery {
 }
 
 export interface LibraryFieldDefinition {
+  allowedValues?: string[];
   key: string;
   label: string;
   required?: boolean;
@@ -27,6 +28,7 @@ export interface LibraryEntityConfig {
   requiredFields: string[];
   routeKey: string;
   searchColumns: string[];
+  selectOptions?: Record<string, string>;
   statusColumn?: string;
   tableName: string;
   uniqueChecks: Array<{ columns: string[]; message: string }>;

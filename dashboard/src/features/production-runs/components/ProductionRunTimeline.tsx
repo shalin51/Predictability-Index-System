@@ -20,7 +20,7 @@ export function ProductionRunTimeline({ status }: { status: ProductionRunStatus 
           <div key={item} style={styles.stepWrap}>
             {index > 0 && <span aria-hidden="true" style={{ ...styles.arrow, ...(index <= currentIndex ? styles.arrowComplete : {}) }}>→</span>}
             <span style={{ ...styles.step, ...(index < currentIndex ? styles.complete : {}), ...(index === currentIndex ? styles.current : {}), ...(index > currentIndex ? styles.upcoming : {}) }}>
-              {index < currentIndex && <span aria-hidden="true" style={styles.check}>✓</span>}
+              {index <= currentIndex && <span aria-hidden="true" style={styles.check}>✓</span>}
               {statusLabels[item]}
             </span>
           </div>

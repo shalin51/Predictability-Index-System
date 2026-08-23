@@ -51,7 +51,7 @@ export class ProductionRunRepository {
     const result = await getPool().query(
       `${this.baseSelect()}
        ${clauses.length ? `WHERE ${clauses.join(' AND ')}` : ''}
-       GROUP BY pr.id, f.formulation_code, f.version_no, m.machine_code, mo.mold_code
+       GROUP BY pr.id, f.formulation_code, f.version_no, m.machine_code, mo.mold_code, msp.profile_name, msp.parameters
        ORDER BY pr.updated_at DESC`,
       params
     );
@@ -62,7 +62,7 @@ export class ProductionRunRepository {
     const result = await getPool().query(
       `${this.baseSelect()}
        WHERE pr.id = $1
-       GROUP BY pr.id, f.formulation_code, f.version_no, m.machine_code, mo.mold_code`,
+       GROUP BY pr.id, f.formulation_code, f.version_no, m.machine_code, mo.mold_code, msp.profile_name, msp.parameters`,
       [id]
     );
     return (result.rows[0] as ProductionRunRecord | undefined) ?? null;
@@ -98,19 +98,20 @@ export class ProductionRunRepository {
       const runCode = await this.nextRunCode(client, input.formulationId);
       const inserted = await client.query<{ id: string }>(
         `INSERT INTO production_runs
-          (run_code, formulation_id, date_produced, machine_id, mold_id,
+         (run_code, formulation_id, date_produced, machine_id, machine_setup_profile_id, mold_id,
            injection_pressure, injection_pressure_unit, melt_temperature, melt_temperature_unit,
            cooling_time, cooling_time_unit, cycle_time, cycle_time_unit, cure_hours_before_test, status)
-         VALUES ($1, $2, $3::date, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15::production_run_status)
+         VALUES ($1, $2, $3::date, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16::production_run_status)
          RETURNING id`,
         [
           runCode,
           input.formulationId,
           input.dateProduced,
           input.machineId,
-          input.moldId,
-          input.injectionPressure,
-          input.injectionPressureUnit,
+         input.machineSetupProfileId,
+         input.moldId,
+         input.injectionPressure,
+         input.injectionPressureUnit,
           input.meltTemperature,
           input.meltTemperatureUnit,
           input.coolingTime,
@@ -143,26 +144,28 @@ export class ProductionRunRepository {
        SET run_code = COALESCE(NULLIF($2, ''), run_code),
            date_produced = COALESCE($3::date, date_produced),
            machine_id = COALESCE($4, machine_id),
-           mold_id = COALESCE($5, mold_id),
-           injection_pressure = $6,
-           injection_pressure_unit = COALESCE(NULLIF($7, ''), injection_pressure_unit),
-           melt_temperature = $8,
-           melt_temperature_unit = COALESCE(NULLIF($9, ''), melt_temperature_unit),
-           cooling_time = $10,
-           cooling_time_unit = COALESCE(NULLIF($11, ''), cooling_time_unit),
-           cycle_time = $12,
-           cycle_time_unit = COALESCE(NULLIF($13, ''), cycle_time_unit),
-           cure_hours_before_test = COALESCE($14, cure_hours_before_test),
+           machine_setup_profile_id = $5,
+           mold_id = COALESCE($6, mold_id),
+           injection_pressure = $7,
+           injection_pressure_unit = COALESCE(NULLIF($8, ''), injection_pressure_unit),
+           melt_temperature = $9,
+           melt_temperature_unit = COALESCE(NULLIF($10, ''), melt_temperature_unit),
+           cooling_time = $11,
+           cooling_time_unit = COALESCE(NULLIF($12, ''), cooling_time_unit),
+           cycle_time = $13,
+           cycle_time_unit = COALESCE(NULLIF($14, ''), cycle_time_unit),
+           cure_hours_before_test = COALESCE($15, cure_hours_before_test),
            updated_at = now()
        WHERE id = $1`,
       [
-        id,
-        input.runCode ?? '',
-        input.dateProduced || null,
-        input.machineId || null,
-        input.moldId || null,
-        input.injectionPressure,
-        input.injectionPressureUnit,
+       id,
+       input.runCode ?? '',
+       input.dateProduced || null,
+       input.machineId || null,
+       input.machineSetupProfileId ?? null,
+       input.moldId || null,
+       input.injectionPressure,
+       input.injectionPressureUnit,
         input.meltTemperature,
         input.meltTemperatureUnit,
         input.coolingTime,
@@ -233,6 +236,8 @@ export class ProductionRunRepository {
                    CONCAT(f.formulation_code, ' V', f.version_no) AS formulation,
                    'All active benchmarks' AS "targetBenchmark",
                    pr.date_produced AS "dateProduced", pr.machine_id AS "machineId", m.machine_code AS machine,
+                   pr.machine_setup_profile_id AS "machineSetupProfileId", msp.profile_name AS "machineSetupProfileName",
+                   msp.parameters AS "machineSetupProfileParameters",
                    pr.mold_id AS "moldId", mo.mold_code AS mold,
                    pr.injection_pressure::float AS "injectionPressure", pr.injection_pressure_unit AS "injectionPressureUnit",
                    pr.melt_temperature::float AS "meltTemperature", pr.melt_temperature_unit AS "meltTemperatureUnit",
@@ -248,6 +253,7 @@ export class ProductionRunRepository {
             JOIN formulations f ON f.id = pr.formulation_id
             JOIN machines m ON m.id = pr.machine_id
             JOIN molds mo ON mo.id = pr.mold_id
+            LEFT JOIN machine_setup_profiles msp ON msp.id = pr.machine_setup_profile_id
             LEFT JOIN samples s ON s.production_run_id = pr.id AND s.status <> 'archived'`;
   }
 }

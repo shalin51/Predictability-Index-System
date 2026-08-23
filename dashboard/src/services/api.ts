@@ -7,6 +7,7 @@ import { env } from '../config/env';
 import { clearAuthSession, getAccessToken } from '../features/auth/authSession';
 
 export interface LibraryFieldDefinition {
+  allowedValues?: string[];
   key: string;
   label: string;
   required?: boolean;
@@ -122,6 +123,7 @@ export interface ProductionRunPayload {
   injectionPressure?: number | null;
   injectionPressureUnit?: string;
   machineId: string;
+  machineSetupProfileId?: string | null;
   meltTemperature?: number | null;
   meltTemperatureUnit?: string;
   moldId: string;
@@ -159,6 +161,9 @@ export interface ProductionRunRecord {
   injectionPressureUnit: string;
   machine: string;
   machineId: string;
+  machineSetupProfileId?: string | null;
+  machineSetupProfileName?: string | null;
+  machineSetupProfileParameters?: import('../features/production-runs/components/SetupProfileParametersTable').SetupProfileParameter[] | null;
   meltTemperature?: number | null;
   meltTemperatureUnit: string;
   mold: string;

@@ -19,13 +19,13 @@ const IMPORT_TITLES: Record<ImportResource, string> = {
   materials: 'Materials',
   'material-properties': 'Material Properties',
   machines: 'Machines',
-  'machine-parameters': 'Machine Parameters',
+  'machine-setup-profiles': 'Machine Setup Profiles',
   molds: 'Molds',
-  'mold-zones': 'Mold Zones',
   benchmarks: 'Benchmarks',
-  'scoring-rules': 'Scoring Rules',
+  'scoring-profiles': 'Scoring Profiles',
   formulations: 'Formulations',
   'production-runs': 'Production Runs',
+  testing: 'Testing',
 };
 
 type Stage = 'idle' | 'validating' | 'validated' | 'importing' | 'done';
@@ -189,7 +189,7 @@ export function ImportSubPage({ resource, onBack, onViewImported }: ImportSubPag
               {downloading ? 'Downloading…' : '⬇ Download Template'}
             </Button>
             <Button onClick={onBack} type="button" variant="secondary">
-              ← Back to Imports
+              Back
             </Button>
           </div>
         </CardHeader>
@@ -264,7 +264,6 @@ export function ImportSubPage({ resource, onBack, onViewImported }: ImportSubPag
         {stage === 'done' && (
           <div style={styles.doneActions}>
             <Button onClick={handleReset} type="button" variant="secondary">Import Another File</Button>
-            <Button onClick={onBack} type="button" variant="secondary">Back to Imports</Button>
             {onViewImported && (
               <Button onClick={onViewImported} type="button" variant="primary">
                 View {title} →

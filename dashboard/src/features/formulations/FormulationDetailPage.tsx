@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
+import { Button } from '../../components/ui/Button';
 import { Card, Divider } from '../../components/ui/Card';
 import { controlStyles, getTabButtonStyle } from '../../components/ui/controls';
 import { DashboardPage, EmptyState, MessageBanner } from '../../components/ui/Page';
@@ -126,14 +127,14 @@ export function FormulationDetailPage({
       <Card>
         <div style={formulationStyles.header}>
           <div>
-            <button onClick={onBack} style={controlStyles.subtleButton} type="button">Back</button>
-            <h1 style={{ ...formulationStyles.title, marginTop: spacing.space4 }}>{record.formulationCode} / Version {record.versionNo}</h1>
+            <h1 style={formulationStyles.title}>{record.formulationCode} / Version {record.versionNo}</h1>
             {record.formulationName && <p style={formulationStyles.subtitle}>{record.formulationName}</p>}
             <p style={formulationStyles.subtitle}>
               Status: {labelize(record.status)} | Component Total: {formatValue(total)}%
             </p>
           </div>
           <div style={formulationStyles.actions}>
+            <Button onClick={onBack} type="button" variant="secondary">Back</Button>
             {record.status === 'draft' && <button onClick={() => setEditing(true)} style={controlStyles.secondaryButton} type="button">Edit</button>}
             {record.status === 'draft' && approvalRequested && <label style={controlStyles.field}><span style={controlStyles.fieldLabel}>Approved By (required to approve)</span><input autoFocus onChange={(event) => setApprovedBy(event.target.value)} style={controlStyles.input} value={approvedBy} /></label>}
             {record.status === 'draft' && <button disabled={!canApprove} onClick={() => void approve()} style={{ ...controlStyles.primaryButton, ...(canApprove ? {} : styles.disabled) }} type="button">{approvalRequested ? 'Confirm Approval' : 'Approve'}</button>}

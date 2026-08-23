@@ -125,6 +125,14 @@ const columnMap: Record<string, Record<string, string>> = {
     sortOrder: 'sort_order',
     status: 'status',
   },
+  machine_setup_profiles: {
+    machineId: 'machine_id',
+    profileCode: 'profile_code',
+    profileName: 'profile_name',
+    parameters: 'parameters',
+    status: 'status',
+    notes: 'notes',
+  },
   mold_zones: {
     moldId: 'mold_id',
     zoneNumber: 'zone_number',
@@ -333,6 +341,14 @@ export class LibraryRepository {
       `,
       benchmarks: `SELECT id, benchmark_name AS label, benchmark_code AS code FROM benchmark_profiles WHERE status = 'active' ORDER BY benchmark_name`,
       machines: `SELECT id, machine_name AS label, machine_code AS code FROM machines WHERE status = 'active' ORDER BY machine_code`,
+      'machine-setup-profiles': `
+        SELECT msp.id, msp.profile_name AS label, msp.profile_code AS code,
+               msp.machine_id AS "machineId", m.machine_code AS "machineCode"
+        FROM machine_setup_profiles msp
+        JOIN machines m ON m.id = msp.machine_id
+        WHERE msp.status = 'active'
+        ORDER BY m.machine_code, msp.profile_code
+      `,
       metrics: `SELECT id, display_name AS label, metric_key AS code FROM metric_definitions WHERE status = 'active' ORDER BY sort_order, metric_key`,
       molds: `SELECT id, mold_name AS label, mold_code AS code, cavity_count AS "cavityCount" FROM molds WHERE status = 'active' ORDER BY mold_code`,
       'supplier-materials': `

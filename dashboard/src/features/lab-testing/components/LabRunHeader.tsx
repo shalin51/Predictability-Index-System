@@ -1,6 +1,6 @@
 import { controlStyles } from '../../../components/ui/controls';
+import { Button } from '../../../components/ui/Button';
 import type { LabTestingQueueRecord } from '../../../services/api';
-import { spacing } from '../../../theme/tokens';
 import { LabTestingProgressBar } from './LabTestingProgressBar';
 import { labStyles } from '../labTestingUi';
 
@@ -32,11 +32,11 @@ export function LabRunHeader({
         </div>
       </div>
       <div style={{ gridColumn: '1', gridRow: '1' }}>
-        <button onClick={onBack} style={controlStyles.subtleButton} type="button">Back</button>
-        <h1 style={{ ...labStyles.title, marginTop: spacing.space4 }}>{run.runCode}</h1>
+        <h1 style={labStyles.title}>{run.runCode}</h1>
         <p style={labStyles.subtitle}>{run.formulation} | {run.targetBenchmark ?? '-'} | Samples: {run.sampleCount}</p>
       </div>
       <div style={{ ...labStyles.actions, gridColumn: '3', gridRow: '1', justifyContent: 'flex-end', justifySelf: 'end', width: '100%' }}>
+        <Button onClick={onBack} type="button" variant="secondary">Back</Button>
         <button onClick={() => onOpenFormulation(run.formulationId)} style={controlStyles.secondaryButton} type="button">View Formulation</button>
         <button onClick={() => onOpenProductionRun(run.id)} style={controlStyles.secondaryButton} type="button">View Production Run</button>
         {run.status === 'ready_for_testing' && <button onClick={onStart} style={controlStyles.primaryButton} type="button">Start Testing</button>}

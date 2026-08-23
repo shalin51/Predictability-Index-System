@@ -17,14 +17,14 @@ const EXPORT_TYPES: ExportTypeConfig[] = [
   { resource: 'material-suppliers', title: 'Material Suppliers', description: 'Export all supplier records.', group: 'Materials' },
   { resource: 'materials', title: 'Materials', description: 'Export all material records.', group: 'Materials' },
   { resource: 'material-properties', title: 'Material Properties', description: 'Export material property data.', group: 'Materials' },
-  { resource: 'machines', title: 'Machines', description: 'Export all machine records.', group: 'Equipment' },
-  { resource: 'machine-parameters', title: 'Machine Parameters', description: 'Export machine parameter capabilities.', group: 'Equipment' },
-  { resource: 'molds', title: 'Molds', description: 'Export all mold records.', group: 'Equipment' },
-  { resource: 'mold-zones', title: 'Mold Zones', description: 'Export mold zone definitions.', group: 'Equipment' },
-  { resource: 'benchmarks', title: 'Benchmarks', description: 'Export benchmark profiles.', group: 'Benchmarks' },
-  { resource: 'scoring-rules', title: 'Scoring Rules', description: 'Export benchmark scoring rules.', group: 'Benchmarks' },
+  { resource: 'machines', title: 'Machines & Parameters', description: 'Export machines and parameter capabilities in a single file.', group: 'Equipment' },
+  { resource: 'machine-setup-profiles', title: 'Machine Setup Profiles', description: 'Export predefined machine setup profiles.', group: 'Equipment' },
+  { resource: 'molds', title: 'Molds & Zones', description: 'Export molds and zone definitions in a single file.', group: 'Equipment' },
+  { resource: 'benchmarks', title: 'Benchmarks', description: 'Export benchmark profiles and properties in a single file.', group: 'Benchmarks' },
+  { resource: 'scoring-profiles', title: 'Scoring Profiles', description: 'Export scoring profiles with metric weights.', group: 'Benchmarks' },
   { resource: 'formulations', title: 'Formulations', description: 'Export formulation recipes and components.', group: 'Workspace' },
-  { resource: 'production-runs', title: 'Production Runs', description: 'Export production runs and samples.', group: 'Workspace' },
+  { resource: 'production-runs', title: 'Production Runs', description: 'Export production runs.', group: 'Workspace' },
+  { resource: 'testing', title: 'Testing', description: 'Export ball test results.', group: 'Workspace' },
 ];
 
 const GROUPS = ['Materials', 'Equipment', 'Benchmarks', 'Workspace'];

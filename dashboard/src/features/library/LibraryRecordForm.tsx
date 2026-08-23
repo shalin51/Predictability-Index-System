@@ -59,10 +59,11 @@ function Field({ field, onChange, options, value }: { field: LibraryFieldDefinit
   if (field.type === 'textarea') return <textarea onChange={(event) => onChange(event.target.value)} required={field.required} style={controlStyles.textarea} value={String(value ?? '')} />;
   if (field.type === 'boolean') return <input checked={Boolean(value)} onChange={(event) => onChange(event.target.checked)} type="checkbox" />;
   if (field.type === 'select') {
+    const allowedValues = field.allowedValues ?? enumOptions[field.key] ?? [];
     return (
       <select onChange={(event) => onChange(event.target.value)} required={field.required} style={controlStyles.input} value={String(value ?? '')}>
         <option value="">Select</option>
-        {(enumOptions[field.key] ?? []).map((item) => <option key={item} value={item}>{labelize(item)}</option>)}
+        {allowedValues.map((item) => <option key={item} value={item}>{labelize(item)}</option>)}
         {options.map((item) => <option key={item.id} value={item.id}>{String(item['label'] ?? item['code'] ?? item.id)}</option>)}
       </select>
     );

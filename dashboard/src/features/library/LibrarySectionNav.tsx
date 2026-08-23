@@ -32,6 +32,7 @@ export function LibrarySectionNav({
 export function labelize(value: string) {
   const labels: Record<string, string> = {
     'machine-parameters': 'Parameters',
+    'machine-setup-profiles': 'Setup Profiles',
     'material-properties': 'Properties',
     'material-suppliers': 'Suppliers',
     'scoring-rules': 'Properties',

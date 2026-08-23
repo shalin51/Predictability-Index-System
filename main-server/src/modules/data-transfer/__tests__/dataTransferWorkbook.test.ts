@@ -88,13 +88,13 @@ describe('data transfer workbook contract', () => {
     expect(() => parseTransferWorkbook(bytes, transferDefinitions['machines']!)).toThrow(/import_machines/);
   });
 
-  it('production-runs has import_ and test_ tabs for both sheets', () => {
+  it('production-runs has import_ and test_ tabs for the merged production run sheet only', () => {
     const bytes = createTransferWorkbook(transferDefinitions['production-runs']!, {});
     const wb = XLSX.read(bytes, { type: 'buffer' });
     expect(wb.SheetNames).toContain(importTabName('Production Runs'));
     expect(wb.SheetNames).toContain(testTabName('Production Runs'));
-    expect(wb.SheetNames).toContain(importTabName('Samples'));
-    expect(wb.SheetNames).toContain(testTabName('Samples'));
+    expect(wb.SheetNames).not.toContain(importTabName('Samples'));
+    expect(wb.SheetNames).not.toContain(testTabName('Samples'));
   });
 
   it('import_{name} headers match definition columns', () => {

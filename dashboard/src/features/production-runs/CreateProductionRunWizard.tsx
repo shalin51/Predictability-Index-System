@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
+import { Button } from '../../components/ui/Button';
 import { Card, Divider } from '../../components/ui/Card';
 import { controlStyles, getTabButtonStyle } from '../../components/ui/controls';
 import { DashboardPage, MessageBanner } from '../../components/ui/Page';
@@ -24,6 +25,7 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
   const [step, setStep] = useState(0);
   const [formulations, setFormulations] = useState<LibraryRecord[]>([]);
   const [machines, setMachines] = useState<LibraryRecord[]>([]);
+  const [machineSetupProfiles, setMachineSetupProfiles] = useState<LibraryRecord[]>([]);
   const [molds, setMolds] = useState<LibraryRecord[]>([]);
   const [priorRuns, setPriorRuns] = useState<ProductionRunRecord[]>([]);
   const [selectedPriorRunId, setSelectedPriorRunId] = useState('');
@@ -39,10 +41,11 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
     setSourceRunCode('');
     setSelectedPriorRunId(duplicateSourceId ?? '');
     const sourceRequest = duplicateSourceId ? getProductionRun(duplicateSourceId) : Promise.resolve(null);
-    void Promise.all([listApprovedFormulationOptions(), listLibraryOptions('machines'), listLibraryOptions('molds'), listProductionRuns(), sourceRequest])
-      .then(([formulationOptions, machineOptions, moldOptions, runOptions, source]) => {
+    void Promise.all([listApprovedFormulationOptions(), listLibraryOptions('machines'), listLibraryOptions('machine-setup-profiles'), listLibraryOptions('molds'), listProductionRuns(), sourceRequest])
+      .then(([formulationOptions, machineOptions, profileOptions, moldOptions, runOptions, source]) => {
         setFormulations(formulationOptions);
         setMachines(machineOptions);
+        setMachineSetupProfiles(profileOptions);
         setMolds(moldOptions);
         setPriorRuns(runOptions);
         if (source) {
@@ -111,7 +114,9 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
             <h1 style={runStyles.title}>{duplicateSourceId ? 'Duplicate Production Run' : 'New Production Run'}</h1>
             <p style={runStyles.subtitle}>{duplicateSourceId ? `Create a new run from ${sourceRunCode || 'the selected run'}.` : 'Create a molded batch from an approved formulation and generate samples.'}</p>
           </div>
-          <button onClick={onCancel} style={controlStyles.secondaryButton} type="button">Cancel</button>
+          <div style={styles.headerActions}>
+            <Button onClick={onCancel} type="button" variant="secondary">Back</Button>
+          </div>
         </div>
         <div style={styles.steps}>
           {['Select Formulation', 'Manufacturing Parameters', 'Review'].map((label, index) => (
@@ -165,11 +170,12 @@ export function CreateProductionRunWizard({ duplicateSourceId, onCancel, onSaved
             </label>
           </div>
         )}
-        {step === 1 && <ManufacturingParametersForm machines={machines} molds={molds} onChange={update} value={payload} />}
+        {step === 1 && <ManufacturingParametersForm machineSetupProfiles={machineSetupProfiles} machines={machines} molds={molds} onChange={update} value={payload} />}
         {step === 2 && (
           <div style={runStyles.stack}>
             <div style={runStyles.panel}>Selected formulation: <strong>{String(selectedFormulation?.['label'] ?? '-')}</strong></div>
             <div style={runStyles.panel}>Machine: <strong>{String(machines.find((item) => item.id === payload.machineId)?.['code'] ?? '-')}</strong></div>
+            <div style={runStyles.panel}>Machine Setup Profile: <strong>{String(machineSetupProfiles.find((item) => item.id === payload.machineSetupProfileId)?.['label'] ?? '-')}</strong></div>
             <div style={runStyles.panel}>Mold: <strong>{String(molds.find((item) => item.id === payload.moldId)?.['code'] ?? '-')}</strong></div>
             <div style={runStyles.panel}>Injection Pressure: {formatValue(payload.injectionPressure)} {payload.injectionPressureUnit}</div>
             <div style={runStyles.panel}>Melt Temperature: {formatValue(payload.meltTemperature)} {payload.meltTemperatureUnit}</div>
@@ -202,5 +208,6 @@ function withDefaultEquipment(payload: ProductionRunPayload, machines: LibraryRe
 }
 
 const styles: Record<string, CSSProperties> = {
+  headerActions: { display: 'flex', justifyContent: 'flex-end' },
   steps: { display: 'flex', flexWrap: 'wrap', gap: spacing.space3 },
 };

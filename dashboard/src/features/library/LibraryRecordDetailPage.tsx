@@ -18,6 +18,7 @@ import { colors, font, spacing } from '../../theme/tokens';
 import { coerceLibraryPayload, LibraryRecordForm, libraryOptionResources } from './LibraryRecordForm';
 import { labelize, LibrarySectionNav } from './LibrarySectionNav';
 import { MachineParametersAccordion } from './MachineParametersAccordion';
+import { SetupProfileParametersTable, type SetupProfileParameter } from '../production-runs/components/SetupProfileParametersTable';
 import { RelatedMaterialsTable } from './RelatedMaterialsTable';
 import { MaterialPropertiesEditor } from './MaterialPropertiesEditor';
 import { ScoringProfileWeightsEditor } from './ScoringProfileWeightsEditor';
@@ -160,7 +161,7 @@ export function LibraryRecordDetailPage({
   };
 
   const title = record ? getRecordTitle(record, resource) : labelize(resource);
-  const details = record ? Object.entries(record).filter(([key]) => key !== 'id' && key !== 'properties') : [];
+  const details = record ? Object.entries(record).filter(([key]) => key !== 'id' && key !== 'properties' && !(resource === 'machine-setup-profiles' && key === 'parameters')) : [];
 
   return (
     <DashboardPage maxWidth="100%">
@@ -179,7 +180,7 @@ export function LibraryRecordDetailPage({
                 </Button>
               )}
               {record && fields.length > 0 && !editing && <Button onClick={() => setEditing(true)} type="button" variant="primary">Edit</Button>}
-              <Button onClick={onBack} type="button" variant="secondary">Back to {labelize(resource)}</Button>
+              <Button onClick={onBack} type="button" variant="secondary">Back</Button>
             </div>
           </CardHeader>
           <Divider />
@@ -217,6 +218,12 @@ export function LibraryRecordDetailPage({
                   <MachineParametersAccordion parameters={machineParameters} />
                 </section>
               )}
+              {resource === 'machine-setup-profiles' && (
+                <section style={styles.machineParameters}>
+                  <h2 style={styles.sectionTitle}>Setup Values</h2>
+                  <SetupProfileParametersTable parameters={record.parameters as SetupProfileParameter[] | undefined} />
+                </section>
+              )}
               {resource === 'material-suppliers' && (
                 <RelatedMaterialsTable error={relatedError} materials={relatedMaterials} />
               )}
@@ -250,7 +257,7 @@ export function LibraryRecordDetailPage({
 }
 
 function getRecordTitle(record: LibraryRecord, resource: string) {
-  const titleKeys = ['benchmarkName', 'scoringCode', 'materialName', 'propertyName', 'supplierName', 'machineName', 'displayName', 'moldName', 'zoneName', 'name', 'code'];
+  const titleKeys = ['benchmarkName', 'scoringCode', 'profileName', 'profileCode', 'materialName', 'propertyName', 'supplierName', 'machineName', 'displayName', 'moldName', 'zoneName', 'name', 'code'];
   const value = titleKeys.map((key) => record[key]).find((item) => item !== null && item !== undefined && item !== '');
   return value ? String(value) : `${labelize(resource)} ${record.id}`;
 }

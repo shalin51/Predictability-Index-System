@@ -79,9 +79,7 @@ export class PerformanceDistanceService {
       };
     }
 
-    const distance = Math.abs((input.runMeanValue as number) - (input.targetMean as number));
-    const normalizedDistance = distance / Math.abs(input.targetMean as number);
-    const metricScore = normalizedDistance * 100;
+    const { distance, metricScore, normalizedDistance } = this.metricDistance(input);
     const trafficLight = this.trafficLight(metricScore, config);
     const { riskLevel, riskNote } = this.risk(input, metricScore);
 
@@ -103,6 +101,38 @@ export class PerformanceDistanceService {
       trafficLight,
       weightedContribution: round(metricScore * (input.weight / 100)),
       weight: input.weight,
+    };
+  }
+
+  private metricDistance(input: ScoringMetricInput): { distance: number; metricScore: number; normalizedDistance: number } {
+    if (input.comparisonMode === 'max_cap') {
+      const boundary = input.maxAcceptable ?? input.targetMean ?? 0;
+      const overage = Math.max(0, (input.runMeanValue as number) - boundary);
+      if (overage <= 0) return { distance: 0, metricScore: 100, normalizedDistance: 0 };
+      return {
+        distance: round(overage),
+        metricScore: 0,
+        normalizedDistance: round(boundary === 0 ? 1 : overage / Math.abs(boundary)),
+      };
+    }
+
+    if (input.comparisonMode === 'min_floor') {
+      const boundary = input.minAcceptable ?? input.targetMean ?? 0;
+      const shortfall = Math.max(0, boundary - (input.runMeanValue as number));
+      if (shortfall <= 0) return { distance: 0, metricScore: 100, normalizedDistance: 0 };
+      return {
+        distance: round(shortfall),
+        metricScore: 0,
+        normalizedDistance: round(boundary === 0 ? 1 : shortfall / Math.abs(boundary)),
+      };
+    }
+
+    const distance = Math.abs((input.runMeanValue as number) - (input.targetMean as number));
+    const normalizedDistance = distance / Math.abs(input.targetMean as number);
+    return {
+      distance: round(distance),
+      metricScore: round(normalizedDistance * 100),
+      normalizedDistance: round(normalizedDistance),
     };
   }
 
@@ -144,7 +174,10 @@ export class PerformanceDistanceService {
 }
 
 function hasRequiredScoringValues(input: ScoringMetricInput): boolean {
-  return input.runMeanValue != null && input.targetMean != null && input.targetMean !== 0;
+  if (input.runMeanValue == null) return false;
+  if (input.comparisonMode === 'max_cap') return input.maxAcceptable != null || (input.targetMean != null && input.targetMean !== 0);
+  if (input.comparisonMode === 'min_floor') return input.minAcceptable != null || (input.targetMean != null && input.targetMean !== 0);
+  return input.targetMean != null && input.targetMean !== 0;
 }
 
 function normalizeConfig(input: unknown): AlgorithmConfig {

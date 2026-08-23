@@ -15,6 +15,7 @@ const REQUIRED_TABLES = [
   'supplier_materials',
   'material_lots',
   'machines',
+  'machine_setup_profiles',
   'molds',
   'machine_parameter_capabilities',
   'mold_zones',
@@ -118,6 +119,9 @@ const REQUIRED_INDEXES = [
   'idx_material_property_facts_material',
   'idx_material_property_facts_property',
   'idx_machine_parameter_capabilities_machine',
+  'idx_machine_setup_profiles_machine',
+  'idx_machine_setup_profiles_status',
+  'idx_production_runs_machine_setup_profile',
   'idx_mold_zones_mold',
   'idx_suppliers_supplier_code_unique',
 ] as const;

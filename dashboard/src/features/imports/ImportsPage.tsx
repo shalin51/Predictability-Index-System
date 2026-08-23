@@ -17,14 +17,14 @@ const IMPORT_TYPES: ImportTypeCard[] = [
   { resource: 'material-suppliers', title: 'Material Suppliers', description: 'Import supplier organizations.', group: 'Materials' },
   { resource: 'materials', title: 'Materials', description: 'Import material records (requires suppliers to exist).', group: 'Materials', dependency: 'material-suppliers' },
   { resource: 'material-properties', title: 'Material Properties', description: 'Import material property data for existing materials.', group: 'Materials', dependency: 'materials' },
-  { resource: 'machines', title: 'Machines', description: 'Import machine records.', group: 'Equipment' },
-  { resource: 'machine-parameters', title: 'Machine Parameters', description: 'Import machine parameter capabilities (requires machines to exist).', group: 'Equipment', dependency: 'machines' },
-  { resource: 'molds', title: 'Molds', description: 'Import mold configurations.', group: 'Equipment' },
-  { resource: 'mold-zones', title: 'Mold Zones', description: 'Import mold zone definitions (requires molds to exist).', group: 'Equipment', dependency: 'molds' },
-  { resource: 'benchmarks', title: 'Benchmarks', description: 'Import benchmark profiles.', group: 'Benchmarks' },
-  { resource: 'scoring-rules', title: 'Scoring Rules', description: 'Import benchmark scoring rules (requires benchmarks to exist).', group: 'Benchmarks', dependency: 'benchmarks' },
-  { resource: 'formulations', title: 'Formulations', description: 'Import formulation recipes.', group: 'Workspace' },
+  { resource: 'machines', title: 'Machines', description: 'Import machines and their parameter capabilities in a single file.', group: 'Equipment' },
+  { resource: 'machine-setup-profiles', title: 'Machine Setup Profiles', description: 'Import predefined machine setup profiles (requires machines to exist).', group: 'Equipment', dependency: 'machines' },
+  { resource: 'molds', title: 'Molds', description: 'Import molds and zone definitions in a single file.', group: 'Equipment' },
+  { resource: 'benchmarks', title: 'Benchmarks', description: 'Import benchmark profiles and properties in a single file.', group: 'Benchmarks' },
+  { resource: 'scoring-profiles', title: 'Scoring Profiles', description: 'Import scoring profiles with metric weights.', group: 'Benchmarks', dependency: 'benchmarks' },
+  { resource: 'formulations', title: 'Formulations', description: 'Import formulation recipes and components in a single file.', group: 'Workspace' },
   { resource: 'production-runs', title: 'Production Runs', description: 'Import production run data.', group: 'Workspace' },
+  { resource: 'testing', title: 'Testing', description: 'Import ball test results (requires production runs to exist).', group: 'Workspace', dependency: 'production-runs' },
 ];
 
 const GROUPS = ['Materials', 'Equipment', 'Benchmarks', 'Workspace'];

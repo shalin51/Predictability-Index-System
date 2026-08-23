@@ -18,13 +18,13 @@ export type ImportResource =
   | 'material-suppliers'
   | 'material-properties'
   | 'machines'
-  | 'machine-parameters'
   | 'molds'
-  | 'mold-zones'
+  | 'machine-setup-profiles'
   | 'benchmarks'
-  | 'scoring-rules'
+  | 'scoring-profiles'
   | 'formulations'
-  | 'production-runs';
+  | 'production-runs'
+  | 'testing';
 
 export type LibrarySection =
   | 'materials'
@@ -35,6 +35,7 @@ export type LibrarySection =
   | 'scoring-profiles'
   | 'machines'
   | 'machine-parameters'
+  | 'machine-setup-profiles'
   | 'molds';
 
 export interface DashboardRouteState {
@@ -61,6 +62,7 @@ const libraryViewBySection: Record<LibrarySection, DashboardView> = {
   'scoring-profiles': 'scoring',
   machines: 'machines',
   'machine-parameters': 'machines',
+  'machine-setup-profiles': 'machines',
   materials: 'materials',
   'material-properties': 'materials',
   'material-suppliers': 'materials',
@@ -213,7 +215,11 @@ export function buildDashboardPath({ formulationId, formulationMode, importResou
   }
 
   if (view === 'machines') {
-    const section = librarySection === 'machine-parameters' ? librarySection : 'machines';
+    const section = librarySection === 'machine-parameters'
+      ? librarySection
+      : librarySection === 'machine-setup-profiles'
+        ? librarySection
+        : 'machines';
     return `/${section}${libraryRecordId ? `/${encodeURIComponent(libraryRecordId)}` : ''}`;
   }
 
