@@ -47,6 +47,11 @@ export class BenchmarkScoringRepository {
     return result.rows as BenchmarkScoringRecord[];
   }
 
+  async scoringProfiles(): Promise<BenchmarkScoringRecord[]> {
+    const result = await getPool().query(`SELECT id, scoring_code AS "scoringCode", profile_name AS "profileName" FROM scoring_profiles WHERE status = 'active' ORDER BY scoring_code`);
+    return result.rows as BenchmarkScoringRecord[];
+  }
+
   async benchmark(benchmarkId: string): Promise<BenchmarkScoringRecord | null> {
     const result = await getPool().query(
       `SELECT id, benchmark_code AS "benchmarkCode", benchmark_name AS "benchmarkName"
@@ -67,7 +72,7 @@ export class BenchmarkScoringRepository {
     return result.rows as BenchmarkScoringRecord[];
   }
 
-  async scoringInputs(runId: string, benchmarkId: string): Promise<ScoringMetricInput[]> {
+  async scoringInputs(runId: string, benchmarkId: string, scoringProfileId?: string): Promise<ScoringMetricInput[]> {
     const result = await getPool().query(
       `SELECT bmt.metric_id AS "metricId", md.display_name AS "metricName",
               bp.benchmark_name AS "benchmarkName",
@@ -76,18 +81,19 @@ export class BenchmarkScoringRepository {
               COALESCE(bmt.target_mean, bmt.target_value)::float AS "targetMean",
               bmt.min_acceptable::float AS "minAcceptable",
               bmt.max_acceptable::float AS "maxAcceptable",
-              COALESCE(bmt.weight, 0)::float AS weight,
+              spw.weight::float AS weight,
               bmt.criticality,
               bmt.required_for_pass AS "requiredForPass"
        FROM benchmark_metric_targets bmt
        JOIN benchmark_profiles bp ON bp.id = bmt.benchmark_profile_id
        JOIN metric_definitions md ON md.id = bmt.metric_id
+       JOIN scoring_profile_weights spw ON spw.metric_id = bmt.metric_id AND spw.scoring_profile_id = COALESCE($3::uuid, (SELECT id FROM scoring_profiles WHERE status = 'active' ORDER BY scoring_code LIMIT 1))
        LEFT JOIN run_metric_summaries rms
          ON rms.production_run_id = $1
         AND rms.metric_id = bmt.metric_id
        WHERE bmt.benchmark_profile_id = $2
        ORDER BY md.sort_order, md.metric_key`,
-      [runId, benchmarkId]
+      [runId, benchmarkId, scoringProfileId]
     );
     return result.rows as ScoringMetricInput[];
   }
@@ -174,14 +180,15 @@ export class BenchmarkScoringRepository {
       for (const score of scores) {
         const inserted = await client.query<{ id: string }>(
           `INSERT INTO score_reports
-            (production_run_id, benchmark_profile_id, algorithm_version_id,
+            (production_run_id, benchmark_profile_id, scoring_profile_id, algorithm_version_id,
              overall_similarity_score, predictability_index, production_readiness_score,
              required_metric_completion_score, traffic_light, key_risks, recommendations, is_best_match)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8::traffic_light_status, $9, $10, $11)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::traffic_light_status, $10, $11, $12)
            RETURNING id`,
           [
             runId,
             score.benchmarkId,
+            score.scoringProfileId,
             algorithmVersionId,
             score.overallSimilarityScore,
             score.predictabilityIndex,
@@ -222,6 +229,22 @@ export class BenchmarkScoringRepository {
             ]
           );
         }
+        await client.query(
+          `UPDATE score_reports
+           SET overall_similarity_score = (
+                 SELECT COALESCE(SUM(weighted_contribution), 0)
+                 FROM score_report_metrics
+                 WHERE score_report_id = $1
+               ),
+               predictability_index = (
+                 SELECT COALESCE(SUM(weighted_contribution), 0)
+                 FROM score_report_metrics
+                 WHERE score_report_id = $1
+               ),
+               updated_at = now()
+           WHERE id = $1`,
+          [reportId]
+        );
       }
       await client.query(
         `UPDATE production_runs
@@ -324,6 +347,7 @@ export class BenchmarkScoringRepository {
     return `SELECT sr.id, sr.production_run_id AS "productionRunId",
                    sr.benchmark_profile_id AS "benchmarkProfileId",
                    bp.benchmark_code AS "benchmarkCode", bp.benchmark_name AS "benchmarkName",
+                   sr.scoring_profile_id AS "scoringProfileId", sp.scoring_code AS "scoringCode", sp.profile_name AS "scoringProfileName",
                    av.algorithm_code AS "algorithmCode", av.version AS "algorithmVersion",
                    sr.overall_similarity_score::float AS "overallSimilarityScore",
                    sr.predictability_index::float AS "predictabilityIndex",
@@ -335,6 +359,7 @@ export class BenchmarkScoringRepository {
                    sr.generated_at AS "generatedAt"
             FROM score_reports sr
             JOIN benchmark_profiles bp ON bp.id = sr.benchmark_profile_id
+            LEFT JOIN scoring_profiles sp ON sp.id = sr.scoring_profile_id
             JOIN algorithm_versions av ON av.id = sr.algorithm_version_id
             WHERE ${whereClause}
             ORDER BY sr.is_best_match DESC, sr.predictability_index DESC`;

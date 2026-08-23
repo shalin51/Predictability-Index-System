@@ -5,7 +5,6 @@ import { EmptyState, MessageBanner } from '../../../components/ui/Page';
 import {
   generateRunSummary,
   getRunSummary,
-  regenerateRunSummary,
   type RunSummaryDetail,
   type RunSummaryStatus,
 } from '../../../services/api';
@@ -37,13 +36,11 @@ export function RunSummaryPanel({ onContinueToScoring, runId }: { onContinueToSc
   }
 
   const canGenerate = detail.run.labTestingStatus === 'completed' && detail.missingRequiredMetrics.length === 0;
-  const generated = detail.summaries.length > 0;
-
-  const generate = async (regenerate = false) => {
+  const generate = async () => {
     try {
-      const next = regenerate ? await regenerateRunSummary(runId) : await generateRunSummary(runId);
+      const next = await generateRunSummary(runId);
       setDetail(next);
-      setMessage(regenerate ? 'Summary regenerated' : 'Summary generated');
+      setMessage('Summary generated');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Summary generation failed');
     }
@@ -61,32 +58,9 @@ export function RunSummaryPanel({ onContinueToScoring, runId }: { onContinueToSc
         <div style={runStyles.panel}>Last Generated<br /><strong>{formatValue(detail.run.lastGeneratedAt)}</strong></div>
       </div>
       <div style={runStyles.actions}>
-        <button disabled={!canGenerate} onClick={() => void generate(false)} style={{ ...controlStyles.primaryButton, ...(!canGenerate ? styles.disabled : {}) }} type="button">Generate Summary</button>
-        <button disabled={!canGenerate || !generated} onClick={() => void generate(true)} style={{ ...controlStyles.secondaryButton, ...(!canGenerate || !generated ? styles.disabled : {}) }} type="button">Regenerate Summary</button>
-        <button onClick={load} style={controlStyles.secondaryButton} type="button">View Missing Metrics</button>
+        <button disabled={!canGenerate} onClick={() => void generate()} style={{ ...controlStyles.primaryButton, ...(!canGenerate ? styles.disabled : {}) }} type="button">Generate Summary</button>
         <button disabled={!detail.canContinueToScoring || !onContinueToScoring} onClick={onContinueToScoring} style={{ ...controlStyles.secondaryButton, ...(!detail.canContinueToScoring || !onContinueToScoring ? styles.disabled : {}) }} type="button">Continue to Benchmark Scoring</button>
       </div>
-      {detail.missingRequiredMetrics.length > 0 && (
-        <div style={runStyles.tableWrap}>
-          <table style={runStyles.table}>
-            <thead>
-              <tr>
-                {['Missing Metric', 'Category', 'Required Samples', 'Existing Results'].map((column) => <th key={column} style={runStyles.th}>{column}</th>)}
-              </tr>
-            </thead>
-            <tbody>
-              {detail.missingRequiredMetrics.map((metric) => (
-                <tr key={metric.id}>
-                  <td style={runStyles.td}>{metric.metricName}</td>
-                  <td style={runStyles.td}>{metric.category}</td>
-                  <td style={runStyles.td}>{metric.requiredSamples}</td>
-                  <td style={runStyles.td}>{metric.existingResults}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
       <Divider />
       {detail.summaries.length === 0 ? (
         <EmptyState>No run metric summaries.</EmptyState>

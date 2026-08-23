@@ -26,6 +26,14 @@ const columnMap: Record<string, Record<string, string>> = {
     profileVersion: 'profile_version',
     status: 'status',
   },
+  scoring_profiles: {
+    scoringCode: 'scoring_code',
+    profileName: 'profile_name',
+    status: 'status',
+  },
+  scoring_profile_weights: {
+    weight: 'weight',
+  },
   metric_definitions: {
     benchmarkComparable: 'benchmark_comparable',
     category: 'category',

@@ -21,22 +21,18 @@ export class PerformanceDistanceService {
   scoreBenchmark(
     benchmark: { benchmarkCode: string; benchmarkId: string; benchmarkName: string },
     inputs: ScoringMetricInput[],
-    configInput: unknown
+    configInput: unknown,
+    profile: { id: string; name: string } = { id: '', name: 'Default' }
   ): BenchmarkScoreResult {
     const config = normalizeConfig(configInput);
     const metrics = inputs.map((input) => this.scoreMetric(input, config));
-    const weightSum = metrics.reduce((sum, metric) => sum + metric.weight, 0);
     const contributionSum = metrics.reduce((sum, metric) => sum + metric.weightedContribution, 0);
-    const overallSimilarityScore = weightSum > 0 ? contributionSum / weightSum : 0;
+    const overallSimilarityScore = contributionSum;
     const requiredMetrics = inputs.filter((input) => input.requiredForPass);
     const completedRequired = requiredMetrics.filter((input) => input.runMeanValue != null).length;
     const requiredMetricCompletionScore = requiredMetrics.length > 0 ? (completedRequired / requiredMetrics.length) * 100 : 100;
     const productionReadinessScore = this.readinessScore(metrics);
-    const predictabilityIndex = (
-      overallSimilarityScore * config.similarityWeight
-      + productionReadinessScore * config.readinessWeight
-      + requiredMetricCompletionScore * config.completionWeight
-    );
+    const predictabilityIndex = overallSimilarityScore;
     const keyRisks = metrics
       .filter((metric) => metric.riskNote)
       .sort((a, b) => riskRank(b.riskLevel) - riskRank(a.riskLevel))
@@ -47,14 +43,16 @@ export class PerformanceDistanceService {
       benchmarkCode: benchmark.benchmarkCode,
       benchmarkId: benchmark.benchmarkId,
       benchmarkName: benchmark.benchmarkName,
+      scoringProfileId: profile.id,
+      scoringProfileName: profile.name,
       keyRisks,
       metrics,
       overallSimilarityScore: round(overallSimilarityScore),
       predictabilityIndex: round(predictabilityIndex),
       productionReadinessScore: round(productionReadinessScore),
-      recommendations: ['Recommendations will be generated in the reporting workflow.'],
+      recommendations: [],
       requiredMetricCompletionScore: round(requiredMetricCompletionScore),
-      trafficLight: this.trafficLight(predictabilityIndex, config),
+      trafficLight: 'gray',
     };
   }
 
@@ -81,7 +79,9 @@ export class PerformanceDistanceService {
       };
     }
 
-    const { distance, metricScore, normalizedDistance } = calculateMetricScore(input);
+    const distance = Math.abs((input.runMeanValue as number) - (input.targetMean as number));
+    const normalizedDistance = distance / Math.abs(input.targetMean as number);
+    const metricScore = normalizedDistance * 100;
     const trafficLight = this.trafficLight(metricScore, config);
     const { riskLevel, riskNote } = this.risk(input, metricScore);
 
@@ -101,7 +101,7 @@ export class PerformanceDistanceService {
       runSummaryId: input.runSummaryId,
       targetMean: input.targetMean,
       trafficLight,
-      weightedContribution: round(metricScore * input.weight),
+      weightedContribution: round(metricScore * (input.weight / 100)),
       weight: input.weight,
     };
   }
@@ -144,32 +144,7 @@ export class PerformanceDistanceService {
 }
 
 function hasRequiredScoringValues(input: ScoringMetricInput): boolean {
-  if (input.runMeanValue == null) return false;
-  if (input.comparisonMode === 'max_cap') return input.maxAcceptable != null;
-  if (input.comparisonMode === 'min_floor') return input.minAcceptable != null;
-  return input.targetMean != null && input.maxAcceptable != null && input.minAcceptable != null;
-}
-
-function calculateMetricScore(input: ScoringMetricInput): {
-  distance: number;
-  metricScore: number;
-  normalizedDistance: number;
-} {
-  const runValue = input.runMeanValue as number;
-  if (input.comparisonMode === 'max_cap') {
-    const cap = input.maxAcceptable as number;
-    const distance = Math.max(0, runValue - cap);
-    return { distance, metricScore: distance === 0 ? 100 : 0, normalizedDistance: distance / Math.max(0.00001, Math.abs(cap)) };
-  }
-  if (input.comparisonMode === 'min_floor') {
-    const floor = input.minAcceptable as number;
-    const distance = Math.max(0, floor - runValue);
-    return { distance, metricScore: distance === 0 ? 100 : 0, normalizedDistance: distance / Math.max(0.00001, Math.abs(floor)) };
-  }
-  const rangeWidth = Math.max(0.00001, (input.maxAcceptable as number) - (input.minAcceptable as number));
-  const distance = Math.abs(runValue - (input.targetMean as number));
-  const normalizedDistance = distance / rangeWidth;
-  return { distance, metricScore: Math.max(0, 100 - normalizedDistance * 100), normalizedDistance };
+  return input.runMeanValue != null && input.targetMean != null && input.targetMean !== 0;
 }
 
 function normalizeConfig(input: unknown): AlgorithmConfig {

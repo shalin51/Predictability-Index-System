@@ -165,14 +165,14 @@ export class LabTestingRepository {
     };
   }
 
-  async updateRunStatus(runId: string, status: 'testing' | 'completed'): Promise<LabTestingRecord | null> {
+  async updateRunStatus(runId: string, status: 'testing' | 'scored'): Promise<LabTestingRecord | null> {
     await getPool().query(
       `UPDATE production_runs
        SET status = $2::production_run_status, updated_at = now()
        WHERE id = $1`,
       [runId, status]
     );
-    if (status === 'completed') {
+    if (status === 'scored') {
       await getPool().query(
         `UPDATE samples SET status = 'tested', updated_at = now()
          WHERE production_run_id = $1 AND status <> 'archived'`,

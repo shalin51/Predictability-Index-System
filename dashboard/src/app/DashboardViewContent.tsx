@@ -132,6 +132,20 @@ export function DashboardViewContent({
     );
   }
 
+  if (view === 'scoring') {
+    const section = 'scoring-profiles';
+    return (
+      <MasterDataPage
+        activeSection={section}
+        editRecordId={libraryRecordMode === 'edit' ? libraryRecordId : undefined}
+        onOpenRecord={(id) => navigate({ libraryRecordId: id, libraryRecordMode: 'view', librarySection: section, view: 'scoring' })}
+        onSectionChange={() => navigate({ view: 'scoring' })}
+        recordId={libraryRecordId}
+        sections={['scoring-profiles']}
+      />
+    );
+  }
+
   if (view === 'machines') {
     const section = librarySection === 'machine-parameters' ? librarySection : 'machines';
     return (

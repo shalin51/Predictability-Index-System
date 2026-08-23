@@ -40,7 +40,7 @@ export class RunSummaryService {
   }
 
   async regenerate(runId: string, changedBy: string): Promise<RunSummaryRecord> {
-    return this.generateInternal(runId, changedBy, true);
+    return this.generateInternal(runId, changedBy, false);
   }
 
   private async generateInternal(runId: string, changedBy: string, regenerate: boolean): Promise<RunSummaryRecord> {

@@ -55,7 +55,7 @@ export class LabTestingService {
     if (sampleCount === 0) throw new ConflictError('Cannot complete testing without samples');
     const missing = await this.repo.missingRequiredMetricCount(runId);
     if (missing > 0) throw new ConflictError(`Cannot complete testing with ${missing} required metrics missing`);
-    const record = await this.repo.updateRunStatus(runId, 'completed');
+    const record = await this.repo.updateRunStatus(runId, 'scored');
     if (!record) throw new NotFoundError(`Lab testing run ${runId}`);
     await this.auditService.log({
       tableName: 'production_runs',

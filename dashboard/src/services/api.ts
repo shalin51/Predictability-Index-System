@@ -448,6 +448,8 @@ export interface ScoreReportMetric {
   riskNote?: string | null;
   runMeanValue: number;
   trafficLight: TrafficLight;
+  weight: number;
+  weightedContribution: number;
 }
 
 export interface ScoreReport {
@@ -464,6 +466,8 @@ export interface ScoreReport {
   predictabilityIndex: number;
   productionReadinessScore: number;
   recommendations: string[];
+  scoringCode?: string;
+  scoringProfileName?: string;
   trafficLight: TrafficLight;
 }
 

@@ -43,7 +43,7 @@ export class BenchmarkScoringService {
   }
 
   async regenerate(runId: string, changedBy: string): Promise<BenchmarkScoringRecord> {
-    return this.generateInternal(runId, changedBy, true);
+    return this.generateInternal(runId, changedBy, false);
   }
 
   async regenerateBenchmarkGlobally(benchmarkId: string, changedBy: string): Promise<BenchmarkScoringRecord> {
@@ -112,9 +112,10 @@ export class BenchmarkScoringService {
     const algorithm = await this.repo.algorithmVersion();
     if (!algorithm) throw new NotFoundError('PERFORMANCE_DISTANCE v1.0');
     const benchmarks = await this.repo.benchmarks();
+    const profiles = await this.repo.scoringProfiles();
     const scores: BenchmarkScoreResult[] = [];
-    for (const benchmark of benchmarks) {
-      const inputs = await this.repo.scoringInputs(runId, benchmark.id);
+    for (const benchmark of benchmarks) for (const profile of profiles) {
+      const inputs = await this.repo.scoringInputs(runId, benchmark.id, profile.id);
       scores.push(this.scoringService.scoreBenchmark(
         {
           benchmarkCode: String(benchmark['benchmarkCode']),
@@ -122,7 +123,8 @@ export class BenchmarkScoringService {
           benchmarkName: String(benchmark['benchmarkName']),
         },
         inputs,
-        algorithm['config']
+        algorithm['config'],
+        { id: profile.id, name: String(profile['profileName']) }
       ));
     }
     return scores;

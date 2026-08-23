@@ -18,12 +18,16 @@ export function formatFormulationCode(name: string): string {
 export function formatProductionRunCode(formulationCode: string): string {
   const normalized = slugify(formulationCode);
   if (!normalized) return '';
-  return normalized.endsWith('-f') ? `${normalized.slice(0, -2)}-pr` : `${normalized}-pr`;
+  return normalized.endsWith('-F') ? `${normalized.slice(0, -2)}-PR` : `${normalized}-PR`;
+}
+
+export function formatScoringProfileCode(name: string): string {
+  return formatNamedCode(name, 's');
 }
 
 function formatNamedCode(value: string, suffix: string): string {
   const normalized = slugify(value);
-  return normalized ? `${normalized}-${suffix}` : '';
+  return normalized ? `${normalized}-${suffix.toUpperCase()}` : '';
 }
 
 function slugify(value: string): string {
@@ -32,5 +36,5 @@ function slugify(value: string): string {
     .replace(/[^a-zA-Z0-9]+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '')
-    .toLowerCase();
+    .toUpperCase();
 }

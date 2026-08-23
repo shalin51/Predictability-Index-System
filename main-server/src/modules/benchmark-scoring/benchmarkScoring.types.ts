@@ -56,6 +56,8 @@ export interface BenchmarkScoreResult {
   benchmarkCode: string;
   benchmarkId: string;
   benchmarkName: string;
+  scoringProfileId: string;
+  scoringProfileName: string;
   keyRisks: string[];
   metrics: MetricScoreResult[];
   overallSimilarityScore: number;

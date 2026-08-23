@@ -1,6 +1,6 @@
 import { ConflictError, NotFoundError, ValidationError } from '../../errors/app-error';
 import { getPool } from '../../infrastructure/database/pg-pool';
-import { formatCode } from '../../core/code-format';
+import { formatCode, formatScoringProfileCode } from '../../core/code-format';
 import { COMPARISON_MODES, CRITICALITY_LEVELS, RECORD_STATUSES } from '../../constants/domain.constants';
 import type { AuditService } from '../audit/audit.service';
 import { getLibraryConfig } from './library.config';
@@ -215,9 +215,11 @@ export class LibraryService {
       'test-methods': { field: 'methodCode', suffix: 'T' },
     };
     const codeRule = suffixByField[resource];
+    const profileName = String(input['profileName'] ?? '').trim();
     return {
       status: 'active',
       ...input,
+      ...(resource === 'scoring-profiles' && profileName ? { scoringCode: formatScoringProfileCode(profileName) } : {}),
       ...(codeRule && input[codeRule.field] !== undefined
         ? { [codeRule.field]: formatCode(String(input[codeRule.field]), codeRule.suffix) }
         : {}),

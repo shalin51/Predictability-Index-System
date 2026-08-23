@@ -33,6 +33,7 @@ const sections = [
   'test-conditions',
   'benchmarks',
   'scoring-rules',
+  'scoring-profiles',
   'process-setups',
 ] as const;
 
@@ -46,6 +47,7 @@ const columns: Record<string, string[]> = {
   metrics: ['displayName', 'metricKey', 'category', 'defaultUnit', 'dataType', 'benchmarkComparable', 'requiredForScoring', 'status'],
   molds: ['moldName', 'moldType', 'manufacturer', 'cavityCount', 'zoneCount', 'status'],
   'scoring-rules': ['metricKey', 'comparisonMode', 'targetMean', 'minAcceptable', 'maxAcceptable', 'targetStdDev', 'weight', 'criticality'],
+  'scoring-profiles': ['scoringCode', 'profileName', 'status'],
   suppliers: ['supplierName', 'supplierType', 'contactName', 'contactEmail', 'contactPhone', 'status'],
   'test-conditions': ['conditionCode', 'conditionName', 'description', 'status'],
   'test-methods': ['methodName', 'methodCode', 'metricKey', 'status'],

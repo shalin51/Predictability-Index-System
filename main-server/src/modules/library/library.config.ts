@@ -361,6 +361,19 @@ const extraLibraryConfigs: Record<string, LibraryEntityConfig> = {
     requiredFields: ['benchmarkProfileId', 'metricId'], routeKey: 'scoring-rules', searchColumns: ['bp.benchmark_code', 'bp.benchmark_name', 'md.metric_key', 'md.display_name'],
     tableName: 'benchmark_metric_targets', uniqueChecks: [{ columns: ['benchmarkProfileId', 'metricId'], message: 'metric cannot be duplicated per benchmark' }],
   },
+  'scoring-profiles': {
+    columns: [], createFields: [{ key: 'profileName', label: 'Scoring Name', required: true }, { key: 'status', label: 'Status', type: 'select' }],
+    defaultOrderBy: 'profile_name', displayName: 'Scoring Profile', idColumn: 'id',
+    listSql: `SELECT id, scoring_code AS "scoringCode", profile_name AS "profileName", status::text AS status, created_at AS "createdAt", updated_at AS "updatedAt" FROM scoring_profiles`,
+    mutableColumns: ['scoringCode', 'profileName', 'status'], requiredFields: ['profileName'], routeKey: 'scoring-profiles', searchColumns: ['scoring_code', 'profile_name'], statusColumn: 'status',
+    tableName: 'scoring_profiles', uniqueChecks: [{ columns: ['profileName'], message: 'profile name must be unique' }, { columns: ['scoringCode'], message: 'scoring code must be unique' }],
+  },
+  'scoring-profile-weights': {
+    columns: [], createFields: [], defaultOrderBy: 'md.sort_order, md.metric_key', displayName: 'Scoring Profile Weight', idColumn: 'id',
+    filterColumn: 'spw.scoring_profile_id',
+    listSql: `SELECT spw.id, spw.scoring_profile_id AS "scoringProfileId", spw.metric_id AS "metricId", md.metric_key AS "metricKey", md.display_name AS "metricName", spw.weight::float AS weight FROM scoring_profile_weights spw JOIN metric_definitions md ON md.id = spw.metric_id`,
+    mutableColumns: ['weight'], requiredFields: [], routeKey: 'scoring-profile-weights', searchColumns: ['md.metric_key', 'md.display_name'], tableName: 'scoring_profile_weights', uniqueChecks: [],
+  },
 };
 
 export function getLibraryConfig(resource: string): LibraryEntityConfig | null {

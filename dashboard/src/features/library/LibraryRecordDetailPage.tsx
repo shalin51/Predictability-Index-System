@@ -20,6 +20,7 @@ import { labelize, LibrarySectionNav } from './LibrarySectionNav';
 import { MachineParametersAccordion } from './MachineParametersAccordion';
 import { RelatedMaterialsTable } from './RelatedMaterialsTable';
 import { MaterialPropertiesEditor } from './MaterialPropertiesEditor';
+import { ScoringProfileWeightsEditor } from './ScoringProfileWeightsEditor';
 import { BenchmarkPropertiesEditor } from './BenchmarkPropertiesEditor';
 
 export function LibraryRecordDetailPage({
@@ -46,6 +47,7 @@ export function LibraryRecordDetailPage({
   const [message, setMessage] = useState('');
   const [machineParameters, setMachineParameters] = useState<LibraryRecord[]>([]);
   const [benchmarkProperties, setBenchmarkProperties] = useState<LibraryRecord[]>([]);
+  const [scoringProfileWeights, setScoringProfileWeights] = useState<LibraryRecord[]>([]);
   const [rerunningBenchmark, setRerunningBenchmark] = useState(false);
   const [relatedMaterials, setRelatedMaterials] = useState<LibraryRecord[]>([]);
   const [relatedError, setRelatedError] = useState('');
@@ -58,6 +60,7 @@ export function LibraryRecordDetailPage({
     setMessage('');
     setMachineParameters([]);
     setBenchmarkProperties([]);
+    setScoringProfileWeights([]);
     setRelatedMaterials([]);
     setRelatedError('');
     setBenchmarkPropertiesError('');
@@ -115,6 +118,12 @@ export function LibraryRecordDetailPage({
         .catch((reason: unknown) => {
           if (active) setBenchmarkPropertiesError(getErrorMessage(reason, 'Unable to load benchmark properties'));
         });
+    }
+
+    if (resource === 'scoring-profiles') {
+      void listLibraryRecords('scoring-profile-weights', { category: id })
+        .then((response) => { if (active) setScoringProfileWeights(response.data); })
+        .catch((reason: unknown) => { if (active) setRelatedError(getErrorMessage(reason, 'Unable to load scoring weights')); });
     }
 
     return () => {
@@ -229,6 +238,9 @@ export function LibraryRecordDetailPage({
                   />
                 </>
               )}
+              {resource === 'scoring-profiles' && (
+                <ScoringProfileWeightsEditor onSaved={(weight) => setScoringProfileWeights((current) => current.map((item) => item.id === weight.id ? weight : item))} options={options} weights={scoringProfileWeights} />
+              )}
             </>
           )}
         </Card>
@@ -238,7 +250,7 @@ export function LibraryRecordDetailPage({
 }
 
 function getRecordTitle(record: LibraryRecord, resource: string) {
-  const titleKeys = ['benchmarkName', 'materialName', 'propertyName', 'supplierName', 'machineName', 'displayName', 'moldName', 'zoneName', 'name', 'code'];
+  const titleKeys = ['benchmarkName', 'scoringCode', 'materialName', 'propertyName', 'supplierName', 'machineName', 'displayName', 'moldName', 'zoneName', 'name', 'code'];
   const value = titleKeys.map((key) => record[key]).find((item) => item !== null && item !== undefined && item !== '');
   return value ? String(value) : `${labelize(resource)} ${record.id}`;
 }
