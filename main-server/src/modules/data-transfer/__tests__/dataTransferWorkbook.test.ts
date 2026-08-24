@@ -81,6 +81,18 @@ describe('data transfer workbook contract', () => {
     expect(() => parseTransferWorkbook(invalid, definition)).toThrow(/Status must be one of: draft/);
   });
 
+  it('accepts circuit as a machine parameter position type', () => {
+    const definition = transferDefinitions.machines!;
+    const bytes = createTransferWorkbook(definition, {
+      'Machine Parameters': [{
+        machineCode: 'M-001', parameterKey: 'test', displayName: 'Test', sectionKey: 'injection',
+        positionType: 'circuit',
+      }],
+    });
+
+    expect(() => parseTransferWorkbook(bytes, definition)).not.toThrow();
+  });
+
   it('rejects a workbook missing the first import_ tab', () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['Col']]), 'wrong_sheet');
