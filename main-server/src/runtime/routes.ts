@@ -24,6 +24,7 @@ export const routes: RouteDefinition[] = [
   { method: 'GET', path: '/library/:resource', handler: (req, res) => controllers.library.list(req, res) },
   { method: 'GET', path: '/data-transfer/:resource/export', handler: (req, res) => controllers.dataTransfer.export(req, res) },
   { method: 'GET', path: '/data-transfer/:resource/template', handler: (req, res) => controllers.dataTransfer.template(req, res) },
+  { method: 'POST', path: '/data-transfer/:resource/validate', handler: (req, res) => controllers.dataTransfer.validate(req, res) },
   { method: 'POST', path: '/data-transfer/:resource/import', handler: (req, res) => controllers.dataTransfer.import(req, res) },
   { method: 'GET', path: '/library/:resource/:id', handler: (req, res) => controllers.library.detail(req, res) },
   { method: 'POST', path: '/library/:resource', handler: (req, res) => controllers.library.create(req, res) },
