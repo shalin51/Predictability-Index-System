@@ -139,11 +139,7 @@ BEGIN
   END IF;
 END $$;
 
-ALTER TABLE users
-  ADD COLUMN IF NOT EXISTS tenant_id UUID;
-
 ALTER TABLE app_users
   ADD COLUMN IF NOT EXISTS tenant_id UUID;
 
-CREATE INDEX IF NOT EXISTS idx_users_tenant ON users(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_app_users_tenant ON app_users(tenant_id);

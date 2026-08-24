@@ -66,6 +66,48 @@ Invoke-WebRequest http://localhost:7071/api/health
 Invoke-WebRequest http://localhost:7071/api/health/db
 ```
 
+## Replace Staging Schema from Local
+Use this only for a staging hard cutover. It permanently deletes every object and row in staging's `public` schema. It does not copy local data or apply seed SQL.
+
+Prerequisites: PostgreSQL `pg_dump` and `psql` are installed, Azure CLI is signed in, and `main-server/.env.development` and `main-server/.env.staging` are present.
+
+```powershell
+$local = @{}
+Get-Content main-server/.env.development | Where-Object { $_ -match '^[A-Za-z_][A-Za-z0-9_]*=' } | ForEach-Object { $parts = $_ -split '=', 2; $local[$parts[0]] = $parts[1] }
+$staging = @{}
+Get-Content main-server/.env.staging | Where-Object { $_ -match '^[A-Za-z_][A-Za-z0-9_]*=' } | ForEach-Object { $parts = $_ -split '=', 2; $staging[$parts[0]] = $parts[1] }
+
+$schemaDump = Join-Path $env:TEMP 'amfpi-local-schema.sql'
+$env:PGPASSWORD = $local['DB_PASSWORD']
+pg_dump --host $local['DB_HOST'] --port $local['DB_PORT'] --username $local['DB_USER'] --dbname $local['DB_NAME'] --schema-only --schema public --no-owner --no-privileges --file $schemaDump
+if ($LASTEXITCODE -ne 0) { throw 'Local schema export failed.' }
+
+$env:PGPASSWORD = az account get-access-token --resource-type oss-rdbms --query accessToken --output tsv
+$env:PGSSLMODE = 'require'
+'DROP SCHEMA IF EXISTS public CASCADE;' | psql --set ON_ERROR_STOP=1 --host $staging['DB_HOST'] --port $staging['DB_PORT'] --username $staging['DB_USER'] --dbname $staging['DB_NAME']
+if ($LASTEXITCODE -ne 0) { throw 'Staging schema reset failed.' }
+
+$restoreSql = @(
+  'CREATE SCHEMA public;',
+  'CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA public;',
+  'CREATE EXTENSION IF NOT EXISTS "pgcrypto" WITH SCHEMA public;'
+) + (Get-Content $schemaDump | Where-Object { $_ -ne 'CREATE SCHEMA public;' }) + @(
+  'GRANT USAGE ON SCHEMA public TO "func-p3-stage";',
+  'GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO "func-p3-stage";',
+  'GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO "func-p3-stage";',
+  'GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO "func-p3-stage";'
+)
+$restoreSql | psql --set ON_ERROR_STOP=1 --host $staging['DB_HOST'] --port $staging['DB_PORT'] --username $staging['DB_USER'] --dbname $staging['DB_NAME']
+if ($LASTEXITCODE -ne 0) { throw 'Staging schema restore failed.' }
+Remove-Item -LiteralPath $schemaDump
+```
+
+Verify that staging has no data and the Function App can connect:
+
+```powershell
+Invoke-WebRequest https://func-p3-stage.azurewebsites.net/api/health/db
+```
+
 ## Deploy Staging Backend
 ```powershell
 npm run deploy:stage --workspace @amfpi/main-server
@@ -112,8 +154,10 @@ GRANT CONNECT ON DATABASE "AMFPI-Staging" TO "func-p3-stage";
 GRANT USAGE ON SCHEMA public TO "func-p3-stage";
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO "func-p3-stage";
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO "func-p3-stage";
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO "func-p3-stage";
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO "func-p3-stage";
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO "func-p3-stage";
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO "func-p3-stage";
 ```
 
 ## Staging Firewall

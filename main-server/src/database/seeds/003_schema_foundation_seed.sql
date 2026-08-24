@@ -11,15 +11,6 @@ SET
   default_unit = COALESCE(default_unit, unit, 'wt%')
 WHERE material_code IS NULL OR material_name IS NULL OR default_unit IS NULL;
 
-INSERT INTO roles (role_key, role_name)
-VALUES
-  ('admin', 'Admin'),
-  ('rd_user', 'R&D User'),
-  ('lab_technician', 'Lab Technician'),
-  ('manager', 'Manager'),
-  ('executive', 'Executive')
-ON CONFLICT (role_key) DO UPDATE SET role_name = EXCLUDED.role_name;
-
 INSERT INTO machines (machine_code, machine_name, location)
 VALUES
   ('BOY-125E', 'BOY 125E Injection Molding Machine', 'Production Floor')

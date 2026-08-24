@@ -29,7 +29,12 @@ export async function resetDatabase(client: Client): Promise<void> {
   await client.query(`
     DROP TABLE IF EXISTS
       score_report_metrics,
+      scoring_profile_weights,
+      scoring_profiles,
       generated_reports,
+      comparison_analysis_metrics,
+      comparison_analysis_candidates,
+      comparison_analyses,
       material_property_facts,
       material_property_definitions,
       material_source_documents,
@@ -86,6 +91,7 @@ export async function resetDatabase(client: Client): Promise<void> {
       molds,
       machines,
       audit_logs,
+      historic_data,
       user_roles,
       app_users,
       roles,
