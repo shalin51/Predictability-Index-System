@@ -109,7 +109,8 @@ CREATE TABLE IF NOT EXISTS benchmark_profiles (
   status record_status NOT NULL DEFAULT 'active',
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE (benchmark_code, profile_version)
 );
 
 CREATE TABLE IF NOT EXISTS benchmark_metric_targets (

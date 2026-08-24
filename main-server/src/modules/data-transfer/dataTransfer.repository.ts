@@ -9,6 +9,7 @@ type Row = Record<string, unknown>;
 type SampleRow = { id: string; sampleCode: string };
 type RunRow = { id: string; runCode: string };
 type MetricRow = { id: string; metricKey: string; category: string; defaultUnit: string | null };
+type MachineSetupProfileParameterMetadata = { displayName: string; category: string };
 
 const value = (row: Row, key: string) => row[key] === '' ? null : row[key] ?? null;
 
@@ -337,13 +338,22 @@ export class DataTransferRepository {
       for (const group of grouped.values()) {
         const header = group[0]!;
         const machineId = await this.resolve(client, 'machines', 'machine_code', String(header['machineCode']));
-        const parameters = group
+        const parameters = await Promise.all(group
           .filter((row) => ['parameterKey', 'positionLabel', 'unit', 'value'].some((key) => value(row, key) !== null))
-          .map((row) => ({
-            ...(value(row, 'parameterKey') !== null ? { key: String(row['parameterKey']) } : {}),
-            ...(value(row, 'positionLabel') !== null ? { positionLabel: String(row['positionLabel']) } : {}),
-            ...(value(row, 'unit') !== null ? { unit: String(row['unit']) } : {}),
-            ...(value(row, 'value') !== null ? { value: String(row['value']) } : {}),
+          .map(async (row) => {
+            const parameterKey = value(row, 'parameterKey');
+            const metadata = parameterKey === null ? null : await this.machineSetupProfileParameterMetadata(
+              client, machineId, String(parameterKey), value(row, 'positionLabel')
+            );
+            return {
+              ...(parameterKey !== null ? { key: String(parameterKey) } : {}),
+              ...(value(row, 'displayName') !== null ? { displayName: String(row['displayName']) } : metadata ? { displayName: metadata.displayName } : parameterKey !== null ? { displayName: String(parameterKey) } : {}),
+              ...(value(row, 'category') !== null ? { category: String(row['category']) } : metadata ? { category: metadata.category } : {}),
+              ...(value(row, 'scope') !== null ? { scope: String(row['scope']) } : { scope: 'machine' }),
+              ...(value(row, 'positionLabel') !== null ? { positionLabel: String(row['positionLabel']) } : {}),
+              ...(value(row, 'unit') !== null ? { unit: String(row['unit']) } : {}),
+              ...(value(row, 'value') !== null ? { value: String(row['value']) } : {}),
+            };
           }));
         const saved = await client.query<{ inserted: boolean }>(
           `INSERT INTO machine_setup_profiles (machine_id, profile_code, profile_name, parameters, status, notes)
@@ -612,7 +622,8 @@ export class DataTransferRepository {
   private async exportMachineSetupProfiles(): Promise<TransferRows> {
     return {
       'Machine Setup Profiles': await this.rows(`SELECT m.machine_code AS "machineCode", msp.profile_code AS "profileCode", msp.profile_name AS "profileName",
-        param.item->>'key' AS "parameterKey", param.item->>'positionLabel' AS "positionLabel", param.item->>'unit' AS "unit", param.item->>'value' AS "value",
+        param.item->>'key' AS "parameterKey", param.item->>'displayName' AS "displayName", param.item->>'category' AS "category", param.item->>'scope' AS "scope",
+        param.item->>'positionLabel' AS "positionLabel", param.item->>'unit' AS "unit", param.item->>'value' AS "value",
         msp.status AS status, msp.notes
         FROM machine_setup_profiles msp
         JOIN machines m ON m.id = msp.machine_id
@@ -761,6 +772,23 @@ export class DataTransferRepository {
       if (inserted.rows[0]) samples.push(inserted.rows[0]);
     }
     return samples.sort((left, right) => left.sampleCode.localeCompare(right.sampleCode));
+  }
+
+  private async machineSetupProfileParameterMetadata(
+    client: PoolClient,
+    machineId: string,
+    parameterKey: string,
+    positionLabel: unknown
+  ): Promise<MachineSetupProfileParameterMetadata | null> {
+    const result = await client.query<MachineSetupProfileParameterMetadata>(
+      `SELECT display_name AS "displayName", section_key AS category
+       FROM machine_parameter_capabilities
+       WHERE machine_id = $1 AND parameter_key = $2
+       ORDER BY CASE WHEN COALESCE(position_label, '') = COALESCE($3, '') THEN 0 ELSE 1 END, sort_order
+       LIMIT 1`,
+      [machineId, parameterKey, value({ positionLabel }, 'positionLabel')]
+    );
+    return result.rows[0] ?? null;
   }
 
   private normalizeMachineSetupProfileStatus(status: unknown): 'active' | 'inactive' {

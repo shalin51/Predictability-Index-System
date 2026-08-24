@@ -105,7 +105,8 @@ export const transferDefinitions: Record<string, TransferDefinition> = {
     filename: 'machine-setup-profiles', resource: 'machine-setup-profiles', sheets: [
       { name: 'Machine Setup Profiles', columns: [
         text('machineCode', 'Machine Code', true), text('profileCode', 'Profile Code', true), text('profileName', 'Profile Name', true),
-        text('parameterKey', 'Parameter Key'), text('positionLabel', 'Position Label'), text('unit', 'Unit'), text('value', 'Value'),
+        text('parameterKey', 'Parameter Key'), text('displayName', 'Parameter Name'), text('category', 'Category'), text('scope', 'Scope'),
+        text('positionLabel', 'Position Label'), text('unit', 'Unit'), text('value', 'Value'),
         text('status', 'Status', false, { allowedValues: RECORD_STATUSES, defaultValue: 'active' }), text('notes', 'Notes'),
       ] },
     ],

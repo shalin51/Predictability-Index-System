@@ -4,6 +4,7 @@ import { colors, font, spacing } from '../../../theme/tokens';
 export interface SetupProfileParameter {
   category?: string;
   displayName?: string;
+  key?: string;
   positionLabel?: string;
   scope?: string;
   unit?: string;
@@ -32,7 +33,7 @@ export function SetupProfileParametersTable({ parameters }: { parameters?: Setup
               <table style={styles.table}>
                 <thead><tr><th style={styles.header}>Parameter</th><th style={styles.header}>Position / Zone</th><th style={styles.header}>Setpoint</th><th style={styles.header}>Unit</th></tr></thead>
                 <tbody>{values.map((parameter, index) => <tr key={`${parameter.displayName}-${parameter.positionLabel}-${index}`}>
-                  <td style={styles.cell}>{parameter.displayName ?? '-'}</td><td style={styles.cell}>{parameter.positionLabel ?? '-'}</td><td style={styles.cell}>{parameter.value ?? '-'}</td><td style={styles.cell}>{parameter.unit ?? '-'}</td>
+                  <td style={styles.cell}>{parameter.displayName ?? parameter.key ?? '-'}</td><td style={styles.cell}>{parameter.positionLabel ?? '-'}</td><td style={styles.cell}>{parameter.value ?? '-'}</td><td style={styles.cell}>{parameter.unit ?? '-'}</td>
                 </tr>)}</tbody>
               </table>
             </div>
