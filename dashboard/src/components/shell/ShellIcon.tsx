@@ -4,7 +4,14 @@ export type IconName =
   | 'flask'
   | 'layers'
   | 'scan'
+  | 'box'
+  | 'cpu'
+  | 'mold'
+  | 'target'
+  | 'sliders'
+  | 'factory'
   | 'upload'
+  | 'download'
   | 'settings'
   | 'bell'
   | 'user'
@@ -74,12 +81,77 @@ export function ShellIcon({ name }: { name: IconName }) {
     );
   }
 
+  if (name === 'box') {
+    return (
+      <svg {...iconProps}>
+        <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" />
+        <path d="m4.5 7.5 7.5 4 7.5-4M12 11.5V21" />
+      </svg>
+    );
+  }
+
+  if (name === 'cpu') {
+    return (
+      <svg {...iconProps}>
+        <rect height="10" rx="2" width="10" x="7" y="7" />
+        <path d="M9 1v4M15 1v4M9 19v4M15 19v4M1 9h4M1 15h4M19 9h4M19 15h4M10 10h4v4h-4z" />
+      </svg>
+    );
+  }
+
+  if (name === 'mold') {
+    return (
+      <svg {...iconProps}>
+        <path d="M5 5h14v4H5zM7 9v8a5 5 0 0 0 10 0V9" />
+        <path d="M9 13h6M9 17h6" />
+      </svg>
+    );
+  }
+
+  if (name === 'target') {
+    return (
+      <svg {...iconProps}>
+        <circle cx="12" cy="12" r="8" />
+        <circle cx="12" cy="12" r="4" />
+        <circle cx="12" cy="12" r="1" />
+      </svg>
+    );
+  }
+
+  if (name === 'sliders') {
+    return (
+      <svg {...iconProps}>
+        <path d="M4 6h16M4 12h16M4 18h16" />
+        <circle cx="9" cy="6" r="2" /><circle cx="15" cy="12" r="2" /><circle cx="11" cy="18" r="2" />
+      </svg>
+    );
+  }
+
+  if (name === 'factory') {
+    return (
+      <svg {...iconProps}>
+        <path d="M3 21V11l6 3V9l6 3V6h3v15H3Z" />
+        <path d="M6 17h2M11 17h2M16 17h2M6 20h2M11 20h2M16 20h2" />
+      </svg>
+    );
+  }
+
   if (name === 'upload') {
     return (
       <svg {...iconProps}>
         <path d="M12 16V5" />
         <path d="m7 10 5-5 5 5" />
         <path d="M4 18v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" />
+      </svg>
+    );
+  }
+
+  if (name === 'download') {
+    return (
+      <svg {...iconProps}>
+        <path d="M12 5v11" />
+        <path d="m7 12 5 5 5-5" />
+        <path d="M4 19v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1" />
       </svg>
     );
   }
