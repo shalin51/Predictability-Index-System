@@ -28,6 +28,9 @@ export async function resetDatabase(client: Client): Promise<void> {
   await client.query('DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE');
   await client.query(`
     DROP TABLE IF EXISTS
+      prediction_result_metrics,
+      prediction_results,
+      prediction_models,
       score_report_metrics,
       scoring_profile_weights,
       scoring_profiles,

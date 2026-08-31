@@ -5,6 +5,8 @@ const PRESERVED_MACHINE_CODE = 'BOY-125E';
 const DEMO_LAB_USER_ID = '40000001-0000-0000-0000-000000000001';
 
 const DOMAIN_TABLES_IN_DELETE_ORDER = [
+  'prediction_result_metrics',
+  'prediction_results',
   'generated_reports',
   'score_report_metrics',
   'score_reports',

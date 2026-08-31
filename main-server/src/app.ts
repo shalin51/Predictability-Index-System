@@ -25,6 +25,7 @@ import { createMaterialImportRouter } from './modules/material-imports/materialI
 import { createMaterialCatalogRouter } from './modules/materials/materialCatalog.module';
 import { createAuthRouter } from './modules/auth/auth.module';
 import { createDataTransferRouter } from './modules/data-transfer/dataTransfer.module';
+import { createPredictionRouter } from './modules/predictions/prediction.module';
 
 export function createApp() {
   const app = express();
@@ -89,6 +90,7 @@ function registerRoutes(app: Express): void {
   app.use('/lab-testing', createLabTestingRouter());
   app.use('/run-summaries', createRunSummaryRouter());
   app.use('/benchmark-scoring', createBenchmarkScoringRouter());
+  app.use('/predictions', createPredictionRouter());
   app.use('/reports', createReportRouter());
 }
 

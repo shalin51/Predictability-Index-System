@@ -26,20 +26,21 @@ import { BenchmarkScoringPanel } from './components/scores/BenchmarkScoringPanel
 import { ProductionRunStatusBadge } from './components/ProductionRunStatusBadge';
 import { ProductionRunTimeline } from './components/ProductionRunTimeline';
 import { RunSummaryPanel } from './components/RunSummaryPanel';
+import { PredictionPanel } from './components/PredictionPanel';
 import { SampleTable } from './components/SampleTable';
 import { ReadOnlyLabResultsPanel } from '../lab-testing/components/ReadOnlyLabResultsPanel';
 import { formatValue, runStyles, statusLabels } from './productionRunUi';
 
-type DetailTab = 'Overview' | 'Manufacturing Parameters' | 'Samples' | 'Lab Results' | 'Run Summary' | 'Scores';
+type DetailTab = 'Overview' | 'Manufacturing Parameters' | 'Prediction' | 'Samples' | 'Lab Results' | 'Run Summary' | 'Scores';
 
 const tabsByStatus: Record<ProductionRunStatus, DetailTab[]> = {
-  planned: ['Overview', 'Manufacturing Parameters'],
-  molded: ['Overview', 'Manufacturing Parameters'],
-  curing: ['Overview', 'Manufacturing Parameters', 'Samples'],
-  ready_for_testing: ['Overview', 'Manufacturing Parameters', 'Samples', 'Lab Results'],
-  testing: ['Overview', 'Manufacturing Parameters', 'Samples', 'Lab Results'],
-  scored: ['Overview', 'Manufacturing Parameters', 'Samples', 'Lab Results', 'Run Summary', 'Scores'],
-  archived: ['Overview', 'Manufacturing Parameters', 'Samples', 'Lab Results', 'Run Summary', 'Scores'],
+  planned: ['Overview', 'Manufacturing Parameters', 'Prediction'],
+  molded: ['Overview', 'Manufacturing Parameters', 'Prediction'],
+  curing: ['Overview', 'Manufacturing Parameters', 'Prediction', 'Samples'],
+  ready_for_testing: ['Overview', 'Manufacturing Parameters', 'Prediction', 'Samples', 'Lab Results'],
+  testing: ['Overview', 'Manufacturing Parameters', 'Prediction', 'Samples', 'Lab Results'],
+  scored: ['Overview', 'Manufacturing Parameters', 'Prediction', 'Samples', 'Lab Results', 'Run Summary', 'Scores'],
+  archived: ['Overview', 'Manufacturing Parameters', 'Prediction', 'Samples', 'Lab Results', 'Run Summary', 'Scores'],
 };
 
 const nextActions: Partial<Record<ProductionRunStatus, { label: string; status: ProductionRunStatus }>> = {
@@ -178,6 +179,7 @@ export function ProductionRunDetailPage({ id, onBack, onOpenFormulation, onOpenL
             {canEditParameters && <div style={runStyles.actions}><button onClick={() => void saveParameters()} style={controlStyles.primaryButton} type="button">Save Changes</button></div>}
           </div>
         )}
+        {tab === 'Prediction' && <PredictionPanel readOnly={record.status === 'archived'} runId={record.id} />}
         {tab === 'Samples' && (record.samples?.length
           ? <SampleTable canDelete={!locked} editable={!locked} onDelete={(sampleId) => void archiveSample(sampleId).then(() => { setRecord((current) => current ? { ...current, samples: current.samples?.filter((sample) => sample.id !== sampleId), sampleCount: Math.max(0, current.sampleCount - 1) } : current); setMessage('Sample deleted'); }).catch((err: Error) => setError(err.message))} onUpdate={(sample, patch) => void updateSample(sample.id, { cavityNumber: patch.cavityNumber === undefined ? sample.cavityNumber : patch.cavityNumber, sampleCode: patch.sampleCode ?? sample.sampleCode, status: patch.status ?? sample.status as import('../../services/api').SamplePayload['status'] }).then((updated) => { setRecord((current) => current ? { ...current, samples: current.samples?.map((item) => item.id === updated.id ? updated : item) } : current); setMessage('Sample saved'); }).catch((err: Error) => setError(err.message))} samples={record.samples} />
           : <EmptyState>Samples are automatically generated when this run is marked Ready for Testing.</EmptyState>)}

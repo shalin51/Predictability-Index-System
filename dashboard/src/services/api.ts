@@ -181,6 +181,29 @@ export interface ProductionRunRecord {
   updatedAt: string;
 }
 
+export interface PredictionMetric {
+  conditionCode: string | null;
+  metricId: string | null;
+  metricKey: string;
+  metricName: string;
+  predictedValue: number;
+  unit: string | null;
+}
+
+export interface PredictionRecord {
+  generatedAt: string;
+  id: string;
+  metrics: PredictionMetric[];
+  modelId: string;
+  modelLabel?: string;
+  productionRunId: string;
+  requestedBy: string;
+  startedAt: string;
+  completedAt: string | null;
+  failureMessage: string | null;
+  status: 'running' | 'completed' | 'failed';
+}
+
 export interface SetupImportPreview {
   id: string;
   status: string;
@@ -828,6 +851,18 @@ export async function listApprovedFormulationOptions(): Promise<LibraryRecord[]>
 
 export async function getProductionRun(id: string): Promise<ProductionRunRecord> {
   return fetchJSON<ProductionRunRecord>(`/production-runs/${id}`);
+}
+
+export async function listRunPredictions(runId: string): Promise<PredictionRecord[]> {
+  return fetchJSON<PredictionRecord[]>(`/predictions/runs/${runId}`);
+}
+
+export async function generateRunPrediction(runId: string): Promise<PredictionRecord> {
+  return fetchJSON<PredictionRecord>(`/predictions/runs/${runId}/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: '{}',
+  });
 }
 
 export async function previewSetupWorkbook(file: File): Promise<SetupImportPreview> {

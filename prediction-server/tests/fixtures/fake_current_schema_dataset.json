@@ -1,0 +1,2726 @@
+{
+  "dataset_version": "fake-current-schema-v1",
+  "records": [
+    {
+      "formula": {
+        "formulation_id": "b4129da4-baf1-577a-9970-53c85ba9a914",
+        "formulation_code": "FAKE-001",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 30.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 70.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 34.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 850.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 18.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "4c217693-7e45-557a-a71c-301cdad7192d",
+      "outcomes": {
+        "hardness": 48.36,
+        "rebound": 78.58
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "476bad39-3b18-5a0e-9f12-1224913748a8",
+        "formulation_code": "FAKE-002",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 31.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 69.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 35.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 875.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 19.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "b009ee94-29cc-5020-916a-0c53ab2ba0ff",
+      "outcomes": {
+        "hardness": 48.66,
+        "rebound": 78.475
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "cfeea26d-1fbb-5080-83fb-f7b5701275c6",
+        "formulation_code": "FAKE-003",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 32.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 68.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 37.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 900.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 20.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "976ad4e1-388e-52e0-99c3-35696bbb902c",
+      "outcomes": {
+        "hardness": 48.96,
+        "rebound": 78.37
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "7e53a88e-d031-53b6-ba25-19560dc2abbe",
+        "formulation_code": "FAKE-004",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 33.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 67.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 38.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 925.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 21.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "b9804967-d347-57d1-8d3f-a39801e0da36",
+      "outcomes": {
+        "hardness": 49.26,
+        "rebound": 78.265
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "c90bc350-b726-51ca-a884-367439ed4a30",
+        "formulation_code": "FAKE-005",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 34.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 66.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 40.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 950.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 22.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "70672cb6-7f6d-5053-bc50-4c2fe6dd2feb",
+      "outcomes": {
+        "hardness": 49.56,
+        "rebound": 78.16
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "607887a7-9dfc-57f1-9d6d-2354f74f19da",
+        "formulation_code": "FAKE-006",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 35.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 65.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 41.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 975.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 23.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "c2e3b195-2c54-53c0-a4d6-f9aae13aade2",
+      "outcomes": {
+        "hardness": 49.86,
+        "rebound": 78.055
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "3f6f0532-c9d5-5b78-9d33-74fc2cae265b",
+        "formulation_code": "FAKE-007",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 36.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 64.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 43.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1000.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 24.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "fba6e17c-77d0-5455-af2e-32b5eba08b7c",
+      "outcomes": {
+        "hardness": 50.16,
+        "rebound": 77.95
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "1a1da7ed-efc8-58e3-816a-3b81b7f4fd5e",
+        "formulation_code": "FAKE-008",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 37.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 63.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 44.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1025.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 25.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "7a838896-a452-5ad4-8f41-713df95abce0",
+      "outcomes": {
+        "hardness": 50.46,
+        "rebound": 77.845
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "097361ac-34d6-5e3f-af70-38309c4e5a8d",
+        "formulation_code": "FAKE-009",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 38.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 62.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 46.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1050.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 18.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "0324a067-4d4c-5c05-87bf-5c47cca54146",
+      "outcomes": {
+        "hardness": 51.4,
+        "rebound": 78.22
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "2aaf3dd7-d45b-5aa0-9f46-c136f9d01cda",
+        "formulation_code": "FAKE-010",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 39.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 61.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 47.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1075.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 19.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "19d849da-d58d-5099-aa7b-42896f64b6f9",
+      "outcomes": {
+        "hardness": 51.7,
+        "rebound": 78.115
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "e115ad41-8022-5572-9096-af6fcff3b395",
+        "formulation_code": "FAKE-011",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 40.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 60.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 49.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1100.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 20.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "e7be7a00-c5e9-515b-8926-aef4c96296dd",
+      "outcomes": {
+        "hardness": 52.0,
+        "rebound": 78.01
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "0db4b316-1b6c-57af-a83c-4482ff8eb2e4",
+        "formulation_code": "FAKE-012",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 41.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 59.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 34.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1125.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 21.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "b67c0b01-8eef-500b-8b38-99bcf4b07ca4",
+      "outcomes": {
+        "hardness": 52.3,
+        "rebound": 76.42
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "156ed333-a588-549f-9172-a4f1afcf9e08",
+        "formulation_code": "FAKE-013",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 42.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 58.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 35.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1150.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 22.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "3b9d632a-cfdf-5441-b7b5-8cb033e7bbe7",
+      "outcomes": {
+        "hardness": 52.6,
+        "rebound": 76.315
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "085417e0-2573-57e6-908c-49588e8f7f0a",
+        "formulation_code": "FAKE-014",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 43.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 57.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 37.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 850.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 23.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "11bbb0d9-3154-5605-aef7-f3472c4448d4",
+      "outcomes": {
+        "hardness": 51.6,
+        "rebound": 76.21
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "ed7ac118-e130-54e5-9655-3c95917fe02f",
+        "formulation_code": "FAKE-015",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 44.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 56.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 38.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 875.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 24.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "8f1c09a6-2354-5cd3-8b58-6b332c09fd15",
+      "outcomes": {
+        "hardness": 51.9,
+        "rebound": 76.105
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "998deac3-04e6-55ee-9d78-b7657e3f70b4",
+        "formulation_code": "FAKE-016",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 45.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 55.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 40.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 900.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 25.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "01d1f41f-1087-5437-9008-2f0ed87faa28",
+      "outcomes": {
+        "hardness": 52.2,
+        "rebound": 76.0
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "c37409ed-f0b0-5772-ab86-507e8a4f20ed",
+        "formulation_code": "FAKE-017",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 46.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 54.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 41.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 925.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 18.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "9fc761f1-f1e9-53a7-aade-6b1adf205572",
+      "outcomes": {
+        "hardness": 53.14,
+        "rebound": 76.375
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "a8573365-a2cf-5b9d-9529-a0b98836b71b",
+        "formulation_code": "FAKE-018",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 47.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 53.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 43.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 950.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 19.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "b2911e72-fffd-5d7a-b0b4-2c7f868e85f6",
+      "outcomes": {
+        "hardness": 53.44,
+        "rebound": 76.27
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "c7e890ce-422c-5ac9-b177-88a6739c96ce",
+        "formulation_code": "FAKE-019",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 48.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 52.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 44.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 975.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 20.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "515b1c77-e550-5db3-b985-fa653254a178",
+      "outcomes": {
+        "hardness": 53.74,
+        "rebound": 76.165
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "762ecb3f-fbcb-5ba5-906a-f93311f92c02",
+        "formulation_code": "FAKE-020",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 49.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 51.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 46.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1000.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 21.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "9018d9a5-7a03-5c1c-91d6-54e0d45e4904",
+      "outcomes": {
+        "hardness": 54.04,
+        "rebound": 76.06
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "a0c8e9b0-b195-5072-ad3d-747d2bc6873f",
+        "formulation_code": "FAKE-021",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 50.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 50.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 47.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1025.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 22.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "dfbbb7dd-67ec-5225-9de5-0f77b748c301",
+      "outcomes": {
+        "hardness": 54.34,
+        "rebound": 75.955
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "271dd4be-cffb-5194-8f27-adf6ccb4e40d",
+        "formulation_code": "FAKE-022",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 30.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 70.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 49.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1050.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 23.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "2a4cc430-940c-513f-875e-bd3925114f52",
+      "outcomes": {
+        "hardness": 48.76,
+        "rebound": 79.63
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "1862a586-5439-5922-b7e7-e330db1d08c0",
+        "formulation_code": "FAKE-023",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 31.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 69.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 34.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1075.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 24.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "e4759612-aff5-5eff-bee6-018986f3a1c7",
+      "outcomes": {
+        "hardness": 49.06,
+        "rebound": 78.04
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "87c0a43e-c36a-519a-b2c8-cb38522b8bf4",
+        "formulation_code": "FAKE-024",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 32.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 68.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 35.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1100.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 25.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "cfa23abe-2606-52b7-ac7d-6a3cdca3816b",
+      "outcomes": {
+        "hardness": 49.36,
+        "rebound": 77.935
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "6eb18003-6aa6-5a7e-8f1b-c5a80e737009",
+        "formulation_code": "FAKE-025",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 33.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 67.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 37.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1125.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 18.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "dda0fc15-dc30-50a0-b4c4-a41f606a5e09",
+      "outcomes": {
+        "hardness": 50.3,
+        "rebound": 78.31
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "d2994ade-0901-58d5-bb2f-b63183033885",
+        "formulation_code": "FAKE-026",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 34.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 66.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 38.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1150.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 19.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "0e0af54d-fbae-542d-93b5-6b9a6a20d11d",
+      "outcomes": {
+        "hardness": 50.6,
+        "rebound": 78.205
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "4e2f1962-4efb-57d9-9a6e-04a22bbe33e4",
+        "formulation_code": "FAKE-027",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 35.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 65.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 40.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 850.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 20.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "b2712369-74e3-5437-940e-d5ac03f2ab23",
+      "outcomes": {
+        "hardness": 49.6,
+        "rebound": 78.1
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "48f0cc4c-e3b6-59b3-9be3-f7c216eb5a47",
+        "formulation_code": "FAKE-028",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 36.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 64.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 41.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 875.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 21.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "93f28278-e24e-51c9-ba02-1a6361653ee4",
+      "outcomes": {
+        "hardness": 49.9,
+        "rebound": 77.995
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "43c9f112-3e81-503a-a803-a1987967f1dc",
+        "formulation_code": "FAKE-029",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 37.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 63.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 43.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 900.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 22.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "e6107fc9-7354-5d30-a520-ef7b78704126",
+      "outcomes": {
+        "hardness": 50.2,
+        "rebound": 77.89
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "97136955-a1ca-5126-a77b-d54aa37d582c",
+        "formulation_code": "FAKE-030",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 38.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 62.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 44.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 925.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 23.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "9619e1da-2959-565b-9ba6-8b2d7e30ea81",
+      "outcomes": {
+        "hardness": 50.5,
+        "rebound": 77.785
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "f2b352aa-8dae-5511-9340-2ba065550bef",
+        "formulation_code": "FAKE-031",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 39.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 61.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 46.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 950.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 24.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "ff7487f2-6aed-568f-930c-ef3f24d2ddcd",
+      "outcomes": {
+        "hardness": 50.8,
+        "rebound": 77.68
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "0b0f3519-180c-518d-b68c-540f8928beba",
+        "formulation_code": "FAKE-032",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 40.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 60.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 47.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 975.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 25.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "1c2d5ddd-0042-52c5-9e65-b2169a05bc78",
+      "outcomes": {
+        "hardness": 51.1,
+        "rebound": 77.575
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "749d2c31-8fba-566b-a872-f5d2adddf773",
+        "formulation_code": "FAKE-033",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 41.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 59.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 49.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1000.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 18.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "370da0fd-821f-56ad-b590-9b7928dacf77",
+      "outcomes": {
+        "hardness": 52.04,
+        "rebound": 77.95
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "7eed040a-e72a-5a26-af07-e5e31d72fe52",
+        "formulation_code": "FAKE-034",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 42.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 58.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 34.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1025.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 19.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "4d06bf37-0b36-5c48-addc-dd817373fdc6",
+      "outcomes": {
+        "hardness": 52.34,
+        "rebound": 76.36
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "e55134d7-008f-55bd-aa3d-522a4ec22706",
+        "formulation_code": "FAKE-035",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 43.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 57.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 35.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1050.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 20.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "85b01d3b-df97-54f9-991d-7642689c6932",
+      "outcomes": {
+        "hardness": 52.64,
+        "rebound": 76.255
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "d2ca964c-12e6-56bf-9dce-b1f6bf9edbdf",
+        "formulation_code": "FAKE-036",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 44.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 56.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 37.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1075.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 21.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "d8b0f953-38b3-50fb-8e88-266085efd987",
+      "outcomes": {
+        "hardness": 52.94,
+        "rebound": 76.15
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "875fd209-2dce-5f1e-958a-f40679abc2ce",
+        "formulation_code": "FAKE-037",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 45.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 55.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 38.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1100.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 22.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "a7a2751e-1159-58f2-bae8-b3b8d8c6beb6",
+      "outcomes": {
+        "hardness": 53.24,
+        "rebound": 76.045
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "f8b19853-606d-5486-90bb-b9607da7fa1a",
+        "formulation_code": "FAKE-038",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 46.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 54.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 40.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1125.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 23.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "b2281e9f-95a5-582d-8255-71c554790bd7",
+      "outcomes": {
+        "hardness": 53.54,
+        "rebound": 75.94
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "e6668dda-9f23-5f65-963f-b659e5ce9b43",
+        "formulation_code": "FAKE-039",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 47.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 53.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 41.5,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 1150.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 24.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "2d2050ce-0cee-515d-97aa-adf2ce467742",
+      "outcomes": {
+        "hardness": 53.84,
+        "rebound": 75.835
+      }
+    },
+    {
+      "formula": {
+        "formulation_id": "c08f2f49-8103-56d3-a286-e6e9f1090f4b",
+        "formulation_code": "FAKE-040",
+        "version_no": 1,
+        "components": [
+          {
+            "material_id": "083913a0-1240-5656-bc65-5ee896c3030e",
+            "material_code": "FAKE-RESIN",
+            "supplier_id": "ec1823b3-d9a5-52cf-b40e-2b24ae28bdd9",
+            "material_lot_id": null,
+            "percent_composition": 48.0,
+            "basis": "weight_percent"
+          },
+          {
+            "material_id": "92243ede-c7a9-50cc-86dc-5c6e2d5712c3",
+            "material_code": "FAKE-FILLER",
+            "supplier_id": "5012e2c9-c1db-58ce-a41a-72c165f16bb4",
+            "material_lot_id": null,
+            "percent_composition": 52.0,
+            "basis": "weight_percent"
+          }
+        ]
+      },
+      "machine_id": "492de69e-f592-54d0-8803-7dcf4eb9cac6",
+      "machine_code": "BOY-125E",
+      "mold_id": "571202c8-3df1-5b63-9779-5e413a8f4838",
+      "mold_code": "BOY-125E-MOLD",
+      "process_parameters": [
+        {
+          "parameter_definition_id": "ee169beb-8cc8-5e5d-a037-e3286139ab82",
+          "parameter_key": "injection.speed",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 43.0,
+          "value_text": null,
+          "unit": "mm/s"
+        },
+        {
+          "parameter_definition_id": "a7b6e047-8af9-5a1d-ba3a-3a2f4df29a59",
+          "parameter_key": "injection.pressure",
+          "position_type": "stage",
+          "position_index": 1,
+          "position_label": "Stage 1",
+          "value_numeric": 850.0,
+          "value_text": null,
+          "unit": "psi"
+        },
+        {
+          "parameter_definition_id": "5fbd7305-7c9c-5e2d-980a-0438c9cf3967",
+          "parameter_key": "cycle.cooling_time",
+          "position_type": "single",
+          "position_index": null,
+          "position_label": null,
+          "value_numeric": 25.0,
+          "value_text": null,
+          "unit": "sec"
+        }
+      ],
+      "environment_observations": [],
+      "process": {},
+      "production_run_id": "7c0c678b-00e5-5315-a3a6-6a51cb85b605",
+      "outcomes": {
+        "hardness": 52.84,
+        "rebound": 75.73
+      }
+    }
+  ],
+  "random_seed": 42
+}

@@ -1,0 +1,7 @@
+.env
+.models/
+.pytest_cache/
+.venv/
+catboost_info/
+__pycache__/
+*.py[cod]

@@ -2,6 +2,8 @@ import { config, initializeConfig } from '../config/env';
 import { createDatabaseClient } from './migration-runner';
 
 const TABLES_IN_DELETE_ORDER = [
+  'prediction_result_metrics',
+  'prediction_results',
   'generated_reports',
   'score_report_metrics',
   'score_reports',

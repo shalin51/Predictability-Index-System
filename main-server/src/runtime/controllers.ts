@@ -50,6 +50,11 @@ import { createMaterialCatalogController } from '../modules/materials/materialCa
 import { AuthController } from '../modules/auth/auth.controller';
 import { AuthService } from '../modules/auth/auth.service';
 import { createDataTransferController } from '../modules/data-transfer/dataTransfer.module';
+import { config } from '../config/env';
+import { PredictionClient } from '../modules/predictions/prediction.client';
+import { PredictionController } from '../modules/predictions/prediction.controller';
+import { PredictionRepository } from '../modules/predictions/prediction.repository';
+import { PredictionService } from '../modules/predictions/prediction.service';
 
 const auditService = new AuditService();
 const libraryRepo = new LibraryRepository();
@@ -81,4 +86,12 @@ export const controllers = {
   materialImports: createMaterialImportController(),
   materials: createMaterialCatalogController(),
   dataTransfer: createDataTransferController(),
+  predictions: new PredictionController(new PredictionService(
+    new PredictionRepository(),
+    new PredictionClient(config.prediction.baseUrl, config.prediction.timeoutMillis),
+    config.prediction.modelId,
+    config.prediction.modelLabel,
+    auditService,
+    config.prediction.staleExecutionTimeoutMillis
+  )),
 };

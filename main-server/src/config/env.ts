@@ -36,6 +36,13 @@ interface AppConfig {
     storageConnectionString: string;
     storageContainer: string;
   };
+  prediction: {
+    baseUrl: string;
+    modelLabel: string;
+    modelId: string;
+    timeoutMillis: number;
+    staleExecutionTimeoutMillis: number;
+  };
   db: {
     authMode: DatabaseAuthMode;
     host: string;
@@ -138,6 +145,13 @@ function readProcessConfig(): AppConfig {
       storageConnectionString: process.env.SETUP_IMPORT_STORAGE_CONNECTION_STRING ?? process.env.AzureWebJobsStorage ?? '',
       storageContainer: process.env.SETUP_IMPORT_STORAGE_CONTAINER ?? 'process-setup-imports',
     },
+    prediction: {
+      baseUrl: process.env.PREDICTION_SERVER_URL ?? 'http://127.0.0.1:4100',
+      modelLabel: process.env.PREDICTION_MODEL_LABEL ?? 'Prediction model',
+      modelId: process.env.PREDICTION_MODEL_ID ?? '',
+      timeoutMillis: parseIntegerEnv(process.env.PREDICTION_TIMEOUT_MS, 30_000),
+      staleExecutionTimeoutMillis: parseIntegerEnv(process.env.PREDICTION_STALE_TIMEOUT_MS, 15 * 60_000),
+    },
     db: {
       authMode: parseAuthMode(process.env.DB_AUTH_MODE),
       host: process.env.DB_HOST ?? 'localhost',
@@ -174,6 +188,7 @@ function assignConfig(target: AppConfig, source: AppConfig): void {
   target.logLevel = source.logLevel;
   Object.assign(target.auth, source.auth);
   Object.assign(target.setupImports, source.setupImports);
+  Object.assign(target.prediction, source.prediction);
   Object.assign(target.db, source.db);
 }
 
