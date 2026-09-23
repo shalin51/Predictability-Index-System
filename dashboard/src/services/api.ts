@@ -666,7 +666,7 @@ export interface DashboardOverview {
 
 async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T> {
   const headers = new Headers(options?.headers);
-  const accessToken = getAccessToken();
+  const accessToken = await getAccessToken();
   if (accessToken) {
     headers.set('Authorization', `Bearer ${accessToken}`);
   }
@@ -686,7 +686,7 @@ async function fetchJSON<T>(endpoint: string, options?: RequestInit): Promise<T>
 
 export async function downloadDataTransferWorkbook(resource: string, mode: 'export' | 'template'): Promise<void> {
   const headers = new Headers();
-  const accessToken = getAccessToken();
+  const accessToken = await getAccessToken();
   if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
   const response = await fetch(`${env.apiBaseUrl}/data-transfer/${encodeURIComponent(resource)}/${mode}`, { headers });
   if (response.status === 401) clearAuthSession();
@@ -1079,7 +1079,7 @@ export function reportExportUrl(reportId: string, format: 'csv' | 'pdf' | 'xlsx'
 
 export async function downloadDatabaseWorkbook(category?: string): Promise<void> {
   const headers = new Headers();
-  const accessToken = getAccessToken();
+  const accessToken = await getAccessToken();
   if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
   const query = category ? `?category=${encodeURIComponent(category)}` : '';
   const response = await fetch(`${env.apiBaseUrl}/reports/export/database/xlsx${query}`, { headers });

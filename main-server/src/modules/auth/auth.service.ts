@@ -16,6 +16,7 @@ export interface LoginResult {
 
 export class AuthService {
   login(userName: string, password: string): LoginResult | null {
+    if (config.auth.mode === 'entra') return null;
     if (!config.auth.userName || !config.auth.userPassword || !config.auth.jwtSecret) {
       throw new Error('Authentication is not configured');
     }

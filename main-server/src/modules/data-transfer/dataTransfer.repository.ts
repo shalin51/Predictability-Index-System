@@ -216,12 +216,14 @@ export class DataTransferRepository {
       const result = this.result(benchmarks.length + properties.length);
       for (const row of benchmarks) {
         const saved = await client.query<{ inserted: boolean }>(
-          `INSERT INTO benchmark_profiles (benchmark_code, benchmark_name, profile_version, ball_brand, ball_model, status, notes)
-           VALUES ($1,$2,$3,$4,$5,$6::record_status,$7)
+          `INSERT INTO benchmark_profiles (benchmark_code, benchmark_name, profile_version, ball_brand, ball_model, test_date, report_number, status, notes)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8::record_status,$9)
            ON CONFLICT (benchmark_code, profile_version) DO UPDATE SET benchmark_name=EXCLUDED.benchmark_name,
-             ball_brand=EXCLUDED.ball_brand, ball_model=EXCLUDED.ball_model, status=EXCLUDED.status, notes=EXCLUDED.notes, updated_at=now()
+             ball_brand=EXCLUDED.ball_brand, ball_model=EXCLUDED.ball_model, test_date=EXCLUDED.test_date,
+             report_number=EXCLUDED.report_number, status=EXCLUDED.status, notes=EXCLUDED.notes, updated_at=now()
            RETURNING (xmax = 0) AS inserted`,
-          [row['benchmarkCode'], row['benchmarkName'], row['profileVersion'], row['ballBrand'], row['ballModel'], row['status'] || 'active', value(row, 'notes')]
+          [row['benchmarkCode'], row['benchmarkName'], row['profileVersion'], row['ballBrand'], row['ballModel'],
+            value(row, 'testDate'), value(row, 'reportNumber'), row['status'] || 'active', value(row, 'notes')]
         );
         if (saved.rows[0]?.inserted) result.created += 1; else result.updated += 1;
       }
@@ -558,7 +560,7 @@ export class DataTransferRepository {
   private async exportBenchmarks(): Promise<TransferRows> {
     return {
       Benchmarks: await this.rows(`SELECT benchmark_code AS "benchmarkCode", benchmark_name AS "benchmarkName", profile_version AS "profileVersion",
-        ball_brand AS "ballBrand", ball_model AS "ballModel", status::text AS status, notes
+        ball_brand AS "ballBrand", ball_model AS "ballModel", test_date AS "testDate", report_number AS "reportNumber", status::text AS status, notes
         FROM benchmark_profiles ORDER BY benchmark_code, profile_version`),
       'Benchmark Properties': await this.rows(`SELECT bp.benchmark_code AS "benchmarkCode", bp.profile_version AS "profileVersion",
         COALESCE(md.metric_key, bmt.metric_name) AS "metricKey", bmt.target_mean::float AS "value"

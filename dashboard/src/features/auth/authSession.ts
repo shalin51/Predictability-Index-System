@@ -1,4 +1,5 @@
 import { env } from '../../config/env';
+import { currentEntraAccount, entraEnabled, getEntraAccessToken, signInEntra, signOutEntra } from './entraAuth';
 
 const STORAGE_KEY = 'predictability-index-auth';
 export const AUTH_CHANGED_EVENT = 'predictability-index-auth-changed';
@@ -14,6 +15,10 @@ function emitAuthChanged(): void {
 }
 
 export function getAuthSession(): AuthSession | null {
+  if (entraEnabled) {
+    const account = currentEntraAccount();
+    return account ? { userName: account.name ?? account.username, token: '', expiresAt: '' } : null;
+  }
   const raw = window.sessionStorage.getItem(STORAGE_KEY);
   if (!raw) return null;
 
@@ -35,16 +40,27 @@ export function getAuthSession(): AuthSession | null {
   }
 }
 
-export function getAccessToken(): string | null {
+export async function getAccessToken(): Promise<string | null> {
+  if (entraEnabled) return getEntraAccessToken();
   return getAuthSession()?.token ?? null;
 }
 
 export function clearAuthSession(): void {
+  if (entraEnabled) {
+    void signOutEntra().then(emitAuthChanged);
+    return;
+  }
   window.sessionStorage.removeItem(STORAGE_KEY);
   emitAuthChanged();
 }
 
 export async function login(userName: string, password: string): Promise<AuthSession> {
+  if (entraEnabled) {
+    const account = await signInEntra();
+    const session = { userName: account.name ?? account.username, token: '', expiresAt: '' };
+    emitAuthChanged();
+    return session;
+  }
   const response = await fetch(`${env.apiBaseUrl}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

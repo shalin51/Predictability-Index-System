@@ -16,7 +16,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@amfpi/shared': resolve(__dirname, '../../packages/shared/src/index.ts'),
+      '@amfpi/shared': resolve(__dirname, '../packages/shared/src/index.ts'),
     },
   },
 });

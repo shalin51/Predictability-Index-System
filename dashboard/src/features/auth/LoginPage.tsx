@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Button } from '../../components/ui/Button';
 import { MessageBanner } from '../../components/ui/Page';
 import { login, type AuthSession } from './authSession';
+import { entraEnabled } from './entraAuth';
 
 interface LoginPageProps {
   onAuthenticated: (session: AuthSession) => void;
@@ -27,6 +28,18 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
     }
   };
 
+  const handleMicrosoftSignIn = async () => {
+    setError('');
+    setSubmitting(true);
+    try {
+      onAuthenticated(await login('', ''));
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Unable to sign in');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   return (
     <main className="auth-page">
       <section aria-labelledby="auth-title" className="auth-card">
@@ -34,10 +47,15 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
         <div>
           <div className="auth-eyebrow">Predictability Index</div>
           <h1 id="auth-title">Sign in</h1>
-          <p>Use your dashboard credentials to continue.</p>
+          <p>{entraEnabled ? 'Use your Microsoft work account to continue.' : 'Use your dashboard credentials to continue.'}</p>
         </div>
 
-        <form className="auth-form" onSubmit={(event) => void handleSubmit(event)}>
+        {entraEnabled ? <div className="auth-form">
+          {error && <MessageBanner tone="danger">{error}</MessageBanner>}
+          <Button disabled={submitting} onClick={() => void handleMicrosoftSignIn()} type="button">
+            {submitting ? 'Signing in…' : 'Sign in with Microsoft'}
+          </Button>
+        </div> : <form className="auth-form" onSubmit={(event) => void handleSubmit(event)}>
           <label>
             <span>Username *</span>
             <input
@@ -66,7 +84,7 @@ export function LoginPage({ onAuthenticated }: LoginPageProps) {
           <Button disabled={submitting} type="submit">
             {submitting ? 'Signing in…' : 'Sign in'}
           </Button>
-        </form>
+        </form>}
       </section>
     </main>
   );

@@ -1,5 +1,6 @@
 import { getPool } from '../../../infrastructure/database/pg-pool';
 import type { LabTestingQueueQuery, LabTestingRecord } from '../labTesting.types';
+import { LAB_TEST_METRIC_KEYS } from '@amfpi/shared';
 
 export class LabTestingRepository {
   async sampleCount(runId: string): Promise<number> {
@@ -87,16 +88,7 @@ export class LabTestingRepository {
        WHERE md.status = 'active'
          AND md.metric_key = ANY($1::text[])
        ORDER BY array_position($1::text[], md.metric_key)` ,
-      [[
-        'weight',
-        'compression',
-        'stretch',
-        'full_stretch_max',
-        'hardness',
-        'wall_thickness',
-        'diameter',
-        'drop_test',
-      ]]
+      [LAB_TEST_METRIC_KEYS]
     );
     return result.rows as LabTestingRecord[];
   }

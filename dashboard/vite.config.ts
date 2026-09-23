@@ -7,6 +7,14 @@ export default defineConfig(({ mode }) => {
 
   return {
     plugins: [react()],
+    build: {
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'index.html'),
+          redirect: resolve(__dirname, 'redirect.html'),
+        },
+      },
+    },
     resolve: {
       alias: {
         '@amfpi/shared': resolve(__dirname, '../packages/shared/src/index.ts'),

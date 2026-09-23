@@ -1,6 +1,8 @@
+import { Fragment } from 'react';
 import type { LabMetric, LabResultRecord, SampleRecord } from '../../../services/api';
 import { LAB_TEST_METRIC_KEYS, labStyles } from '../labTestingUi';
 import { SampleResultInput } from './SampleResultInput';
+import { DropTestResultCells } from './DropTestResultCells';
 
 export function LabResultGrid({
   metrics,
@@ -26,7 +28,10 @@ export function LabResultGrid({
           <tr>
             {!hideSampleColumn && <th style={labStyles.th}>Sample</th>}
             {ordered.map((metric) => (
-              <th key={metric.id} style={labStyles.th}>{metric.displayName}<br /><span style={labStyles.muted}>{metric.defaultUnit ?? ''}</span></th>
+              <Fragment key={metric.id}>
+                <th style={labStyles.th}>{metric.displayName}<br /><span style={labStyles.muted}>{metric.metricKey === 'drop_test' ? 'cm' : metric.defaultUnit ?? ''}</span></th>
+                {metric.metricKey === 'drop_test' && <th style={labStyles.th}>Drop Test (in)<br /><span style={labStyles.muted}>Calculated</span></th>}
+              </Fragment>
             ))}
           </tr>
         </thead>
@@ -36,9 +41,17 @@ export function LabResultGrid({
               {!hideSampleColumn && <td style={labStyles.td}>{sample.sampleCode}</td>}
               {ordered.map((metric) => {
                 const result = results.find((item) => item.sampleId === sample.id && item.metricId === metric.id);
+                if (metric.metricKey === 'drop_test') {
+                  return <DropTestResultCells key={metric.id} metric={metric} onSave={(value) => onSave(sample, metric, value)} result={result} sample={sample} />;
+                }
                 return (
                   <td key={metric.id} style={labStyles.td}>
-                    <SampleResultInput metric={metric} onSave={(value) => onSave(sample, metric, value)} result={result} sample={sample} />
+                    {metric.metricKey === 'cor_78in' ? (
+                      <div>
+                        <strong>{result?.valueNumeric == null ? '—' : Number(result.valueNumeric).toFixed(3)}</strong>
+                        <div style={labStyles.muted}>Calculated from rebound height: √(H₂ ÷ 78)</div>
+                      </div>
+                    ) : <SampleResultInput metric={metric} onSave={(value) => onSave(sample, metric, value)} result={result} sample={sample} />}
                   </td>
                 );
               })}

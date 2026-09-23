@@ -5,7 +5,7 @@ import { MessageBanner } from '../../components/ui/Page';
 import { updateLibraryRecord, type LibraryRecord } from '../../services/api';
 import { spacing } from '../../theme/tokens';
 
-const metricKeys = ['weight', 'compression', 'stretch', 'full_stretch_max', 'hardness', 'wall_thickness', 'diameter', 'drop_test'];
+import { LAB_TEST_METRIC_KEYS } from '@amfpi/shared';
 
 export function ScoringProfileWeightsEditor({ onSaved, options, weights }: { onSaved: (weight: LibraryRecord) => void; options: Record<string, LibraryRecord[]>; weights: LibraryRecord[] }) {
   const [values, setValues] = useState<Record<string, string>>({});
@@ -13,7 +13,7 @@ export function ScoringProfileWeightsEditor({ onSaved, options, weights }: { onS
   const [error, setError] = useState('');
   const metrics = useMemo(() => {
     const byKey = new Map((options.metrics ?? []).map((metric) => [String(metric.code), metric]));
-    return metricKeys.map((key) => byKey.get(key)).filter((metric): metric is LibraryRecord => Boolean(metric));
+    return LAB_TEST_METRIC_KEYS.map((key) => byKey.get(key)).filter((metric): metric is LibraryRecord => Boolean(metric));
   }, [options.metrics]);
 
   useEffect(() => setValues(Object.fromEntries(weights.map((weight) => [String(weight.metricId), String(weight.weight ?? '')]))), [weights]);

@@ -8,11 +8,7 @@ import {
   type LibraryRecord,
 } from '../../services/api';
 import { spacing } from '../../theme/tokens';
-
-const benchmarkMetricKeys = [
-  'weight', 'compression', 'stretch', 'full_stretch_max',
-  'hardness', 'wall_thickness', 'diameter', 'drop_test',
-] as const;
+import { LAB_TEST_METRIC_KEYS } from '@amfpi/shared';
 
 export function BenchmarkPropertiesEditor({
   benchmarkProfileId,
@@ -30,7 +26,7 @@ export function BenchmarkPropertiesEditor({
   const [values, setValues] = useState<Record<string, string>>({});
   const metrics = useMemo(() => {
     const byKey = new Map((options.metrics ?? []).map((metric) => [String(metric.code), metric]));
-    return benchmarkMetricKeys.map((key) => byKey.get(key)).filter((metric): metric is LibraryRecord => Boolean(metric));
+    return LAB_TEST_METRIC_KEYS.map((key) => byKey.get(key)).filter((metric): metric is LibraryRecord => Boolean(metric));
   }, [options.metrics]);
 
   useEffect(() => {

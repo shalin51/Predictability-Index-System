@@ -4,46 +4,33 @@ const METRIC_MAPPINGS = [
   { sourceLabel: 'Weight', metricKey: 'weight', unit: 'g', methodCode: 'WEIGHT_STANDARD' },
   {
     sourceLabel: 'Compression @ 1/4 inch',
-    metricKey: 'compression_force_025_in',
-    displayName: 'Compression Force @ 0.25 in',
-    category: 'performance',
+    metricKey: 'compression',
     unit: 'lbf',
-    methodCode: 'PICKLEBALL_COMPRESSION_FORCE_025IN_LEGACY',
-    methodName: 'Pickleball Compression Force at 0.25 in — Legacy Workbook',
-    sortOrder: 81,
+    methodCode: 'COMPRESSION_STANDARD',
   },
   {
     sourceLabel: 'Stretch @ 1/4 inch',
-    metricKey: 'stretch_force_025_in',
-    displayName: 'Stretch Force @ 0.25 in',
-    category: 'performance',
+    metricKey: 'stretch',
     unit: 'lbf',
-    methodCode: 'PICKLEBALL_STRETCH_FORCE_025IN_LEGACY',
-    methodName: 'Pickleball Stretch Force at 0.25 in — Legacy Workbook',
-    sortOrder: 82,
+    methodCode: 'STRETCH_STANDARD',
+    methodName: 'Stretch Standard Method',
   },
   {
     sourceLabel: 'Full Stretch max',
-    metricKey: 'full_stretch_max_force',
-    displayName: 'Full Stretch Maximum Force',
-    category: 'performance',
+    metricKey: 'full_stretch_max',
     unit: 'lbf',
-    methodCode: 'PICKLEBALL_FULL_STRETCH_MAX_LEGACY',
-    methodName: 'Pickleball Full Stretch Maximum — Legacy Workbook',
-    sortOrder: 83,
+    methodCode: 'FULL_STRETCH_MAX_STANDARD',
+    methodName: 'Full Stretch Maximum Standard Method',
   },
   { sourceLabel: 'Hardness', metricKey: 'hardness', unit: 'Shore D', methodCode: 'HARDNESS_STANDARD' },
   { sourceLabel: 'Wall Thickness', metricKey: 'wall_thickness', unit: 'mm', methodCode: 'WALL_THICKNESS_STANDARD' },
   { sourceLabel: 'Diameter', metricKey: 'diameter', unit: 'mm', methodCode: 'DIAMETER_STANDARD' },
   {
     sourceLabel: 'Drop Test',
-    metricKey: 'drop_test_legacy',
-    displayName: 'Drop Test — Legacy Reading',
-    category: 'performance',
+    metricKey: 'drop_test',
     unit: 'in',
-    methodCode: 'PICKLEBALL_DROP_TEST_LEGACY',
-    methodName: 'Pickleball Drop Test — Legacy Workbook',
-    sortOrder: 84,
+    methodCode: 'DROP_TEST_STANDARD',
+    methodName: 'Drop Test Standard Method',
   },
 ];
 
@@ -164,19 +151,22 @@ function parseSheet(sheetName, sheet, XLSX) {
 function parseWorkbook(workbookPath, XLSX) {
   const workbook = XLSX.readFile(workbookPath, { cellFormula: true });
   const parsed = workbook.SheetNames.map((sheetName) => parseSheet(sheetName, workbook.Sheets[sheetName], XLSX));
-  const formulations = parsed.filter((sheet) => sheet.components);
+  const formulations = parsed.filter((sheet) => sheet.components && sheet.results.length > 0);
+  const benchmarks = parsed.filter((sheet) => !sheet.components && sheet.results.length > 0);
   const skipped = parsed
-    .filter((sheet) => !sheet.components)
+    .filter((sheet) => sheet.results.length === 0)
     .map((sheet) => ({ sheetName: sheet.sheetName, reason: sheet.reason, resultCount: sheet.results.length }));
   return {
     workbookPath,
     workbookName: path.basename(workbookPath),
     formulations,
+    benchmarks,
     skipped,
     warnings: parsed.flatMap((sheet) => sheet.warnings),
     totals: {
       sheets: parsed.length,
       formulations: formulations.length,
+      benchmarks: benchmarks.length,
       samples: formulations.reduce((sum, sheet) => sum + sheet.sampleColumns.length, 0),
       results: formulations.reduce((sum, sheet) => sum + sheet.results.length, 0),
     },

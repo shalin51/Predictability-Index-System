@@ -7,7 +7,9 @@ const XLSX = require('xlsx');
 const { METRIC_MAPPINGS, normalizeKey, normalizeLabel, parseWorkbook } = require('./lib/pickleball-workbook.cjs');
 
 const DEFAULT_WORKBOOK = 'D:\\CCP\\Pickleball Testing Results Amerilabs.xlsx';
-const DEFAULT_REFERENCE_RUN = 'KINGFA-1789-RUN-20260806';
+const DEFAULT_PROFILE_CODE = 'BOY-125E-KINGFA-HR';
+const DEFAULT_MOLD_CODE = 'BOY-125E-MOLD';
+const DEFAULT_DATE_PRODUCED = '2026-08-06';
 const IMPORT_ACTOR = 'codex-dev-amerilabs-import';
 const LEGACY_SUPPLIER = 'Unspecified Supplier — Amerilabs Workbook';
 
@@ -52,17 +54,30 @@ async function audit(client, tableName, recordId, action, oldValues, newValues) 
   );
 }
 
-async function referenceRun(client, runCode) {
+async function productionContext(client, profileCode, moldCode) {
   const result = await client.query(
-    `SELECT pr.*, f.formulation_code
-     FROM production_runs pr
-     JOIN formulations f ON f.id = pr.formulation_id
-     WHERE pr.run_code = $1`,
-    [runCode]
+    `SELECT msp.id AS machine_setup_profile_id, msp.machine_id, msp.parameters,
+            mo.id AS mold_id
+     FROM machine_setup_profiles msp
+     JOIN molds mo ON mo.mold_code = $2 AND mo.status = 'active'
+     WHERE msp.profile_code = $1 AND msp.status = 'active'`,
+    [profileCode, moldCode]
   );
-  if (result.rowCount !== 1) throw new Error(`Expected one reference production run with code ${runCode}`);
-  if (!result.rows[0].process_setup_revision_id) throw new Error(`Reference run ${runCode} has no process setup revision`);
-  return result.rows[0];
+  if (result.rowCount !== 1) throw new Error(`Expected one active setup profile ${profileCode} and mold ${moldCode}`);
+  const row = result.rows[0];
+  const parameters = Array.isArray(row.parameters) ? row.parameters : [];
+  const value = (key, positionLabel) => {
+    const item = parameters.find((entry) => entry.key === key && entry.positionLabel === positionLabel);
+    const numeric = Number(item?.value);
+    return Number.isFinite(numeric) ? numeric : null;
+  };
+  return {
+    ...row,
+    injectionPressure: value('injection.pressure', 'Stage 1'),
+    meltTemperature: value('barrel.temperature', 'Front Zone') ?? value('barrel.temperature', 'Nozzle'),
+    coolingTime: value('cycle.cooling_time', 'Single'),
+    cycleTime: value('cycle.total_time', 'Single'),
+  };
 }
 
 async function ensureLegacySupplier(client) {
@@ -149,6 +164,7 @@ async function ensureFormulation(client, sheet, componentRecords, workbookName, 
      LIMIT 1`,
     [sheet.sheetName]
   );
+  const formulationCode = sheet.sheetName.toUpperCase();
   const sourceNote = `Imported from ${workbookName}; worksheet ${sheet.sheetName}.`;
   let formulationId;
   let action;
@@ -157,18 +173,19 @@ async function ensureFormulation(client, sheet, componentRecords, workbookName, 
     action = 'UPDATE';
     await client.query(
       `UPDATE formulations
-       SET status = 'testing', notes = COALESCE(NULLIF(notes, ''), $2), updated_at = now()
+       SET formulation_code = $2, formulation_name = $3, status = 'approved',
+           approved_by = $4, notes = COALESCE(NULLIF(notes, ''), $5), updated_at = now()
        WHERE id = $1`,
-      [formulationId, sourceNote]
+      [formulationId, formulationCode, sheet.sheetName, IMPORT_ACTOR, sourceNote]
     );
     counters.formulationsUpdated += 1;
   } else {
     const inserted = await client.query(
       `INSERT INTO formulations
-        (formulation_code, version_no, status, notes)
-       VALUES ($1, 1, 'testing', $2)
+        (formulation_code, formulation_name, version_no, status, notes, approved_by)
+       VALUES ($1, $2, 1, 'approved', $3, $4)
        RETURNING id`,
-      [sheet.sheetName, sourceNote]
+      [formulationCode, sheet.sheetName, sourceNote, IMPORT_ACTOR]
     );
     formulationId = inserted.rows[0].id;
     action = 'INSERT';
@@ -196,7 +213,7 @@ async function ensureFormulation(client, sheet, componentRecords, workbookName, 
   }
   await audit(client, 'formulations', formulationId, action, existing.rows[0] ?? null, {
     formulationCode: sheet.sheetName,
-    status: 'testing',
+    status: 'approved',
     sourceFile: workbookName,
     components: componentRecords.map(({ component, material }) => ({
       materialId: material.id,
@@ -207,98 +224,21 @@ async function ensureFormulation(client, sheet, componentRecords, workbookName, 
   return formulationId;
 }
 
-async function cloneProcessSetup(client, sourceRun, formulationId, counters) {
-  if (formulationId === sourceRun.formulation_id) return sourceRun.process_setup_revision_id;
-  const source = await client.query('SELECT * FROM process_setup_revisions WHERE id = $1', [sourceRun.process_setup_revision_id]);
-  if (source.rowCount !== 1) throw new Error(`Reference process setup revision not found: ${sourceRun.process_setup_revision_id}`);
-  const sourceRevision = source.rows[0];
-  const revisionNo = new Date(sourceRun.date_produced).toISOString().slice(0, 10).replaceAll('-', '');
-  const existing = await client.query(
-    `SELECT id FROM process_setup_revisions
-     WHERE machine_id = $1 AND mold_id = $2 AND formulation_id = $3 AND revision_no = $4`,
-    [sourceRevision.machine_id, sourceRevision.mold_id, formulationId, revisionNo]
-  );
-  let revisionId;
-  if (existing.rowCount) {
-    revisionId = existing.rows[0].id;
-    counters.setupRevisionsUpdated += 1;
-  } else {
-    const setupHash = crypto.createHash('sha256').update(`${sourceRevision.setup_hash}:${formulationId}`).digest('hex');
-    const inserted = await client.query(
-      `INSERT INTO process_setup_revisions
-        (machine_id, mold_id, formulation_id, revision_no, status, setup_hash,
-         hot_runner_manufacturer, hot_runner_controller_model, hot_runner_zone_count,
-         approved_by_display, approved_by_actor, document_approval_date, approved_at, source_import_id)
-       VALUES ($1,$2,$3,$4,'approved',$5,$6,$7,$8,$9,$10,$11,$12,$13)
-       RETURNING id`,
-      [
-        sourceRevision.machine_id,
-        sourceRevision.mold_id,
-        formulationId,
-        revisionNo,
-        setupHash,
-        sourceRevision.hot_runner_manufacturer,
-        sourceRevision.hot_runner_controller_model,
-        sourceRevision.hot_runner_zone_count,
-        sourceRevision.approved_by_display,
-        sourceRevision.approved_by_actor,
-        sourceRevision.document_approval_date,
-        sourceRevision.approved_at,
-        sourceRevision.source_import_id,
-      ]
-    );
-    revisionId = inserted.rows[0].id;
-    counters.setupRevisionsCreated += 1;
-    await audit(client, 'process_setup_revisions', revisionId, 'INSERT', null, {
-      copiedFromRevisionId: sourceRun.process_setup_revision_id,
-      formulationId,
-    });
-  }
-
-  await client.query('DELETE FROM process_setup_revision_parameters WHERE process_setup_revision_id = $1', [revisionId]);
-  await client.query(
-    `INSERT INTO process_setup_revision_parameters
-      (process_setup_revision_id, parameter_definition_id, position_type, position_index, position_label,
-       value_numeric, value_text, value_date, unit, tolerance_min, tolerance_max, notes, sort_order)
-     SELECT $1, parameter_definition_id, position_type, position_index, position_label,
-            value_numeric, value_text, value_date, unit, tolerance_min, tolerance_max, notes, sort_order
-     FROM process_setup_revision_parameters
-     WHERE process_setup_revision_id = $2`,
-    [revisionId, sourceRun.process_setup_revision_id]
-  );
-  await client.query('DELETE FROM process_setup_revision_log_entries WHERE process_setup_revision_id = $1', [revisionId]);
-  await client.query(
-    `INSERT INTO process_setup_revision_log_entries
-      (process_setup_revision_id, revision_no, revision_date, changed_by, approved_by,
-       change_description, machine_status, sort_order)
-     SELECT $1, revision_no, revision_date, changed_by, approved_by,
-            change_description, machine_status, sort_order
-     FROM process_setup_revision_log_entries
-     WHERE process_setup_revision_id = $2`,
-    [revisionId, sourceRun.process_setup_revision_id]
-  );
-  return revisionId;
-}
-
-async function ensureRun(client, sourceRun, formulationId, revisionId, sheetName, counters) {
-  if (formulationId === sourceRun.formulation_id) return { id: sourceRun.id, runCode: sourceRun.run_code };
-  const runCode = datedRunCode(sheetName, sourceRun.date_produced);
+async function ensureRun(client, context, formulationId, sheetName, dateProduced, counters) {
+  const runCode = datedRunCode(sheetName, dateProduced);
   const existing = await client.query('SELECT id FROM production_runs WHERE run_code = $1', [runCode]);
   const result = await client.query(
     `INSERT INTO production_runs
-      (run_code, formulation_id, date_produced, machine_id, mold_id, process_setup_revision_id,
+      (run_code, formulation_id, date_produced, machine_id, machine_setup_profile_id, mold_id,
        job_name, part_number, operator_name, shift_code, injection_pressure, injection_pressure_unit,
        melt_temperature, melt_temperature_unit, cooling_time, cooling_time_unit, cycle_time,
        cycle_time_unit, cure_hours_before_test, status)
-     SELECT $1, $2, date_produced, machine_id, mold_id, $3,
-            $4, $5, operator_name, shift_code, injection_pressure, injection_pressure_unit,
-            melt_temperature, melt_temperature_unit, cooling_time, cooling_time_unit, cycle_time,
-            cycle_time_unit, cure_hours_before_test, 'testing'
-     FROM production_runs WHERE id = $6
+     VALUES ($1, $2, $3::date, $4, $5, $6, $7, $8, $9, $10, $11, 'psi',
+             $12, 'F', $13, 'sec', $14, 'sec', 72, 'testing')
      ON CONFLICT (run_code) DO UPDATE SET
        formulation_id = EXCLUDED.formulation_id, date_produced = EXCLUDED.date_produced,
        machine_id = EXCLUDED.machine_id, mold_id = EXCLUDED.mold_id,
-       process_setup_revision_id = EXCLUDED.process_setup_revision_id, job_name = EXCLUDED.job_name,
+       machine_setup_profile_id = EXCLUDED.machine_setup_profile_id, job_name = EXCLUDED.job_name,
        part_number = EXCLUDED.part_number, operator_name = EXCLUDED.operator_name,
        shift_code = EXCLUDED.shift_code, injection_pressure = EXCLUDED.injection_pressure,
        injection_pressure_unit = EXCLUDED.injection_pressure_unit,
@@ -307,42 +247,19 @@ async function ensureRun(client, sourceRun, formulationId, revisionId, sheetName
        cycle_time = EXCLUDED.cycle_time, cycle_time_unit = EXCLUDED.cycle_time_unit,
        cure_hours_before_test = EXCLUDED.cure_hours_before_test, status = 'testing', updated_at = now()
      RETURNING id`,
-    [runCode, formulationId, revisionId, `${sheetName} Pickleball Testing`, sheetName, sourceRun.id]
+    [
+      runCode, formulationId, dateProduced, context.machine_id, context.machine_setup_profile_id,
+      context.mold_id, `${sheetName} Pickleball Testing`, sheetName, IMPORT_ACTOR, 'DEV',
+      context.injectionPressure, context.meltTemperature, context.coolingTime, context.cycleTime,
+    ]
   );
   const runId = result.rows[0].id;
   if (existing.rowCount) counters.runsUpdated += 1;
   else {
     counters.runsCreated += 1;
-    await audit(client, 'production_runs', runId, 'INSERT', null, { runCode, copiedFromRunId: sourceRun.id, formulationId });
+    await audit(client, 'production_runs', runId, 'INSERT', null, { runCode, formulationId, setupProfileId: context.machine_setup_profile_id });
   }
   return { id: runId, runCode };
-}
-
-async function cloneRunProcessValues(client, sourceRun, targetRunId, targetRevisionId) {
-  if (targetRunId === sourceRun.id) return 0;
-  await client.query('DELETE FROM production_run_process_values WHERE production_run_id = $1', [targetRunId]);
-  const copied = await client.query(
-    `INSERT INTO production_run_process_values
-      (production_run_id, setup_parameter_id, parameter_definition_id, position_type, position_index,
-       position_label, setpoint_numeric, setpoint_text, setpoint_date, actual_numeric, actual_text,
-       actual_date, unit, tolerance_min, tolerance_max, notes, source_import_id)
-     SELECT $1, target_parameter.id, source_value.parameter_definition_id, source_value.position_type,
-            source_value.position_index, source_value.position_label, source_value.setpoint_numeric,
-            source_value.setpoint_text, source_value.setpoint_date, source_value.actual_numeric,
-            source_value.actual_text, source_value.actual_date, source_value.unit,
-            source_value.tolerance_min, source_value.tolerance_max, source_value.notes,
-            source_value.source_import_id
-     FROM production_run_process_values source_value
-     LEFT JOIN process_setup_revision_parameters target_parameter
-       ON target_parameter.process_setup_revision_id = $2
-      AND target_parameter.parameter_definition_id = source_value.parameter_definition_id
-      AND target_parameter.position_type = source_value.position_type
-      AND target_parameter.position_index IS NOT DISTINCT FROM source_value.position_index
-      AND target_parameter.position_label IS NOT DISTINCT FROM source_value.position_label
-     WHERE source_value.production_run_id = $3`,
-    [targetRunId, targetRevisionId, sourceRun.id]
-  );
-  return copied.rowCount;
 }
 
 async function ensureMetricAndMethod(client, mapping, workbookName) {
@@ -438,26 +355,160 @@ async function importResults(client, sheet, samples, metricResolutions, workbook
   }
 }
 
+function average(values) {
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function sampleStandardDeviation(values) {
+  if (values.length < 2) return 0;
+  const mean = average(values);
+  const variance = values.reduce((sum, value) => sum + ((value - mean) ** 2), 0) / (values.length - 1);
+  return Math.sqrt(variance);
+}
+
+async function ensureBenchmark(client, sheet, metricResolutions, workbookName, counters) {
+  const existing = await client.query(
+    `SELECT id, benchmark_code, benchmark_name, status::text
+     FROM benchmark_profiles
+     WHERE lower(trim(benchmark_name)) = lower($1)
+        OR lower(trim(COALESCE(ball_model, ''))) = lower($1)
+     ORDER BY created_at
+     LIMIT 1`,
+    [sheet.sheetName]
+  );
+  const benchmarkCode = existing.rows[0]?.benchmark_code || `${slug(sheet.sheetName).slice(0, 120)}-BN`;
+  const notes = `Test-only benchmark identified in ${workbookName}; worksheet ${sheet.sheetName}.`;
+  let benchmarkId;
+  if (existing.rowCount) {
+    benchmarkId = existing.rows[0].id;
+    await client.query(
+      `UPDATE benchmark_profiles
+       SET name = $2::text, benchmark_name = $2::varchar, ball_brand = $2::varchar, ball_model = $2::varchar,
+           description = $3, notes = $3, is_active = true, status = 'active', updated_at = now()
+       WHERE id = $1`,
+      [benchmarkId, sheet.sheetName, notes]
+    );
+    counters.benchmarksUpdated += 1;
+  } else {
+    const inserted = await client.query(
+      `INSERT INTO benchmark_profiles
+        (name, description, ball_brand, ball_model, is_active, benchmark_code,
+         benchmark_name, profile_version, status, notes)
+       VALUES ($1::text, $2, $1::varchar, $1::varchar, true, $3, $1::varchar, 1, 'active', $2)
+       RETURNING id`,
+      [sheet.sheetName, notes, benchmarkCode]
+    );
+    benchmarkId = inserted.rows[0].id;
+    counters.benchmarksCreated += 1;
+  }
+
+  await client.query('DELETE FROM benchmark_metric_targets WHERE benchmark_profile_id = $1', [benchmarkId]);
+  const byMetric = new Map();
+  for (const result of sheet.results) {
+    const values = byMetric.get(result.metricKey) || [];
+    values.push(result.value);
+    byMetric.set(result.metricKey, values);
+  }
+  for (const [metricKey, values] of byMetric) {
+    const resolution = metricResolutions.get(metricKey);
+    const mapping = METRIC_MAPPINGS.find((item) => item.metricKey === metricKey);
+    await client.query(
+      `INSERT INTO benchmark_metric_targets
+        (benchmark_profile_id, metric_id, metric_name, metric_category, target_value,
+         target_mean, standard_deviation, target_std_dev, min_acceptable, max_acceptable,
+         weight, criticality, unit, notes, required_for_pass, comparison_mode)
+       SELECT $1, md.id, md.metric_key, md.category::text, $3, $3, $4, $4, $5, $6,
+              0, 'medium', $7, $8, false, 'target_range'
+       FROM metric_definitions md
+       WHERE md.id = $2`,
+      [
+        benchmarkId,
+        resolution.metricId,
+        average(values),
+        sampleStandardDeviation(values),
+        Math.min(...values),
+        Math.max(...values),
+        mapping.unit,
+        `${values.length} result(s) from ${workbookName}; worksheet ${sheet.sheetName}.`,
+      ]
+    );
+    counters.benchmarkTargetsCreated += 1;
+  }
+  await audit(client, 'benchmark_profiles', benchmarkId, existing.rowCount ? 'UPDATE' : 'INSERT', existing.rows[0] ?? null, {
+    benchmarkCode,
+    benchmarkName: sheet.sheetName,
+    metricTargets: byMetric.size,
+    sourceFile: workbookName,
+  });
+}
+
+async function prepareRunForScoring(client, runId, runCode, counters) {
+  await client.query('DELETE FROM run_metric_summaries WHERE production_run_id = $1', [runId]);
+  await client.query(
+    `INSERT INTO run_metric_summaries
+      (production_run_id, metric_id, condition_id, n_samples, mean_value, std_dev,
+       min_value, max_value, unit, source_table)
+     SELECT s.production_run_id, str.metric_id, NULL, COUNT(*)::int,
+            AVG(str.value_numeric), COALESCE(STDDEV_SAMP(str.value_numeric), 0),
+            MIN(str.value_numeric), MAX(str.value_numeric),
+            COALESCE(NULLIF(str.unit, ''), md.default_unit), 'sample_test_results'
+     FROM sample_test_results str
+     JOIN samples s ON s.id = str.sample_id
+     JOIN metric_definitions md ON md.id = str.metric_id
+     WHERE s.production_run_id = $1
+     GROUP BY s.production_run_id, str.metric_id, COALESCE(NULLIF(str.unit, ''), md.default_unit)`,
+    [runId]
+  );
+  const missing = await client.query(
+    `SELECT md.metric_key
+     FROM metric_definitions md
+     WHERE md.required_for_scoring = true AND md.status = 'active'
+       AND EXISTS (
+         SELECT 1
+         FROM samples s
+         WHERE s.production_run_id = $1 AND s.status <> 'archived'
+           AND NOT EXISTS (
+             SELECT 1
+             FROM sample_test_results str
+             WHERE str.sample_id = s.id AND str.metric_id = md.id
+           )
+       )
+     ORDER BY md.sort_order, md.metric_key`,
+    [runId]
+  );
+  const scoringReady = missing.rowCount === 0;
+  await client.query(
+    `UPDATE production_runs SET status = $2::production_run_status, updated_at = now() WHERE id = $1`,
+    [runId, scoringReady ? 'scored' : 'testing']
+  );
+  if (scoringReady) counters.runsReadyForScoring += 1;
+  else counters.incompleteRuns.push({ runCode, missingMetrics: missing.rows.map((row) => row.metric_key) });
+}
+
 function createCounters() {
   return {
     materialsCreated: 0,
+    benchmarksCreated: 0,
+    benchmarksUpdated: 0,
+    benchmarkTargetsCreated: 0,
     formulationsCreated: 0,
     formulationsUpdated: 0,
-    setupRevisionsCreated: 0,
-    setupRevisionsUpdated: 0,
     runsCreated: 0,
     runsUpdated: 0,
-    processValuesCopied: 0,
     samplesCreated: 0,
     samplesUpdated: 0,
     resultsCreated: 0,
     resultsUpdated: 0,
+    runsReadyForScoring: 0,
+    incompleteRuns: [],
   };
 }
 
 async function main() {
   const workbookPath = path.resolve(argument('workbook', DEFAULT_WORKBOOK));
-  const referenceRunCode = argument('reference-run-code', DEFAULT_REFERENCE_RUN);
+  const profileCode = argument('profile-code', DEFAULT_PROFILE_CODE);
+  const moldCode = argument('mold-code', DEFAULT_MOLD_CODE);
+  const dateProduced = argument('date-produced', DEFAULT_DATE_PRODUCED);
   const sheetFilter = argument('sheet');
   const apply = process.argv.includes('--apply');
   dotenv.config({ path: path.resolve(__dirname, '..', '.env.development') });
@@ -469,10 +520,13 @@ async function main() {
   const source = parseWorkbook(workbookPath, XLSX);
   if (sheetFilter) {
     source.formulations = source.formulations.filter((sheet) => normalizeKey(sheet.sheetName) === normalizeKey(sheetFilter));
-    if (source.formulations.length !== 1) throw new Error(`Formulation worksheet not found: ${sheetFilter}`);
-    source.totals.formulations = 1;
-    source.totals.samples = source.formulations[0].sampleColumns.length;
-    source.totals.results = source.formulations[0].results.length;
+    source.benchmarks = source.benchmarks.filter((sheet) => normalizeKey(sheet.sheetName) === normalizeKey(sheetFilter));
+    if (source.formulations.length + source.benchmarks.length !== 1) throw new Error(`Importable worksheet not found: ${sheetFilter}`);
+    source.totals.formulations = source.formulations.length;
+    source.totals.benchmarks = source.benchmarks.length;
+    const selected = source.formulations[0] || source.benchmarks[0];
+    source.totals.samples = source.formulations[0]?.sampleColumns.length || 0;
+    source.totals.results = selected.results.length;
   }
 
   const stats = createCounters();
@@ -480,11 +534,15 @@ async function main() {
   await client.connect();
   try {
     await client.query('BEGIN');
-    const sourceRun = await referenceRun(client, referenceRunCode);
+    const context = await productionContext(client, profileCode, moldCode);
     const supplierId = await ensureLegacySupplier(client);
     const metricResolutions = new Map();
     for (const mapping of METRIC_MAPPINGS) {
       metricResolutions.set(mapping.metricKey, await ensureMetricAndMethod(client, mapping, source.workbookName));
+    }
+
+    for (const sheet of source.benchmarks) {
+      await ensureBenchmark(client, sheet, metricResolutions, source.workbookName, stats);
     }
 
     for (const sheet of source.formulations) {
@@ -494,11 +552,10 @@ async function main() {
         componentRecords.push({ component, material });
       }
       const formulationId = await ensureFormulation(client, sheet, componentRecords, source.workbookName, stats);
-      const revisionId = await cloneProcessSetup(client, sourceRun, formulationId, stats);
-      const run = await ensureRun(client, sourceRun, formulationId, revisionId, sheet.sheetName, stats);
-      stats.processValuesCopied += await cloneRunProcessValues(client, sourceRun, run.id, revisionId);
+      const run = await ensureRun(client, context, formulationId, sheet.sheetName, dateProduced, stats);
       const sampleRecords = await ensureSamples(client, run, sheet.sampleColumns, stats);
       await importResults(client, sheet, sampleRecords, metricResolutions, source.workbookName, stats);
+      await prepareRunForScoring(client, run.id, run.runCode, stats);
     }
 
     if (apply) await client.query('COMMIT');
@@ -507,7 +564,9 @@ async function main() {
       mode: apply ? 'applied' : 'dry-run',
       environment: process.env.APP_ENV,
       workbook: workbookPath,
-      referenceRunCode,
+      profileCode,
+      moldCode,
+      dateProduced,
       sourceTotals: source.totals,
       skippedSheets: source.skipped,
       warnings: source.warnings,

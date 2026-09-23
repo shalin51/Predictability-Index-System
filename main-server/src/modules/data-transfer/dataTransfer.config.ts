@@ -67,6 +67,7 @@ export const transferDefinitions: Record<string, TransferDefinition> = {
       { name: 'Benchmarks', columns: [
         text('benchmarkCode', 'Benchmark Code', true), text('benchmarkName', 'Benchmark Name', true), number('profileVersion', 'Profile Version', true),
         text('ballBrand', 'Ball Brand', true), text('ballModel', 'Ball Model', true),
+        date('testDate', 'Test Date'), text('reportNumber', 'Report Number'),
         text('status', 'Status', false, { allowedValues: RECORD_STATUSES, defaultValue: 'active' }), text('notes', 'Notes'),
       ] },
       { name: 'Benchmark Properties', columns: [

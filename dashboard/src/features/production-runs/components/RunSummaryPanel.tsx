@@ -68,6 +68,17 @@ export function RunSummaryPanel({ runId }: { runId: string }) {
                   <td style={runStyles.td}><span style={styles.ready}>{summary.status}</span></td>
                 </tr>
               ))}
+              {!detail.summaries.some((summary) => summary.metricKey === 'cor_78in') && (
+                <tr>
+                  <td style={runStyles.td}>COR (78 in Bounce)</td>
+                  <td style={runStyles.td}>performance</td>
+                  <td style={runStyles.td}>-</td>
+                  <td style={runStyles.td}>0</td>
+                  <td colSpan={4} style={runStyles.td}>Awaiting valid rebound height for √(H₂ ÷ 78)</td>
+                  <td style={runStyles.td}>ratio</td>
+                  <td style={runStyles.td}>Missing data</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

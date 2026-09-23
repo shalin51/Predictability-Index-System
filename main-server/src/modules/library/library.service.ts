@@ -6,20 +6,11 @@ import type { AuditService } from '../audit/audit.service';
 import { getLibraryConfig } from './library.config';
 import { LibraryRepository } from './library.repository';
 import type { LibraryCollectionResponse, LibraryEntityConfig, LibraryListQuery, LibraryRecord } from './library.types';
+import { LAB_TEST_METRIC_KEYS } from '@amfpi/shared';
 
 const statuses = new Set<string>(RECORD_STATUSES);
 const comparisonModes = new Set<string>(COMPARISON_MODES);
 const criticalityLevels = new Set<string>(CRITICALITY_LEVELS);
-const benchmarkMetricKeys = [
-  'weight',
-  'compression',
-  'stretch',
-  'full_stretch_max',
-  'hardness',
-  'wall_thickness',
-  'diameter',
-  'drop_test',
-] as const;
 
 export class LibraryService {
   constructor(
@@ -168,7 +159,7 @@ export class LibraryService {
        WHERE id = $1
          AND status = 'active'
          AND metric_key = ANY($2::text[])`,
-      [metricId, benchmarkMetricKeys]
+      [metricId, LAB_TEST_METRIC_KEYS]
     );
     if ((result.rowCount ?? 0) === 0) {
       throw new ValidationError('Benchmark properties must use a supported Lab Testing metric');

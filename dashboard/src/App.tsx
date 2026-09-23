@@ -14,6 +14,7 @@ import {
   getAuthSession,
   type AuthSession,
 } from './features/auth/authSession';
+import { entraEnabled } from './features/auth/entraAuth';
 
 export default function App() {
   const [session, setSession] = useState<AuthSession | null>(() => getAuthSession());
@@ -25,7 +26,7 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!session) return undefined;
+    if (!session || entraEnabled) return undefined;
     const remaining = Math.max(0, Date.parse(session.expiresAt) - Date.now());
     const timeoutId = window.setTimeout(clearAuthSession, remaining);
     return () => window.clearTimeout(timeoutId);

@@ -25,6 +25,10 @@ interface AppConfig {
   corsOrigin: string;
   logLevel: string;
   auth: {
+    mode: 'password' | 'entra';
+    entraTenantId: string;
+    entraClientId: string;
+    entraScope: string;
     userName: string;
     userPassword: string;
     jwtSecret: string;
@@ -134,6 +138,10 @@ function readProcessConfig(): AppConfig {
     corsOrigin: process.env.CORS_ORIGIN ?? 'http://localhost:3000',
     logLevel: process.env.LOG_LEVEL ?? 'info',
     auth: {
+      mode: process.env.AUTH_MODE === 'entra' ? 'entra' : 'password',
+      entraTenantId: process.env.ENTRA_TENANT_ID ?? '',
+      entraClientId: process.env.ENTRA_CLIENT_ID ?? '',
+      entraScope: process.env.ENTRA_SCOPE ?? 'access_as_user',
       userName: process.env.USER_NAME ?? '',
       userPassword: process.env.USER_PASSWORD ?? '',
       jwtSecret: process.env.JWT_SECRET ?? '',
@@ -200,14 +208,18 @@ function requireEnvValue(name: string, value: string): string {
 }
 
 function validateAuthConfig(snapshot: AppConfig): void {
-  requireEnvValue('USER_NAME', snapshot.auth.userName);
-  requireEnvValue('USER_PASSWORD', snapshot.auth.userPassword);
-  requireEnvValue('JWT_SECRET', snapshot.auth.jwtSecret);
-  requireEnvValue('APP_API_KEY', snapshot.auth.apiKey);
-
-  if (snapshot.auth.jwtSecret.length < 32) {
-    throw new Error('[config] JWT_SECRET must contain at least 32 characters');
+  if (snapshot.auth.mode === 'entra') {
+    requireEnvValue('ENTRA_TENANT_ID', snapshot.auth.entraTenantId);
+    requireEnvValue('ENTRA_CLIENT_ID', snapshot.auth.entraClientId);
+  } else {
+    requireEnvValue('USER_NAME', snapshot.auth.userName);
+    requireEnvValue('USER_PASSWORD', snapshot.auth.userPassword);
+    requireEnvValue('JWT_SECRET', snapshot.auth.jwtSecret);
+    if (snapshot.auth.jwtSecret.length < 32) {
+      throw new Error('[config] JWT_SECRET must contain at least 32 characters');
+    }
   }
+  requireEnvValue('APP_API_KEY', snapshot.auth.apiKey);
   if (snapshot.auth.apiKey.length < 32) {
     throw new Error('[config] APP_API_KEY must contain at least 32 characters');
   }

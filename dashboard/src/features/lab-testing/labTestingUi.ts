@@ -1,15 +1,6 @@
 import type { CSSProperties } from 'react';
 import { colors, font, radius, spacing } from '../../theme/tokens';
-export const LAB_TEST_METRIC_KEYS = [
-  'weight',
-  'compression',
-  'stretch',
-  'full_stretch_max',
-  'hardness',
-  'wall_thickness',
-  'diameter',
-  'drop_test',
-] as const;
+export { LAB_TEST_METRIC_KEYS } from '@amfpi/shared';
 
 export const labStyles: Record<string, CSSProperties> = {
   actions: { alignItems: 'center', display: 'flex', flexWrap: 'wrap', gap: spacing.space3 },

@@ -1,4 +1,4 @@
-import { ConflictError, ValidationError } from '../../errors/app-error';
+import { ConflictError } from '../../errors/app-error';
 import { getPool } from '../../infrastructure/database/pg-pool';
 import type { PredictionInputSnapshot, PredictionRecord } from './prediction.types';
 
@@ -143,17 +143,6 @@ export class PredictionRepository {
         const [baseKey, conditionCode] = metricKey.split('::');
         return { baseKey, conditionCode: conditionCode ?? null, metricKey, value };
       });
-      const knownMetrics = await client.query<{ metric_key: string }>(
-        `SELECT metric_key FROM metric_definitions WHERE metric_key = ANY($1::text[])`,
-        [parsed.map((entry) => entry.baseKey)]
-      );
-      const knownMetricKeys = new Set(knownMetrics.rows.map((row) => row.metric_key));
-      const unknown = parsed.filter((entry) => !knownMetricKeys.has(entry.baseKey));
-      if (unknown.length) {
-        throw new ValidationError(
-          `Prediction processor returned unknown metrics: ${unknown.map((entry) => entry.metricKey).join(', ')}`
-        );
-      }
       for (const { baseKey, conditionCode, metricKey, value } of parsed) {
         await client.query(
           `INSERT INTO prediction_result_metrics

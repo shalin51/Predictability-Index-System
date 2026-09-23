@@ -20,6 +20,7 @@ import {
 import { colors, font, radius, spacing } from '../../theme/tokens';
 import { coerceLibraryPayload, LibraryRecordForm, libraryOptionResources } from './LibraryRecordForm';
 import { labelize, LibrarySectionNav } from './LibrarySectionNav';
+import { CorFormula } from './CorFormula';
 
 const sections = [
   'materials',
@@ -169,6 +170,7 @@ export function LibraryPage({
             </div>
           </CardHeader>
           <Divider />
+          {section === 'metrics' && <CorFormula />}
           <div style={styles.filters}>
             <input onChange={(event) => setSearch(event.target.value)} placeholder="Search" style={controlStyles.input} value={search} />
             <select onChange={(event) => setStatus(event.target.value)} style={controlStyles.input} value={status}>

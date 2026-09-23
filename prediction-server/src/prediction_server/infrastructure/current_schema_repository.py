@@ -27,7 +27,24 @@ FROM production_runs pr
 JOIN formulations f ON f.id = pr.formulation_id
 JOIN machines machine ON machine.id = pr.machine_id
 JOIN molds mold ON mold.id = pr.mold_id
-WHERE pr.status IN ('completed', 'scored')
+WHERE (
+  pr.status IN ('completed', 'scored')
+  OR (
+    pr.status = 'testing'
+    AND EXISTS (
+      SELECT 1
+      FROM run_metric_summaries summary
+      WHERE summary.production_run_id = pr.id
+    )
+  )
+)
+  AND 6 = (
+    SELECT count(DISTINCT metric.metric_key)
+    FROM run_metric_summaries summary
+    JOIN metric_definitions metric ON metric.id = summary.metric_id
+    WHERE summary.production_run_id = pr.id
+      AND metric.metric_key IN ('compression', 'diameter', 'hardness', 'stretch', 'wall_thickness', 'weight')
+  )
 ORDER BY pr.date_produced, pr.id
 LIMIT %s
 """

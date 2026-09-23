@@ -146,7 +146,7 @@ async function executePipeline(req: Request, resCapture: ResponseCapture, handle
 
     try {
       if (current.length >= 3) {
-        (current as Middleware)(req, resCapture as unknown as Response, run);
+        Promise.resolve((current as Middleware)(req, resCapture as unknown as Response, run)).catch(run);
         return;
       }
 

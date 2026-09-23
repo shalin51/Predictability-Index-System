@@ -24,7 +24,9 @@ const columnMap: Record<string, Record<string, string>> = {
     benchmarkName: 'benchmark_name',
     notes: 'notes',
     profileVersion: 'profile_version',
+    reportNumber: 'report_number',
     status: 'status',
+    testDate: 'test_date',
   },
   scoring_profiles: {
     scoringCode: 'scoring_code',

@@ -8,6 +8,7 @@ import type { Request, Response, NextFunction } from 'express';
 import { createHash, timingSafeEqual } from 'crypto';
 import { config } from '../config/env';
 import { verifyJwt } from '../modules/auth/jwt';
+import { verifyEntraAccessToken } from '../modules/auth/entra-token';
 
 function secureEqual(left: string, right: string): boolean {
   const leftBuffer = createHash('sha256').update(left).digest();
@@ -15,9 +16,9 @@ function secureEqual(left: string, right: string): boolean {
   return timingSafeEqual(leftBuffer, rightBuffer);
 }
 
-export function authPlaceholder(req: Request, res: Response, next: NextFunction): void {
+export async function authPlaceholder(req: Request, res: Response, next: NextFunction): Promise<void> {
   // Skip auth for health endpoints — they must remain public
-  if (req.path.startsWith('/health') || req.path.startsWith('/version') || req.path === '/auth/login') {
+  if (req.path.startsWith('/health') || req.path.startsWith('/version') || (config.auth.mode === 'password' && req.path === '/auth/login')) {
     next();
     return;
   }
@@ -26,7 +27,13 @@ export function authPlaceholder(req: Request, res: Response, next: NextFunction)
   const bearerToken = typeof authorization === 'string' && authorization.startsWith('Bearer ')
     ? authorization.slice('Bearer '.length).trim()
     : '';
-  const claims = bearerToken && config.auth.jwtSecret
+  const entraUserId = config.auth.mode === 'entra' && bearerToken ? await verifyEntraAccessToken(bearerToken) : null;
+  if (entraUserId) {
+    req.headers['x-user-id'] = entraUserId;
+    next();
+    return;
+  }
+  const claims = config.auth.mode === 'password' && bearerToken && config.auth.jwtSecret
     ? verifyJwt(bearerToken, config.auth.jwtSecret)
     : null;
 

@@ -23,6 +23,7 @@ import { RelatedMaterialsTable } from './RelatedMaterialsTable';
 import { MaterialPropertiesEditor } from './MaterialPropertiesEditor';
 import { ScoringProfileWeightsEditor } from './ScoringProfileWeightsEditor';
 import { BenchmarkPropertiesEditor } from './BenchmarkPropertiesEditor';
+import { CorFormula } from './CorFormula';
 
 export function LibraryRecordDetailPage({
   id,
@@ -184,6 +185,7 @@ export function LibraryRecordDetailPage({
             </div>
           </CardHeader>
           <Divider />
+          {resource === 'metrics' && record?.metricKey === 'cor_78in' && <CorFormula />}
           {error && <MessageBanner tone="danger">{error}</MessageBanner>}
           {message && <MessageBanner tone="success">{message}</MessageBanner>}
           {!record && !error && <div style={styles.muted}>Loading...</div>}

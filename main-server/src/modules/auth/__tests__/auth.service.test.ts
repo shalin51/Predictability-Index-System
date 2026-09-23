@@ -8,6 +8,7 @@ const originalAuth = { ...config.auth };
 describe('AuthService', () => {
   beforeEach(() => {
     Object.assign(config.auth, {
+      mode: 'password',
       userName: 'dashboard-user',
       userPassword: 'correct-password',
       jwtSecret: 'test-secret-that-is-long-enough-for-hmac-signing',
