@@ -247,6 +247,15 @@ function applyAppSettings() {
     'WEBSITE_RUN_FROM_PACKAGE=1',
   ];
 
+  if (config.appEnv === 'staging') {
+    settings.push(
+      'AUTH_MODE=entra',
+      'ENTRA_TENANT_ID=215a6b8b-eafe-4ab7-a413-f9fdc36f3373',
+      'ENTRA_CLIENT_ID=68564682-58e4-4b21-b2f4-75aa16288db6',
+      'ENTRA_SCOPE=access_as_user'
+    );
+  }
+
   for (const name of ['SETUP_IMPORT_STORAGE_ACCOUNT_URL', 'SETUP_IMPORT_STORAGE_CONNECTION_STRING', 'SETUP_IMPORT_STORAGE_CONTAINER']) {
     if (envFileVars[name]) settings.push(`${name}=${envFileVars[name]}`);
   }
